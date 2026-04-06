@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>Políticas de Troca e Garantia - JSL</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        .politicas-hero {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+            color: #fff;
+            text-align: center;
+            padding: 60px 20px 50px;
+        }
+        .politicas-hero h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; }
+        .politicas-hero p { color: rgba(255,255,255,0.85); font-size: 1rem; }
+
+        .politicas-container {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+
+        .politica-secao {
+            margin-bottom: 2.5rem;
+        }
+
+        .politica-secao h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .politica-secao h2 i {
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+        }
+
+        .politica-secao p,
+        .politica-secao li {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .politica-secao ul {
+            list-style: none;
+            padding: 0;
+            margin: 0.75rem 0;
+        }
+
+        .politica-secao li {
+            padding: 0.4rem 0 0.4rem 1.5rem;
+            position: relative;
+        }
+
+        .politica-secao li::before {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            left: 0;
+            color: var(--primary-blue);
+            font-size: 0.8rem;
+            top: 0.55rem;
+        }
+
+        .politica-card {
+            background: var(--bg-gray-light);
+            border: 1px solid var(--border-lighter);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .politica-card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .politica-destaque {
+            background: var(--light-blue);
+            border-left: 4px solid var(--primary-blue);
+            padding: 1rem 1.25rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1rem 0;
+        }
+
+        .politica-destaque p {
+            color: var(--dark-blue);
+            font-weight: 500;
+        }
+
+        .politica-contato {
+            text-align: center;
+            padding: 2rem;
+            background: var(--bg-gray-light);
+            border-radius: 16px;
+            margin-top: 2rem;
+        }
+
+        .politica-contato h3 {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .politica-contato p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .politica-contato a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #25D366;
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .politica-contato a:hover {
+            background: #20b35b;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 600px) {
+            .politicas-hero h1 { font-size: 1.5rem; }
+            .politicas-container { padding: 1.5rem 1rem 3rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <section class="politicas-hero">
+        <h1>Políticas de Troca e Garantia</h1>
+        <p>Transparência e segurança nas suas compras</p>
+    </section>
+
+    <main class="politicas-container">
+
+        <section class="politica-secao">
+            <h2><i class="fa-solid fa-rotate-left"></i> Política de Troca</h2>
+            <p>
+                Na JSL Soluções em Embalagens, priorizamos a sua satisfação. Caso o produto entregue apresente
+                algum defeito ou não corresponda ao que foi solicitado, você pode solicitar a troca seguindo as condições abaixo:
+            </p>
+
+            <div class="politica-card">
+                <h3>Condições para troca</h3>
+                <ul>
+                    <li>O pedido de troca deve ser feito em até <strong>7 dias corridos</strong> após o recebimento</li>
+                    <li>O produto deve estar na embalagem original, sem sinais de uso</li>
+                    <li>Apresentar o número do pedido ou comprovante de compra</li>
+                    <li>Produtos personalizados sob encomenda não são elegíveis para troca, salvo defeito de fabricação</li>
+                </ul>
+            </div>
+
+            <div class="politica-card">
+                <h3>Como solicitar</h3>
+                <ul>
+                    <li>Entre em contato pelo WhatsApp ou e-mail informando o número do pedido</li>
+                    <li>Envie fotos do produto recebido para avaliação</li>
+                    <li>Após aprovação, combinaremos a logística de envio e reposição</li>
+                </ul>
+            </div>
+
+            <div class="politica-destaque">
+                <p><i class="fa-solid fa-info-circle"></i> O frete de envio para troca por defeito é por conta da JSL. Para trocas por outros motivos, o frete é de responsabilidade do cliente.</p>
+            </div>
+        </section>
+
+        <section class="politica-secao">
+            <h2><i class="fa-solid fa-box-open"></i> Política de Devolução</h2>
+            <p>
+                Caso deseje devolver um produto, as mesmas condições de troca se aplicam. O reembolso será processado conforme o método de pagamento original:
+            </p>
+
+            <div class="politica-card">
+                <h3>Prazos de reembolso</h3>
+                <ul>
+                    <li><strong>PIX / Transferência:</strong> até 5 dias úteis após recebimento do produto devolvido</li>
+                    <li><strong>Cartão de crédito:</strong> estorno em até 2 faturas subsequentes (depende da operadora)</li>
+                    <li><strong>Boleto:</strong> reembolso via transferência em até 10 dias úteis</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="politica-secao">
+            <h2><i class="fa-solid fa-shield-halved"></i> Garantia dos Produtos</h2>
+            <p>
+                Todos os nossos produtos passam por controle de qualidade. Oferecemos garantia contra defeitos
+                de fabricação conforme descrito abaixo:
+            </p>
+
+            <div class="politica-card">
+                <h3>Cobertura da garantia</h3>
+                <ul>
+                    <li>Defeitos de fabricação (rasgos, furos, descolamento)</li>
+                    <li>Produtos que não correspondem às especificações anunciadas</li>
+                    <li>Embalagens danificadas durante o transporte (registrar ocorrência na entrega)</li>
+                </ul>
+            </div>
+
+            <div class="politica-card">
+                <h3>O que NÃO é coberto</h3>
+                <ul>
+                    <li>Uso indevido ou armazenamento inadequado do produto</li>
+                    <li>Danos causados por excesso de peso além da capacidade indicada</li>
+                    <li>Desgaste natural pelo uso</li>
+                </ul>
+            </div>
+
+            <div class="politica-destaque">
+                <p><i class="fa-solid fa-clock"></i> O prazo de garantia é de <strong>30 dias</strong> a partir da data de recebimento para todos os produtos.</p>
+            </div>
+        </section>
+
+        <div class="politica-contato">
+            <h3>Precisa de ajuda?</h3>
+            <p>Nossa equipe está pronta para ajudar com trocas, devoluções ou qualquer dúvida.</p>
+            <a href="https://wa.me/5583996389725?text=Ol%C3%A1!%20Preciso%20de%20ajuda%20com%20troca/devolu%C3%A7%C3%A3o%20de%20produto." target="_blank">
+                <i class="fa-brands fa-whatsapp"></i> Falar no WhatsApp
+            </a>
+        </div>
+
+    </main>
+
+    <a class="whatsapp-float" href="#">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/main.js"></script>
+</body>
+
+</html>

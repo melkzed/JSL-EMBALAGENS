@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>Contato - JSL</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <link rel="stylesheet" href="../css/contato.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <section class="herop">
+        <h1>Contato</h1>
+        <p>Fale conosco e solicite um orçamento personalizado</p>
+    </section>
+
+    <section class="ct-section">
+        <div class="ct-container">
+
+            <div class="ct-info">
+                <h2>Informações de contato</h2>
+
+                <div class="ct-card">
+                    <i class="fa fa-phone"></i>
+                    <div>
+                        <span>TELEFONE</span>
+                        <p>(83) 99638-9725</p>
+                    </div>
+                </div>
+
+                <div class="ct-card">
+                    <i class="fa-brands fa-whatsapp"></i>
+                    <div>
+                        <span>WHATSAPP</span>
+                        <p><a href="https://wa.me/5583996389725" target="_blank">(83) 99638-9725</a></p>
+                    </div>
+                </div>
+
+                <div class="ct-card">
+                    <i class="fa fa-envelope"></i>
+                    <div>
+                        <span>E-MAIL</span>
+                        <p>contato@jslsolucoesemembalagens.com</p>
+                    </div>
+                </div>
+
+                <div class="ct-card">
+                    <i class="fa fa-location-dot"></i>
+                    <div>
+                        <span>ENDEREÇO</span>
+                        <p>R. Francisco Guimarães, Centro, Itaporanga - PB, CEP 58780-000</p>
+                    </div>
+                </div>
+
+                <div class="ct-card">
+                    <i class="fa fa-clock"></i>
+                    <div>
+                        <span>HORÁRIO</span>
+                        <p>Seg a Sex: 8h - 18h</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ct-form-box">
+                <h2>Envie uma mensagem</h2>
+
+                <form class="ct-form">
+
+                    <div class="ct-grid">
+                        <div>
+                            <label for="contatoNome">Nome</label>
+                            <input type="text" id="contatoNome" placeholder="Seu nome">
+                        </div>
+
+                        <div>
+                            <label for="contatoTelefone">Telefone</label>
+                            <input type="text" id="contatoTelefone" placeholder="(00) 00000-0000">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="contatoEmail">E-mail</label>
+                        <input type="email" id="contatoEmail" placeholder="seu@email.com">
+                    </div>
+
+                    <div>
+                        <label for="contatoMensagem">Mensagem</label>
+                        <textarea id="contatoMensagem" placeholder="Descreva o que precisa..."></textarea>
+                    </div>
+
+                    <button type="submit" class="ct-btn">
+                        <i class="fa fa-paper-plane"></i>
+                        Enviar pelo WhatsApp
+                    </button>
+
+                </form>
+            </div>
+
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/main.js"></script>
+
+</body>
+
+</html>

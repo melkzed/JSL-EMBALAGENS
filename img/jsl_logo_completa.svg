@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300" width="100%">
+<defs>
+  <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" style="stop-color:#0d3a8a;stop-opacity:1"/>
+    <stop offset="40%" style="stop-color:#2270d4;stop-opacity:1"/>
+    <stop offset="50%" style="stop-color:#4a9ee8;stop-opacity:1"/>
+    <stop offset="60%" style="stop-color:#2270d4;stop-opacity:1"/>
+    <stop offset="100%" style="stop-color:#0d3a8a;stop-opacity:1"/>
+  </linearGradient>
+</defs>
+
+<!-- Letras JSL -->
+<text x="300" y="190" font-family="Arial Black, sans-serif" font-size="160" font-weight="900" text-anchor="middle" fill="#0d2b8e" letter-spacing="-4" style="fill:rgb(13, 43, 142);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Arial Black&quot;, sans-serif;font-size:160px;font-weight:900;text-anchor:middle;dominant-baseline:auto">JSL</text>
+
+<!-- Arco: nasce na base esquerda, curva pelo meio do S, termina na base direita -->
+<path d="&#10;  M 55,225&#10;  C 95,190 185,115 300,115&#10;  C 415,115 505,190 545,225&#10;  C 539,221 526,212 510,200&#10;  C 474,174 412,140 300,140&#10;  C 188,140 126,174 90,200&#10;  C 74,212 61,221 55,225&#10;  Z" fill="url(#arcGrad)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+<!-- Texto inferior -->
+<text x="300" y="268" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700" text-anchor="middle" fill="#1a4a8a" letter-spacing="3" style="fill:rgb(26, 74, 138);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:Arial, Helvetica, sans-serif;font-size:20px;font-weight:700;text-anchor:middle;dominant-baseline:auto">SOLUÇÕES EM EMBALAGENS</text>
+
+</svg>

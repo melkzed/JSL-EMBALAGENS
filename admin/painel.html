@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://cdn.jsdelivr.net;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>Painel Admin - JSL Embalagens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+    <aside class="admin-sidebar" id="adminSidebar">
+        <div class="admin-sidebar-header">
+            <h2>JSL <span>ADMIN</span></h2>
+            <button class="admin-sidebar-toggle" id="btnToggleSidebar">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <a href="../index.html" class="admin-back-store-btn" title="Voltar à Loja">
+            <i class="fa-solid fa-store"></i><span>Voltar à Loja</span>
+        </a>
+
+        <nav class="admin-nav">
+            <button class="admin-nav-item active" data-section="dashboard">
+                <i class="fa-solid fa-chart-line"></i><span>Dashboard</span>
+            </button>
+            <button class="admin-nav-item" data-section="produtos">
+                <i class="fa-solid fa-box-open"></i><span>Produtos</span>
+            </button>
+            <button class="admin-nav-item" data-section="categorias">
+                <i class="fa-solid fa-tags"></i><span>Categorias</span>
+            </button>
+            <button class="admin-nav-item" data-section="pedidos">
+                <i class="fa-solid fa-shopping-bag"></i><span>Pedidos</span>
+            </button>
+            <button class="admin-nav-item" data-section="usuarios">
+                <i class="fa-solid fa-users"></i><span>Usuários</span>
+            </button>
+            <button class="admin-nav-item" data-section="estoque">
+                <i class="fa-solid fa-warehouse"></i><span>Estoque</span>
+            </button>
+            <button class="admin-nav-item" data-section="entregas">
+                <i class="fa-solid fa-truck"></i><span>Entregas</span>
+            </button>
+            <button class="admin-nav-item" data-section="pagamentos">
+                <i class="fa-solid fa-credit-card"></i><span>Pagamentos</span>
+            </button>
+            <button class="admin-nav-item" data-section="avaliacoes">
+                <i class="fa-solid fa-star"></i><span>Avaliações</span>
+            </button>
+            <button class="admin-nav-item" data-section="fiscal" style="display:none">
+                <i class="fa-solid fa-file-invoice"></i><span>Fiscal</span>
+            </button>
+            <button class="admin-nav-item" data-section="administracao">
+                <i class="fa-solid fa-shield-halved"></i><span>Administração</span>
+            </button>
+        </nav>
+
+        <div class="admin-sidebar-footer">
+            <div class="admin-user-info" id="adminUserInfo">
+                <div class="admin-user-avatar" id="adminAvatar">A</div>
+                <div class="admin-user-details">
+                    <strong id="adminNome">Admin</strong>
+                    <small id="adminRole">Super Admin</small>
+                </div>
+            </div>
+            <button class="admin-logout-btn" id="btnAdminLogout">
+                <i class="fa-solid fa-right-from-bracket"></i><span>Sair</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="admin-main" id="adminMain">
+        <header class="admin-topbar">
+            <button class="admin-mobile-toggle" id="btnMobileMenu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <h1 id="adminPageTitle">Dashboard</h1>
+            <div class="admin-topbar-actions">
+                <span class="admin-date" id="adminDate"></span>
+            </div>
+        </header>
+
+        <div class="admin-content" id="adminContent">
+
+            <section class="admin-section active" id="secDashboard">
+                <div class="admin-stats-grid">
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon" style="background:#2c4dfc20;color:#2c4dfc"><i class="fa-solid fa-shopping-bag"></i></div>
+                        <div><p>Total de Vendas</p><h3 id="statTotalVendas">0</h3></div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon" style="background:#10b98120;color:#10b981"><i class="fa-solid fa-dollar-sign"></i></div>
+                        <div><p>Faturamento</p><h3 id="statFaturamento">R$ 0,00</h3></div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon" style="background:#f59e0b20;color:#f59e0b"><i class="fa-solid fa-clock"></i></div>
+                        <div><p>Pedidos Pendentes</p><h3 id="statPendentes">0</h3></div>
+                    </div>
+                    <div class="admin-stat-card">
+                        <div class="admin-stat-icon" style="background:#8b5cf620;color:#8b5cf6"><i class="fa-solid fa-users"></i></div>
+                        <div><p>Usuários</p><h3 id="statUsuarios">0</h3></div>
+                    </div>
+                </div>
+
+                <div class="admin-grid-2">
+                    <div class="admin-card">
+                        <h3><i class="fa-solid fa-chart-bar"></i> Pedidos por Período</h3>
+                        <div class="admin-filter-row">
+                            <select id="dashPeriodo">
+                                <option value="7">Últimos 7 dias</option>
+                                <option value="30" selected>Últimos 30 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                                <option value="365">Último ano</option>
+                            </select>
+                        </div>
+                        <div id="dashPedidosChart" class="admin-chart-placeholder">
+                            <table class="admin-table" id="dashPedidosTabela">
+                                <thead><tr><th>Data</th><th>Pedidos</th><th>Situação</th><th>Valor Confirmado</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fa-solid fa-fire"></i> Produtos Mais Vendidos</h3>
+                        <div id="dashTopProdutos" class="admin-list-placeholder">
+                            <p class="admin-empty">Carregando...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secProdutos">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-box-open"></i> Gerenciar Produtos</h2>
+                    <button class="admin-btn primary" id="btnNovoProduto"><i class="fa-solid fa-plus"></i> Novo Produto</button>
+                </div>
+
+                <div class="admin-filter-row">
+                    <input type="text" id="filtroProdutoBusca" placeholder="Buscar por nome..." class="admin-input">
+                    <select id="filtroProdutoCategoria" class="admin-select">
+                        <option value="">Todas categorias</option>
+                    </select>
+                    <select id="filtroProdutoStatus" class="admin-select">
+                        <option value="">Todos</option>
+                        <option value="true">Ativos</option>
+                        <option value="false">Inativos</option>
+                    </select>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaProdutos">
+                        <thead>
+                            <tr>
+                                <th>Imagem</th>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th>Preço</th>
+                                <th>Estoque</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyProdutos"></tbody>
+                    </table>
+                </div>
+
+                
+                <div class="admin-modal-overlay" id="modalProduto" style="display:none">
+                    <div class="admin-modal large">
+                        <div class="admin-modal-header">
+                            <h3 id="modalProdutoTitulo">Novo Produto</h3>
+                            <button class="admin-modal-close" data-close="modalProduto"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form id="formProduto" class="admin-modal-body">
+                            <input type="hidden" id="produtoId">
+                            <div class="admin-form-grid">
+                                <div class="admin-form-group full">
+                                    <label for="produtoNome">Nome do Produto</label>
+                                    <input type="text" id="produtoNome" required class="admin-input">
+                                </div>
+                                <div class="admin-form-group">
+                                    <label for="produtoCategoria">Categoria</label>
+                                    <select id="produtoCategoria" class="admin-select" required>
+                                        <option value="">Selecione...</option>
+                                    </select>
+                                </div>
+                                <div class="admin-form-group">
+                                    <label for="produtoSlug">Slug (URL)</label>
+                                    <input type="text" id="produtoSlug" class="admin-input" required>
+                                </div>
+                                <div class="admin-form-group full">
+                                    <label for="produtoDescricao">Descrição</label>
+                                    <textarea id="produtoDescricao" class="admin-textarea" rows="3"></textarea>
+                                </div>
+                                <div class="admin-form-group">
+                                    <label for="produtoFeatured">Destaque?</label>
+                                    <select id="produtoFeatured" class="admin-select">
+                                        <option value="false">Não</option>
+                                        <option value="true">Sim</option>
+                                    </select>
+                                </div>
+                                <div class="admin-form-group">
+                                    <label for="produtoAtivo">Status</label>
+                                    <select id="produtoAtivo" class="admin-select">
+                                        <option value="true">Ativo</option>
+                                        <option value="false">Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <h4 style="margin:1.5rem 0 0.75rem"><i class="fa-solid fa-layer-group"></i> Variantes (Tamanhos/Preços)</h4>
+                            <div id="variantesContainer"></div>
+                            <button type="button" class="admin-btn secondary small" id="btnAddVariante"><i class="fa-solid fa-plus"></i> Adicionar Variante</button>
+
+                            <h4 style="margin:1.5rem 0 0.75rem"><i class="fa-solid fa-image"></i> Imagens</h4>
+                            <div id="imagensContainer" class="admin-images-grid"></div>
+                            <div class="admin-form-group">
+                                <input type="file" id="inputImagemProduto" accept="image/*" multiple class="admin-input">
+                                <div id="imagensPreview" class="admin-images-grid" style="margin-top:0.5rem"></div>
+                            </div>
+
+                            <h4 style="margin:1.5rem 0 0.75rem"><i class="fa-solid fa-ruler-combined"></i> Informações Técnicas</h4>
+                            <div id="specsContainer"></div>
+
+                            <div class="admin-modal-footer">
+                                <button type="button" class="admin-btn secondary" data-close="modalProduto">Cancelar</button>
+                                <button type="button" class="admin-btn info" id="btnPreviewProduto"><i class="fa-solid fa-eye"></i> Visualizar</button>
+                                <button type="submit" class="admin-btn primary" id="btnSalvarProduto"><i class="fa-solid fa-check"></i> Salvar Produto</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                
+                <div class="admin-modal-overlay" id="modalPreviewProduto" style="display:none">
+                    <div class="admin-modal" style="max-width:900px">
+                        <div class="admin-modal-header">
+                            <h3><i class="fa-solid fa-eye"></i> Prévia do Produto (visão do cliente)</h3>
+                            <button class="admin-modal-close" data-close="modalPreviewProduto"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="admin-modal-body" id="previewProdutoBody" style="padding:0">
+                            
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secCategorias">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-tags"></i> Gerenciar Categorias</h2>
+                    <button class="admin-btn primary" id="btnNovaCategoria"><i class="fa-solid fa-plus"></i> Nova Categoria</button>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaCategorias">
+                        <thead>
+                            <tr>
+                                <th>Ordem</th>
+                                <th>Nome</th>
+                                <th>Slug</th>
+                                <th>Produtos</th>
+                                <th>Destaque</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyCategorias"></tbody>
+                    </table>
+                </div>
+
+                
+                <div class="admin-modal-overlay" id="modalCategoria" style="display:none">
+                    <div class="admin-modal">
+                        <div class="admin-modal-header">
+                            <h3 id="modalCategoriaTitulo">Nova Categoria</h3>
+                            <button class="admin-modal-close" data-close="modalCategoria"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form id="formCategoria" class="admin-modal-body">
+                            <input type="hidden" id="categoriaId">
+                            <div class="admin-form-group">
+                                <label for="categoriaNome">Nome</label>
+                                <input type="text" id="categoriaNome" required class="admin-input">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="categoriaSlug">Slug</label>
+                                <input type="text" id="categoriaSlug" required class="admin-input">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="categoriaDescricao">Descrição</label>
+                                <textarea id="categoriaDescricao" class="admin-textarea" rows="2"></textarea>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="categoriaIcone">Ícone (Font Awesome)</label>
+                                <div style="display:flex;gap:0.5rem;align-items:center">
+                                    <input type="text" id="categoriaIcone" class="admin-input" placeholder="fa-solid fa-box" style="flex:1">
+                                    <span id="categoriaIconePreview" style="font-size:1.4rem;width:2rem;text-align:center"></span>
+                                </div>
+                                <small style="color:#6b7280">Ex: fa-solid fa-box, fa-solid fa-bag-shopping</small>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="categoriaOrdem">Ordem de Exibição</label>
+                                <input type="number" id="categoriaOrdem" class="admin-input" value="0">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="categoriaAtiva">Status</label>
+                                <select id="categoriaAtiva" class="admin-select">
+                                    <option value="true">Ativa</option>
+                                    <option value="false">Inativa</option>
+                                </select>
+                            </div>                            <div class="admin-form-group">
+                                <label for="categoriaFeatured">Destaque na Home?</label>
+                                <select id="categoriaFeatured" class="admin-select">
+                                    <option value="false">Não</option>
+                                    <option value="true">Sim</option>
+                                </select>
+                                <small style="color:#6b7280">Categorias em destaque aparecem na página inicial</small>
+                            </div>
+                            <h4 style="margin:1rem 0 0.75rem"><i class="fa-solid fa-ruler-combined"></i> Informações Técnicas da Categoria</h4>
+                            <p style="font-size:0.78rem;color:#6b7280;margin-bottom:0.75rem">Defina quais campos técnicos os produtos desta categoria terão (ex: Altura, Espessura, Material)</p>
+                            <div id="categoriaSpecsContainer"></div>
+                            <button type="button" class="admin-btn secondary small" id="btnAddCategoriaSpec"><i class="fa-solid fa-plus"></i> Adicionar Info Técnica</button>
+
+                            <div class="admin-modal-footer">
+                                <button type="button" class="admin-btn secondary" data-close="modalCategoria">Cancelar</button>
+                                <button type="submit" class="admin-btn primary" id="btnSalvarCategoria"><i class="fa-solid fa-check"></i> Salvar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secPedidos">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-shopping-bag"></i> Gerenciar Pedidos</h2>
+                </div>
+
+                <div class="admin-filter-row">
+                    <input type="text" id="filtroPedidoBusca" placeholder="Buscar por número ou cliente..." class="admin-input">
+                    <select id="filtroPedidoStatus" class="admin-select">
+                        <option value="">Todos os status</option>
+                        <option value="pending">Pendente</option>
+                        <option value="paid">Pago</option>
+                        <option value="preparing">Em Preparação</option>
+                        <option value="shipped">Enviado</option>
+                        <option value="delivered">Entregue</option>
+                        <option value="cancelled">Cancelado</option>
+                        <option value="refunded">Reembolsado</option>
+                    </select>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaPedidos">
+                        <thead>
+                            <tr>
+                                <th>Nº Pedido</th>
+                                <th>Cliente</th>
+                                <th>Data</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Pagamento</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPedidos"></tbody>
+                    </table>
+                </div>
+
+            </section>
+
+            <section class="admin-section" id="secUsuarios">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-users"></i> Usuários Cadastrados</h2>
+                </div>
+
+                <div class="admin-filter-row">
+                    <input type="text" id="filtroUsuarioBusca" placeholder="Buscar por nome ou email..." class="admin-input">
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaUsuarios">
+                        <thead>
+                            <tr>
+                                <th>Avatar</th>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Telefone</th>
+                                <th>Cadastro</th>
+                                <th>Pedidos</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyUsuarios"></tbody>
+                    </table>
+                </div>
+
+                
+                <div class="admin-modal-overlay" id="modalUsuario" style="display:none">
+                    <div class="admin-modal" style="max-width:700px">
+                        <div class="admin-modal-header">
+                            <h3 id="modalUsuarioTitulo">Detalhes do Usuário</h3>
+                            <button class="admin-modal-close" data-close="modalUsuario"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="admin-modal-body" id="modalUsuarioConteudo">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secEstoque">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-warehouse"></i> Gerenciar Estoque</h2>
+                    <button class="admin-btn primary" id="btnMovimentarEstoque"><i class="fa-solid fa-arrows-rotate"></i> Nova Movimentação</button>
+                </div>
+
+                <div class="admin-filter-row">
+                    <input type="text" id="filtroEstoqueBusca" placeholder="Buscar produto..." class="admin-input">
+                    <select id="filtroEstoqueStatus" class="admin-select">
+                        <option value="">Todos</option>
+                        <option value="low">Estoque Baixo</option>
+                        <option value="zero">Sem Estoque</option>
+                    </select>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaEstoque">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Variante</th>
+                                <th>SKU</th>
+                                <th>Estoque</th>
+                                <th>Mínimo</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyEstoque"></tbody>
+                    </table>
+                </div>
+
+                <h3 style="margin-top:2rem"><i class="fa-solid fa-clock-rotate-left"></i> Histórico de Movimentações</h3>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaMovimentacoes">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Produto</th>
+                                <th>Tipo</th>
+                                <th>Quantidade</th>
+                                <th>Referência</th>
+                                <th>Obs.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyMovimentacoes"></tbody>
+                    </table>
+                </div>
+
+                
+                <div class="admin-modal-overlay" id="modalEstoque" style="display:none">
+                    <div class="admin-modal">
+                        <div class="admin-modal-header">
+                            <h3>Nova Movimentação de Estoque</h3>
+                            <button class="admin-modal-close" data-close="modalEstoque"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form id="formEstoque" class="admin-modal-body">
+                            <div class="admin-form-group">
+                                <label for="estoqueVariante">Produto / Variante</label>
+                                <select id="estoqueVariante" class="admin-select" required></select>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="estoqueTipo">Tipo</label>
+                                <select id="estoqueTipo" class="admin-select" required>
+                                    <option value="entry">Entrada</option>
+                                    <option value="exit">Saída Manual</option>
+                                    <option value="adjustment">Ajuste de Inventário</option>
+                                </select>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="estoqueQtd">Quantidade</label>
+                                <input type="number" id="estoqueQtd" class="admin-input" required min="1">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="estoqueObs">Observação</label>
+                                <textarea id="estoqueObs" class="admin-textarea" rows="2"></textarea>
+                            </div>
+                            <div class="admin-modal-footer">
+                                <button type="button" class="admin-btn secondary" data-close="modalEstoque">Cancelar</button>
+                                <button type="submit" class="admin-btn primary"><i class="fa-solid fa-check"></i> Registrar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secEntregas">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-truck"></i> Gerenciar Entregas</h2>
+                </div>
+
+                <div class="admin-filter-row">
+                    <select id="filtroEntregaStatus" class="admin-select">
+                        <option value="">Todos</option>
+                        <option value="preparing">Em Preparação</option>
+                        <option value="shipped">Enviado</option>
+                        <option value="in_transit">Em Trânsito</option>
+                        <option value="delivered">Entregue</option>
+                    </select>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaEntregas">
+                        <thead>
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Cliente</th>
+                                <th>Cidade/UF</th>
+                                <th>Transportadora</th>
+                                <th>Rastreio</th>
+                                <th>Pagamento</th>
+                                <th>Status</th>
+                                <th>Previsão</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyEntregas"></tbody>
+                    </table>
+                </div>
+
+                
+                <div class="admin-modal-overlay" id="modalEntrega" style="display:none">
+                    <div class="admin-modal large">
+                        <div class="admin-modal-header">
+                            <h3 id="modalEntregaTitulo">Gerenciar Entrega</h3>
+                            <button class="admin-modal-close" data-close="modalEntrega"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <div class="admin-modal-body">
+                            <input type="hidden" id="entregaId">
+                            <input type="hidden" id="entregaOrderId">
+
+                            
+                            <div id="entregaInfoPedido" style="background:#f0f4ff;border:1px solid #d1d9f0;border-radius:8px;padding:1rem;margin-bottom:1rem"></div>
+
+                            
+                            <div id="entregaTimeline" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;padding:0.75rem;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb"></div>
+
+                            <form id="formEntrega">
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                                    <div class="admin-form-group">
+                                        <label for="entregaTransportadora">Transportadora</label>
+                                        <select id="entregaTransportadora" class="admin-select"></select>
+                                    </div>
+                                    <div class="admin-form-group">
+                                        <label for="entregaRastreio">Código de Rastreio</label>
+                                        <input type="text" id="entregaRastreio" class="admin-input" placeholder="Ex: BR123456789BR">
+                                    </div>
+                                    <div class="admin-form-group">
+                                        <label for="entregaStatus">Status</label>
+                                        <select id="entregaStatus" class="admin-select">
+                                            <option value="preparing">Em Preparação</option>
+                                            <option value="shipped">Enviado</option>
+                                            <option value="in_transit">Em Trânsito</option>
+                                            <option value="out_for_delivery">Saiu p/ Entrega</option>
+                                            <option value="delivered">Entregue</option>
+                                        </select>
+                                    </div>
+                                    <div class="admin-form-group">
+                                        <label for="entregaPrevisao">Previsão de Entrega</label>
+                                        <input type="date" id="entregaPrevisao" class="admin-input">
+                                    </div>
+                                </div>
+
+                                
+                                <div id="entregaLinkRastreio" style="display:none;margin-bottom:1rem">
+                                    <a id="entregaLinkRastreioUrl" href="#" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:0.5rem;color:#2c4dfc;font-weight:600;font-size:0.9rem">
+                                        <i class="fa-solid fa-location-arrow"></i> Rastrear encomenda
+                                    </a>
+                                </div>
+
+                                
+                                <div id="entregaConfirmacao" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                                    <h4 style="margin-bottom:0.75rem;color:#166534"><i class="fa-solid fa-check-circle"></i> Confirmação de Entrega</h4>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                                        <div class="admin-form-group">
+                                            <label for="entregaRecebidoPor">Recebido por</label>
+                                            <input type="text" id="entregaRecebidoPor" class="admin-input" placeholder="Nome de quem recebeu">
+                                        </div>
+                                        <div class="admin-form-group">
+                                            <label for="entregaDataHoraEntrega">Data/Hora da Entrega</label>
+                                            <input type="datetime-local" id="entregaDataHoraEntrega" class="admin-input">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="admin-form-group">
+                                    <label for="entregaObs">Observações</label>
+                                    <textarea id="entregaObs" class="admin-textarea" rows="2"></textarea>
+                                </div>
+                                <div class="admin-modal-footer">
+                                    <button type="button" class="admin-btn secondary" data-close="modalEntrega">Cancelar</button>
+                                    <button type="submit" class="admin-btn primary"><i class="fa-solid fa-check"></i> Salvar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secPagamentos">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-credit-card"></i> Gerenciar Pagamentos</h2>
+                </div>
+
+                <div class="admin-filter-row">
+                    <select id="filtroPagamentoStatus" class="admin-select">
+                        <option value="">Todos</option>
+                        <option value="pending">Pendente</option>
+                        <option value="approved">Aprovado</option>
+                        <option value="refused">Recusado</option>
+                        <option value="cancelled">Cancelado</option>
+                        <option value="refunded">Reembolsado</option>
+                    </select>
+                    <select id="filtroPagamentoMetodo" class="admin-select">
+                        <option value="">Todos métodos</option>
+                        <option value="pix">PIX</option>
+                        <option value="credit_card">Cartão Crédito</option>
+                        <option value="debit_card">Cartão Débito</option>
+                        <option value="boleto">Boleto</option>
+                    </select>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaPagamentos">
+                        <thead>
+                            <tr>
+                                <th>Pedido</th>
+                                <th>Método</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPagamentos"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secAvaliacoes">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-star"></i> Gerenciar Avaliações</h2>
+                </div>
+
+                <div class="admin-filter-row">
+                    <select id="filtroAvaliacaoStatus" class="admin-select">
+                        <option value="">Todas</option>
+                        <option value="true">Aprovadas</option>
+                        <option value="false">Pendentes</option>
+                    </select>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaAvaliacoes">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Usuário</th>
+                                <th>Nota</th>
+                                <th>Comentário</th>
+                                <th>Resposta</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyAvaliacoes"></tbody>
+                    </table>
+                </div>
+
+                
+                <div class="admin-modal-overlay" id="modalResposta" style="display:none">
+                    <div class="admin-modal">
+                        <div class="admin-modal-header">
+                            <h3>Responder Avaliação</h3>
+                            <button class="admin-modal-close" data-close="modalResposta"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form id="formResposta" class="admin-modal-body">
+                            <input type="hidden" id="respostaReviewId">
+                            <div class="admin-review-preview" id="respostaPreview"></div>
+                            <div class="admin-form-group">
+                                <label for="respostaTexto">Sua Resposta</label>
+                                <textarea id="respostaTexto" class="admin-textarea" rows="4" required></textarea>
+                            </div>
+                            <div class="admin-modal-footer">
+                                <button type="button" class="admin-btn secondary" data-close="modalResposta">Cancelar</button>
+                                <button type="submit" class="admin-btn primary"><i class="fa-solid fa-paper-plane"></i> Enviar Resposta</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secFiscal">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-file-invoice"></i> Gestão Fiscal</h2>
+                </div>
+
+                <div class="admin-filter-row">
+                    <select id="filtroFiscalStatus" class="admin-select">
+                        <option value="">Todas</option>
+                        <option value="pending">Pendente</option>
+                        <option value="issued">Emitida</option>
+                        <option value="cancelled">Cancelada</option>
+                    </select>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaFiscal">
+                        <thead>
+                            <tr>
+                                <th>Nº NF</th>
+                                <th>Pedido</th>
+                                <th>Chave de Acesso</th>
+                                <th>Status</th>
+                                <th>Emissão</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyFiscal"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="admin-section" id="secAdministracao">
+                <div class="admin-section-header">
+                    <h2><i class="fa-solid fa-shield-halved"></i> Administração</h2>
+                    <button class="admin-btn primary" id="btnNovoAdmin"><i class="fa-solid fa-user-plus"></i> Novo Administrador</button>
+                </div>
+
+                <div class="admin-table-wrapper">
+                    <table class="admin-table" id="tabelaAdmins">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Cargo</th>
+                                <th>Status</th>
+                                <th>Desde</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyAdmins"></tbody>
+                    </table>
+                </div>
+
+                
+                <div class="admin-modal-overlay" id="modalAdmin" style="display:none">
+                    <div class="admin-modal">
+                        <div class="admin-modal-header">
+                            <h3>Novo Administrador</h3>
+                            <button class="admin-modal-close" data-close="modalAdmin"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form id="formAdmin" class="admin-modal-body">
+                            <div class="admin-form-group">
+                                <label for="adminNovoEmail">E-mail do Usuário</label>
+                                <input type="email" id="adminNovoEmail" class="admin-input" required placeholder="usuario@email.com">
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="adminNovoRole">Cargo</label>
+                                <select id="adminNovoRole" class="admin-select" required></select>
+                            </div>
+                            <div class="admin-modal-footer">
+                                <button type="button" class="admin-btn secondary" data-close="modalAdmin">Cancelar</button>
+                                <button type="submit" class="admin-btn primary"><i class="fa-solid fa-check"></i> Criar Admin</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        
+        <div class="admin-modal-overlay" id="modalConfirmar" style="display:none">
+            <div class="admin-modal small">
+                <div class="admin-modal-header">
+                    <h3>Confirmação</h3>
+                    <button class="admin-modal-close" id="btnConfirmarNao2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="admin-modal-body">
+                    <p id="modalConfirmarMsg">Tem certeza que deseja realizar esta ação?</p>
+                    <div class="admin-modal-footer">
+                        <button type="button" class="admin-btn secondary" id="btnConfirmarNao">Não</button>
+                        <button type="button" class="admin-btn danger" id="btnConfirmarSim"><i class="fa-solid fa-check"></i> Sim</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="admin-modal-overlay" id="modalPedido" style="display:none">
+            <div class="admin-modal large">
+                <div class="admin-modal-header">
+                    <h3 id="modalPedidoTitulo">Detalhes do Pedido</h3>
+                    <button class="admin-modal-close" data-close="modalPedido"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="admin-modal-body" id="modalPedidoConteudo">
+                    <p>Carregando...</p>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="admin-modal-overlay" id="modalSenha" style="display:none">
+            <div class="admin-modal small">
+                <div class="admin-modal-header">
+                    <h3 id="modalSenhaTitulo">Confirmação de Segurança</h3>
+                    <button class="admin-modal-close" data-close="modalSenha"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="admin-modal-body">
+                    <p id="modalSenhaMsg">Digite a senha para confirmar a ação:</p>
+                    <div class="admin-form-group">
+                        <input type="password" id="inputSenhaConfirmacao" class="admin-input" placeholder="Senha de confirmação">
+                    </div>
+                    <div id="senhaErro" class="admin-erro" style="display:none"></div>
+                    <div class="admin-modal-footer">
+                        <button type="button" class="admin-btn secondary" data-close="modalSenha">Cancelar</button>
+                        <button type="button" class="admin-btn danger" id="btnConfirmarSenha"><i class="fa-solid fa-check"></i> Confirmar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <div id="adminToast" class="admin-toast" style="display:none"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="js/admin-main.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+
+.ct-section {
+    padding: 0 clamp(20px, 5vw, 80px);
+}
+
+.ct-container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 40px 0;
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 40px;
+}
+
+
+.ct-info h2 {
+    margin-bottom: 20px;
+}
+
+.ct-card {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    background: var(--bg-gray-dark);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.ct-card i {
+    font-size: 18px;
+    color: #1a38d8;
+}
+
+.ct-card span {
+    font-size: 12px;
+    color: var(--text-gray-lighter);
+}
+
+.ct-card p {
+    font-weight: 500;
+}
+
+
+.ct-form-box {
+    background: var(--bg-gray-medium);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid #e5e5e5;
+}
+
+.ct-form-box h2 {
+    margin-bottom: 20px;
+}
+
+.ct-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.ct-form input,
+.ct-form textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    margin-bottom: 15px;
+}
+
+.ct-form textarea {
+    height: 120px;
+    resize: none;
+}
+
+
+.ct-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+
+.ct-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #1a38d8, #2c4dfc, #1a3ab0);
+    background-size: 200% 200%;
+    color: var(--text-white);
+    padding: 14px;
+    border-radius: 25px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.ct-btn:hover {
+    background-position: 100% 100%;
+    box-shadow: 0 6px 20px rgba(26, 56, 216, 0.35);
+    transform: translateY(-2px);
+}
+
+
+@media (max-width: 900px) {
+    .ct-container {
+        grid-template-columns: 1fr;
+    }
+
+    .ct-grid {
+        grid-template-columns: 1fr;
+    }
+}

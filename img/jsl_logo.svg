@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 260" width="100%">
+<defs>
+  <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" style="stop-color:#1255bb;stop-opacity:1"/>
+    <stop offset="50%" style="stop-color:#2e7dd4;stop-opacity:1"/>
+    <stop offset="100%" style="stop-color:#1255bb;stop-opacity:1"/>
+  </linearGradient>
+</defs>
+
+<text x="300" y="195" font-family="Arial Black, sans-serif" font-size="170" font-weight="900" text-anchor="middle" fill="#0d2b8e" letter-spacing="-4" style="fill:rgb(13, 43, 142);stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Arial Black&quot;, sans-serif;font-size:170px;font-weight:900;text-anchor:middle;dominant-baseline:auto">JSL</text>
+
+<!-- Arco descido ~18px -->
+<path d="&#10;  M 60,230&#10;  C 100,195 190,118 300,118&#10;  C 410,118 500,195 540,230&#10;  C 534,226 520,216 504,204&#10;  C 468,176 406,136 300,136&#10;  C 194,136 132,176 96,204&#10;  C 80,216 66,226 60,230&#10;  Z" fill="url(#arcGrad)" style="stroke:none;color:rgb(255, 255, 255);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Anthropic Sans&quot;, -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;font-size:16px;font-weight:400;text-anchor:start;dominant-baseline:auto"/>
+
+</svg>

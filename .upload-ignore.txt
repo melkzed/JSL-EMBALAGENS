@@ -1,0 +1,6 @@
+# Pastas/arquivos que NÃO devem ser enviados para o servidor:
+.vscode/
+supabase/
+node_modules/
+.git/
+_remove-comments.js

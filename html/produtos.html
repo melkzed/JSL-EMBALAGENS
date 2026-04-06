@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>Produtos - JSL</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <section class="herop">
+        <h1>Nossos Produtos</h1>
+        <p>Encontre a embalagem perfeita para o seu negócio</p>
+    </section>
+
+
+    <section class="filtros-barra">
+
+        <div class="busca-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="busca" placeholder="Buscar produto...">
+        </div>
+
+        <button class="btn-abrir-filtros" id="btnAbrirFiltros">
+            <i class="fa-solid fa-sliders"></i>
+            Filtros
+            <span class="filtros-ativos-badge" id="filtrosAtivosBadge" style="display:none">0</span>
+        </button>
+
+        <div class="ordenar-wrapper">
+            <i class="fa-solid fa-arrow-up-wide-short"></i>
+            <select id="ordenar">
+                <option value="">Ordenar por</option>
+                <option value="padrao">Ordem padrão</option>
+                <option value="menor-preco">Menor preço</option>
+                <option value="maior-preco">Maior preço</option>
+                <option value="az">A → Z</option>
+                <option value="za">Z → A</option>
+            </select>
+        </div>
+
+    </section>
+
+
+    <div class="filtros-overlay" id="filtrosOverlay"></div>
+
+    <aside class="filtros-painel" id="filtrosPainel">
+
+        <div class="filtros-painel-header">
+            <h2><i class="fa-solid fa-sliders"></i> Filtros</h2>
+            <button class="btn-fechar-filtros" id="btnFecharFiltros">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="filtro-grupo">
+            <h3>Categoria</h3>
+            <div class="categorias-filtro" id="categoriasFiltro">
+                <button class="ativo" data-categoria="todas">
+                    <i class="fa-solid fa-border-all"></i> Todas
+                </button>
+                
+            </div>
+        </div>
+
+        <div class="filtro-grupo">
+            <h3>Faixa de preço <small>(por unidade)</small></h3>
+            <div class="preco-range">
+                <div class="preco-inputs">
+                    <label>
+                        <span>Mín. R$</span>
+                        <input type="number" id="precoMin" min="0" step="0.01" placeholder="0,00">
+                    </label>
+                    <span class="preco-separador">—</span>
+                    <label>
+                        <span>Máx. R$</span>
+                        <input type="number" id="precoMax" min="0" step="0.01" placeholder="999,99">
+                    </label>
+                </div>
+                <div class="preco-atalhos">
+                    <button data-min="0" data-max="0.5">Até R$ 0,50</button>
+                    <button data-min="0.5" data-max="2">R$ 0,50 – R$ 2</button>
+                    <button data-min="2" data-max="10">R$ 2 – R$ 10</button>
+                    <button data-min="10" data-max="">Acima de R$ 10</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="filtro-grupo">
+            <h3>Disponibilidade</h3>
+            <label class="filtro-checkbox">
+                <input type="checkbox" id="apenasDisponiveis">
+                <span>Apenas disponíveis</span>
+            </label>
+        </div>
+
+        <div class="filtros-painel-footer">
+            <button class="btn-limpar-filtros" id="btnLimparFiltros">
+                <i class="fa-solid fa-rotate-left"></i> Limpar filtros
+            </button>
+            <button class="btn-aplicar-filtros" id="btnAplicarFiltros">
+                <i class="fa-solid fa-check"></i> Aplicar
+            </button>
+        </div>
+
+    </aside>
+
+
+    <div class="filtros-tags-wrapper" id="filtrosTagsWrapper"></div>
+
+
+    <div class="produtos-resultado-info" id="resultadoInfo"></div>
+
+
+    <section class="produtos">
+        <div class="produtos-grid">
+            
+        </div>
+    </section>
+
+
+    <a class="whatsapp-float" href="#">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <div id="footer-placeholder"></div>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/main.js"></script>
+
+</body>
+
+</html>

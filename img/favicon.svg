@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 260" width="260" height="260">
+<rect width="260" height="260" rx="40" fill="#ffffff"/>
+<defs>
+  <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" style="stop-color:#1255bb;stop-opacity:1"/>
+    <stop offset="50%" style="stop-color:#2e7dd4;stop-opacity:1"/>
+    <stop offset="100%" style="stop-color:#1255bb;stop-opacity:1"/>
+  </linearGradient>
+</defs>
+
+<text x="130" y="165" font-family="Arial Black, sans-serif" font-size="130" font-weight="900" text-anchor="middle" fill="#0d2b8e" letter-spacing="-4">JSL</text>
+
+<path d="
+  M 20,210
+  C 45,175 80,115 130,115
+  C 180,115 215,175 240,210
+  C 236,207 227,198 216,188
+  C 195,164 168,128 130,128
+  C 92,128 65,164 44,188
+  C 33,198 24,207 20,210
+  Z" fill="url(#arcGrad)"/>
+</svg>

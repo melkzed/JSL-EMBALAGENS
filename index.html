@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>JSL Embalagens</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://otwmjdiqjhumqvyztnbl.supabase.co" crossorigin>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <div id="navbar-placeholder"></div>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-text">
+                <span class="hero-tag"><span class="hero-tag-line"></span> JSL SOLUÇÕES EM EMBALAGENS</span>
+                <h1>
+                    Embalagens que<br>
+                    <span class="hero-gradient-text">protegem</span> e<br>
+                    <span class="hero-gradient-text">encantam</span><span class="hero-dot">.</span>
+                </h1>
+                <p>
+                    Qualidade, resistência e variedade para empresas de todos
+                    os portes — do consumidor final à grande indústria.
+                </p>
+                <div class="hero-buttons">
+                    <a href="./html/produtos.html" class="hero-btn-primary">
+                        Ver catálogo completo <span>→</span>
+                    </a>
+                    <a href="https://wa.me/5583996389725" class="hero-btn-outline">
+                        <i class="fa-regular fa-comment-dots"></i>
+                        Falar no WhatsApp
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <strong>+500</strong>
+                        <span>Clientes ativos</span>
+                    </div>
+                    <div class="hero-stat">
+                        <strong>15+</strong>
+                        <span>Anos de mercado</span>
+                    </div>
+                    <div class="hero-stat">
+                        <strong>100%</strong>
+                        <span>Satisfação garantida</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image-wrapper">
+                <div class="hero-badge-quality">
+                    <i class="fa-solid fa-check"></i> QUALIDADE GARANTIDA
+                </div>
+                <img src="./img/imagemExemplo.jpg" alt="Embalagens JSL" class="hero-img" fetchpriority="high">
+                <div class="hero-badge-delivery">
+                    <span class="hero-badge-delivery-icon">📦</span>
+                    <div class="hero-badge-delivery-text">
+                        <strong>Entrega nacional</strong>
+                        <small>Para todo o Brasil</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-scroll-wrapper">
+            <span class="hero-scroll">SCROLL</span>
+            <i class="fa-solid fa-chevron-down hero-scroll-arrow" id="heroScrollArrow"></i>
+        </div>
+    </section>
+
+    <section class="categorias">
+        <h2>Nossas Categorias</h2>
+        <p class="subtitulo">
+            Encontre a embalagem ideal para o seu negócio
+        </p>
+        <div class="categorias-grid" id="categoriasGrid">
+            
+        </div>
+    </section>
+
+    <section class="beneficios">
+        <h2>Por que escolher a JSL?</h2>
+        <p class="subtitulo">
+            Nossos diferenciais fazem a diferença no seu negócio
+        </p>
+        <div class="beneficios-grid">
+            <div class="beneficio-card">
+                <div class="icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h3>Alta qualidade</h3>
+                <p>
+                    Embalagens resistentes e de primeira linha para garantir
+                    a segurança dos seus produtos.
+                </p>
+            </div>
+            <div class="beneficio-card">
+                <div class="icon">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                <h3>Preço competitivo</h3>
+                <p>
+                    Excelente custo-benefício para sua empresa,
+                    sem abrir mão da qualidade.
+                </p>
+            </div>
+            <div class="beneficio-card">
+                <div class="icon">
+                    <i class="fa-solid fa-truck"></i>
+                </div>
+                <h3>Entrega rápida</h3>
+                <p>
+                    Logística ágil para todo o Brasil,
+                    com prazos que cabem na sua necessidade.
+                </p>
+            </div>
+            <div class="beneficio-card">
+                <div class="icon">
+                    <i class="fa-solid fa-headset"></i>
+                </div>
+                <h3>Atendimento personalizado</h3>
+                <p>
+                    Equipe dedicada para entender e atender
+                    suas demandas específicas.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="quem-somos">
+        <div class="quem-somos-container">
+            <div class="quem-somos-content">
+                <h2>Quem somos</h2>
+                <p class="quem-somos-descricao">
+                    A JSL Soluções em Embalagens oferece soluções completas para empresas que buscam qualidade,
+                    segurança e eficiência em seus processos de embalagem. Atendemos desde pequenos negócios até grandes
+                    empresas, garantindo produtos resistentes e com excelente custo-benefício.
+                </p>
+
+                <ul class="quem-somos-lista">
+                    <li>
+                        <span class="check-icon">✓</span>
+                        Soluções completas em embalagens
+                    </li>
+                    <li>
+                        <span class="check-icon">✓</span>
+                        Atendemos pequenos negócios e grandes empresas
+                    </li>
+                    <li>
+                        <span class="check-icon">✓</span>
+                        Produtos resistentes com excelente custo-benefício
+                    </li>
+                    <li>
+                        <span class="check-icon">✓</span>
+                        Entrega para todo o Brasil
+                    </li>
+                </ul>
+
+                <a href="./html/sobre.html" class="quem-somos-link">
+                    Leia mais sobre nós →
+                </a>
+            </div>
+
+            <div class="quem-somos-imagem">
+                <div class="pack-destaque">
+                    <img src="./img/jsl_logo_completa.svg" alt="JSL Soluções em Embalagens" class="quem-somos-logo" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="produtos">
+        <div class="container">
+            <div class="produtos-header">
+                <div class="produtos-titulo">
+                    <h2>Produtos em destaque</h2>
+                    <p>Os mais procurados pelos nossos clientes</p>
+                </div>
+                <a href="./html/produtos.html" class="btn-outline">
+                    Ver catálogo completo →
+                </a>
+            </div>
+
+            <div class="produtos-grid">
+                
+            </div>
+    </section>
+
+    <a class="whatsapp-float" href="https://wa.me/5583996389725">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <div id="footer-placeholder"></div>
+
+    <script type="module" src="./js/main.js"></script>
+</body>
+
+</html>

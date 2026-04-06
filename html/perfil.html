@@ -1,0 +1,368 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>Meu Perfil - JSL</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <main class="perfil-page" id="perfilPage">
+
+        <aside class="perfil-sidebar">
+            <div class="perfil-sidebar-avatar" id="perfilAvatar">
+                <div class="perfil-avatar-circle" id="perfilAvatarCircle" title="Clique para alterar sua foto">
+                    U
+                    <div class="perfil-avatar-overlay">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                </div>
+                <input type="file" id="inputAvatarFile" accept="image/*" style="display:none">
+                <button type="button" class="btn-remover-avatar" id="btnRemoverAvatar" title="Remover foto">
+                    <i class="fa-solid fa-trash"></i> Remover foto
+                </button>
+                <h3 id="perfilNomeUsuario">Carregando...</h3>
+                <p id="perfilEmailUsuario">...</p>
+            </div>
+
+            <nav class="perfil-sidebar-nav">
+                <button class="perfil-tab-btn ativo" data-tab="dados">
+                    <i class="fa-solid fa-user"></i> Dados Pessoais
+                </button>
+                <button class="perfil-tab-btn" data-tab="enderecos">
+                    <i class="fa-solid fa-location-dot"></i> Endereços
+                </button>
+                <button class="perfil-tab-btn" data-tab="pedidos">
+                    <i class="fa-solid fa-box"></i> Pedidos
+                </button>
+                <button class="perfil-tab-btn" data-tab="favoritos">
+                    <i class="fa-solid fa-heart"></i> Favoritos
+                </button>
+                <button class="perfil-tab-btn" data-tab="cartoes">
+                    <i class="fa-solid fa-credit-card"></i> Cartões
+                </button>
+                <button class="perfil-tab-btn" data-tab="preferencias">
+                    <i class="fa-solid fa-gear"></i> Preferências
+                </button>
+            </nav>
+
+            <button class="perfil-btn-sair" id="btnSairConta">
+                <i class="fa-solid fa-right-from-bracket"></i> Sair da conta
+            </button>
+        </aside>
+
+        <div class="perfil-conteudo">
+
+            <section class="perfil-tab" id="tabDados">
+                <h2>Dados Pessoais</h2>
+                <p class="perfil-tab-desc">Gerencie suas informações pessoais</p>
+
+                <form id="formDadosPessoais" class="perfil-form">
+                    <div class="perfil-form-grid">
+                        <div class="perfil-campo">
+                            <label for="perfilNome">Nome completo <span class="obrigatorio">*</span></label>
+                            <input type="text" id="perfilNome" placeholder="Seu nome completo" required>
+                        </div>
+                        <div class="perfil-campo">
+                            <label for="perfilEmail">E-mail</label>
+                            <input type="email" id="perfilEmail" disabled>
+                            <small>O e-mail não pode ser alterado</small>
+                        </div>
+                        <div class="perfil-campo">
+                            <label for="perfilCPF">CPF <span class="obrigatorio">*</span></label>
+                            <input type="text" id="perfilCPF" placeholder="000.000.000-00" maxlength="14">
+                        </div>
+                        <div class="perfil-campo">
+                            <label for="perfilTelefone">Telefone <span class="obrigatorio">*</span></label>
+                            <input type="text" id="perfilTelefone" placeholder="(00) 00000-0000" maxlength="15">
+                        </div>
+                        <div class="perfil-campo">
+                            <label for="perfilNascimento">Data de nascimento</label>
+                            <input type="date" id="perfilNascimento">
+                        </div>
+                    </div>
+
+                    <div class="perfil-form-acoes">
+                        <button type="submit" class="perfil-btn-salvar" id="btnSalvarDados">
+                            <i class="fa-solid fa-check"></i> Salvar alterações
+                        </button>
+                    </div>
+                </form>
+
+                <div class="perfil-secao-perigo">
+                    <h3>Alterar senha</h3>
+                    <p>Enviaremos um link de redefinição para seu e-mail</p>
+                    <button class="perfil-btn-outline" id="btnAlterarSenha">
+                        <i class="fa-solid fa-key"></i> Enviar link de redefinição
+                    </button>
+                </div>
+            </section>
+
+            <section class="perfil-tab" id="tabEnderecos" style="display:none">
+                <div class="perfil-tab-header">
+                    <div>
+                        <h2>Meus Endereços</h2>
+                        <p class="perfil-tab-desc">Gerencie seus endereços de entrega</p>
+                    </div>
+                    <button class="perfil-btn-novo" id="btnNovoEndereco">
+                        <i class="fa-solid fa-plus"></i> Novo endereço
+                    </button>
+                </div>
+
+                <div id="listaEnderecos" class="perfil-enderecos-lista">
+                    <div class="perfil-loading">
+                        <div class="spinner-sm"></div>
+                        <p>Carregando endereços...</p>
+                    </div>
+                </div>
+
+                
+                <div id="formEnderecoWrapper" class="perfil-form-endereco-wrapper" style="display:none">
+                    <h3 id="formEnderecoTitulo">Novo endereço</h3>
+                    <form id="formEndereco" class="perfil-form">
+                        <input type="hidden" id="enderecoId" value="">
+
+                        <div class="perfil-form-grid">
+                            <div class="perfil-campo">
+                                <label for="enderecoApelido">Apelido</label>
+                                <input type="text" id="enderecoApelido" placeholder="Ex: Casa, Trabalho">
+                            </div>
+                            <div class="perfil-campo">
+                                <label for="enderecoDestinatario">Destinatário</label>
+                                <input type="text" id="enderecoDestinatario" placeholder="Nome do destinatário">
+                            </div>
+                            <div class="perfil-campo perfil-campo-cep">
+                                <label for="enderecoCEP">CEP <span class="obrigatorio">*</span></label>
+                                <div class="perfil-cep-wrapper">
+                                    <input type="text" id="enderecoCEP" placeholder="00000-000" maxlength="9" required>
+                                    <button type="button" id="btnBuscarCEP" class="perfil-btn-cep">
+                                        <i class="fa-solid fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="perfil-campo">
+                                <label for="enderecoRua">Rua <span class="obrigatorio">*</span></label>
+                                <input type="text" id="enderecoRua" placeholder="Nome da rua" required>
+                            </div>
+                            <div class="perfil-campo perfil-campo-sm">
+                                <label for="enderecoNumero">Número <span class="obrigatorio">*</span></label>
+                                <input type="text" id="enderecoNumero" placeholder="Nº" required>
+                            </div>
+                            <div class="perfil-campo">
+                                <label for="enderecoComplemento">Complemento</label>
+                                <input type="text" id="enderecoComplemento" placeholder="Apto, Bloco...">
+                            </div>
+                            <div class="perfil-campo">
+                                <label for="enderecoBairro">Bairro <span class="obrigatorio">*</span></label>
+                                <input type="text" id="enderecoBairro" placeholder="Bairro" required>
+                            </div>
+                            <div class="perfil-campo">
+                                <label for="enderecoCidade">Cidade <span class="obrigatorio">*</span></label>
+                                <input type="text" id="enderecoCidade" placeholder="Cidade" required>
+                            </div>
+                            <div class="perfil-campo perfil-campo-sm">
+                                <label for="enderecoEstado">Estado <span class="obrigatorio">*</span></label>
+                                <select id="enderecoEstado" required>
+                                    <option value="">UF</option>
+                                    <option value="AC">AC</option><option value="AL">AL</option>
+                                    <option value="AP">AP</option><option value="AM">AM</option>
+                                    <option value="BA">BA</option><option value="CE">CE</option>
+                                    <option value="DF">DF</option><option value="ES">ES</option>
+                                    <option value="GO">GO</option><option value="MA">MA</option>
+                                    <option value="MT">MT</option><option value="MS">MS</option>
+                                    <option value="MG">MG</option><option value="PA">PA</option>
+                                    <option value="PB">PB</option><option value="PR">PR</option>
+                                    <option value="PE">PE</option><option value="PI">PI</option>
+                                    <option value="RJ">RJ</option><option value="RN">RN</option>
+                                    <option value="RS">RS</option><option value="RO">RO</option>
+                                    <option value="RR">RR</option><option value="SC">SC</option>
+                                    <option value="SP">SP</option><option value="SE">SE</option>
+                                    <option value="TO">TO</option>
+                                </select>
+                            </div>
+                            <div class="perfil-campo perfil-campo-check">
+                                <label>
+                                    <input type="checkbox" id="enderecoPadrao">
+                                    Definir como endereço padrão
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="perfil-form-acoes">
+                            <button type="button" class="perfil-btn-cancelar" id="btnCancelarEndereco">Cancelar</button>
+                            <button type="submit" class="perfil-btn-salvar" id="btnSalvarEndereco">
+                                <i class="fa-solid fa-check"></i> Salvar endereço
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="perfil-tab" id="tabPedidos" style="display:none">
+                <h2>Meus Pedidos</h2>
+                <p class="perfil-tab-desc">Acompanhe seus pedidos</p>
+                <div id="listaPedidos" class="perfil-pedidos-lista">
+                    <div class="perfil-vazio">
+                        <i class="fa-solid fa-box-open"></i>
+                        <h3>Nenhum pedido ainda</h3>
+                        <p>Quando você fizer uma compra, seus pedidos aparecerão aqui</p>
+                        <a href="./produtos.html" class="perfil-btn-outline">Ver produtos</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="perfil-tab" id="tabFavoritos" style="display:none">
+                <h2>Favoritos</h2>
+                <p class="perfil-tab-desc">Produtos que você salvou</p>
+                <div id="listaFavoritos" class="perfil-favoritos-lista">
+                    <div class="perfil-vazio">
+                        <i class="fa-solid fa-heart"></i>
+                        <h3>Nenhum favorito ainda</h3>
+                        <p>Adicione produtos aos seus favoritos para vê-los aqui</p>
+                        <a href="./produtos.html" class="perfil-btn-outline">Explorar produtos</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="perfil-tab" id="tabCartoes" style="display:none">
+                <div class="perfil-tab-header">
+                    <div>
+                        <h2>Meus Cartões</h2>
+                        <p class="perfil-tab-desc">Gerencie seus cartões de crédito e débito para compras mais rápidas</p>
+                    </div>
+                    <button class="perfil-btn-novo" id="btnNovoCartao">
+                        <i class="fa-solid fa-plus"></i> Novo cartão
+                    </button>
+                </div>
+
+                <div id="listaCartoes" class="perfil-cartoes-lista">
+                    <div class="perfil-loading">
+                        <div class="spinner-sm"></div>
+                        <p>Carregando cartões...</p>
+                    </div>
+                </div>
+
+                
+                <div id="formCartaoWrapper" class="perfil-form-cartao-wrapper" style="display:none">
+                    <h3 id="formCartaoTitulo">Novo cartão</h3>
+                    <form id="formCartao" class="perfil-form" autocomplete="off">
+                        <div class="perfil-form-grid">
+                            <div class="perfil-campo" style="grid-column: 1 / -1;">
+                                <label for="cartaoNumero">Número do cartão <span class="obrigatorio">*</span></label>
+                                <input type="text" id="cartaoNumero" placeholder="0000 0000 0000 0000" maxlength="19" required inputmode="numeric">
+                                <div class="cartao-bandeira-preview" id="cartaoBandeiraPreview"></div>
+                            </div>
+                            <div class="perfil-campo" style="grid-column: 1 / -1;">
+                                <label for="cartaoNome">Nome no cartão <span class="obrigatorio">*</span></label>
+                                <input type="text" id="cartaoNome" placeholder="Como está impresso no cartão" required>
+                            </div>
+                            <div class="perfil-campo">
+                                <label for="cartaoValidade">Validade <span class="obrigatorio">*</span></label>
+                                <input type="text" id="cartaoValidade" placeholder="MM/AA" maxlength="5" required inputmode="numeric">
+                            </div>
+                            <div class="perfil-campo">
+                                <label for="cartaoTipo">Tipo</label>
+                                <select id="cartaoTipo" class="perfil-select">
+                                    <option value="credit">Crédito</option>
+                                    <option value="debit">Débito</option>
+                                </select>
+                            </div>
+                            <div class="perfil-campo perfil-campo-check">
+                                <label>
+                                    <input type="checkbox" id="cartaoPadrao">
+                                    Definir como cartão padrão
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="perfil-form-acoes">
+                            <button type="button" class="perfil-btn-cancelar" id="btnCancelarCartao">Cancelar</button>
+                            <button type="submit" class="perfil-btn-salvar" id="btnSalvarCartao">
+                                <i class="fa-solid fa-lock"></i> Salvar cartão
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="perfil-tab" id="tabPreferencias" style="display:none">
+                <h2>Preferências</h2>
+                <p class="perfil-tab-desc">Configure suas notificações e preferências</p>
+
+                <form id="formPreferencias" class="perfil-form">
+                    <div class="perfil-pref-grupo">
+                        <h4>Notificações</h4>
+                        <label class="perfil-switch-label">
+                            <span>Notificações por e-mail</span>
+                            <input type="checkbox" id="prefNotifEmail" checked>
+                            <span class="perfil-switch"></span>
+                        </label>
+                        <label class="perfil-switch-label">
+                            <span>Notificações por WhatsApp</span>
+                            <input type="checkbox" id="prefNotifWhatsapp" checked>
+                            <span class="perfil-switch"></span>
+                        </label>
+                        <label class="perfil-switch-label">
+                            <span>Newsletter com promoções</span>
+                            <input type="checkbox" id="prefNewsletter">
+                            <span class="perfil-switch"></span>
+                        </label>
+                    </div>
+
+                    <div class="perfil-form-acoes">
+                        <button type="submit" class="perfil-btn-salvar" id="btnSalvarPreferencias">
+                            <i class="fa-solid fa-check"></i> Salvar preferências
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+        </div>
+    </main>
+
+    <a class="whatsapp-float" href="#">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <div id="footer-placeholder"></div>
+
+    
+    <div class="modal-confirmar-overlay" id="modalConfirmarPerfil" style="display:none">
+        <div class="modal-confirmar-box">
+            <p id="modalConfirmarPerfilMsg">Tem certeza?</p>
+            <div class="modal-confirmar-btns">
+                <button type="button" class="modal-confirmar-btn cancelar" id="btnConfirmarPerfilNao">Não</button>
+                <button type="button" class="modal-confirmar-btn confirmar" id="btnConfirmarPerfilSim">Sim</button>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/perfil-page.js"></script>
+
+</body>
+
+</html>

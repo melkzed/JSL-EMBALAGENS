@@ -1,0 +1,16 @@
+@import "./global.css";
+@import "./navbar.css";
+@import "./hero.css";
+@import "./categorias.css";
+@import "./beneficios.css";
+@import "./sobre.css";
+@import "./produtos.css";
+@import "./footer.css";
+@import "./quemsomos.css";
+@import "./buttons.css";
+@import "./filtros.css";
+@import "./contato.css";
+@import "./produto-detalhe.css";
+@import "./carrinho.css";
+@import "./auth.css";
+@import "./checkout.css";

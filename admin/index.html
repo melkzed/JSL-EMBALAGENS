@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://cdn.jsdelivr.net;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>Admin - JSL Embalagens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-login-body">
+    <div class="admin-login-container">
+        <div class="admin-login-card">
+            <div class="admin-login-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <h1>JSL <span>ADMIN</span></h1>
+                <p>Painel de Gerenciamento</p>
+            </div>
+            <form id="formAdminLogin" autocomplete="off">
+                <div class="admin-input-group">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" id="adminEmail" placeholder="E-mail do administrador" required>
+                </div>
+                <div class="admin-input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="adminSenha" placeholder="Senha" required>
+                </div>
+                <div id="adminLoginErro" class="admin-login-erro" style="display:none"></div>
+                <button type="submit" class="admin-login-btn" id="btnAdminLogin">
+                    <i class="fa-solid fa-right-to-bracket"></i> Entrar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module">
+        import { supabase } from '../js/supabaseClient.js'
+
+        // Se já está logado como admin, redirecionar direto ao painel
+        // Se não, redirecionar para a home (login unificado)
+        async function verificarSessaoAdmin() {
+            const { data: { session } } = await supabase.auth.getSession()
+            if (session) {
+                const { data: admin } = await supabase
+                    .from('admin_users')
+                    .select('id, active')
+                    .eq('user_id', session.user.id)
+                    .eq('active', true)
+                    .maybeSingle()
+                if (admin) {
+                    window.location.href = 'painel.html'
+                    return
+                }
+            }
+            // Não é admin ou não está logado → ir para home
+            window.location.href = '../index.html'
+        }
+        verificarSessaoAdmin()
+    </script>
+</body>
+</html>

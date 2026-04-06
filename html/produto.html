@@ -1,0 +1,201 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net;
+        frame-src 'none';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>Produto - JSL</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/produto-detalhe.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div id="navbar-placeholder"></div>
+
+    <div class="produto-loading" id="produtoLoading">
+        <div class="spinner"></div>
+        <p>Carregando produto...</p>
+    </div>
+
+    <div class="produto-erro" id="produtoErro" style="display:none">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <h2>Produto não encontrado</h2>
+        <p>O produto que você está procurando não existe ou foi removido.</p>
+        <a href="./produtos.html" class="btn-voltar">
+            <i class="fa-solid fa-arrow-left"></i> Voltar aos produtos
+        </a>
+    </div>
+
+    <main class="produto-detalhe" id="produtoDetalhe" style="display:none">
+
+        <nav class="breadcrumb" id="breadcrumb">
+            <a href="../index.html">Home</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <a href="./produtos.html">Produtos</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span id="breadcrumbNome">-</span>
+        </nav>
+
+        <section class="pd-topo">
+            <div class="pd-galeria">
+                <div class="pd-img-principal">
+                    <img id="imgPrincipal" src="../img/imagemExemplo.jpg" alt="Produto">
+                </div>
+                <div class="pd-miniaturas" id="miniaturas"></div>
+            </div>
+
+            <div class="pd-info">
+                <span class="pd-categoria" id="pdCategoria">Categoria</span>
+                <h1 id="pdNome">Nome do Produto</h1>
+                <p class="pd-descricao" id="pdDescricao">Descrição do produto.</p>
+
+                <div class="pd-preco-box">
+                    <span class="pd-preco" id="pdPreco">R$ 0,00</span>
+                    <span class="pd-preco-info">por unidade · pedido mínimo negociável</span>
+                </div>
+
+                <div class="pd-estoque" id="pdEstoque"></div>
+
+                <div class="pd-variantes" id="pdVariantes" style="display:none">
+                    <h4>Variantes</h4>
+                    <div class="pd-variantes-lista" id="pdVariantesLista"></div>
+                </div>
+
+                <div class="pd-acao">
+                    <div class="quantidade">
+                        <button class="menos">–</button>
+                        <span class="numero">1</span>
+                        <button class="mais">+</button>
+                    </div>
+                    <button class="btn-adicionar-carrinho">
+                        <i class="fa-solid fa-cart-shopping"></i> Adicionar ao carrinho
+                    </button>
+                    <button class="btn-compartilhar" id="btnCompartilhar" title="Compartilhar produto">
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </button>
+                </div>
+
+                <div class="pd-frete">
+                    <h4><i class="fa-solid fa-truck"></i> Calcular frete</h4>
+                    <div class="pd-frete-input">
+                        <input type="text" id="cepInput" placeholder="00000-000" maxlength="9">
+                        <button id="btnCalcularFrete">Calcular</button>
+                    </div>
+                    <div class="pd-frete-resultado" id="freteResultado" style="display:none"></div>
+                </div>
+
+                <div class="pd-selos">
+                    <div class="pd-selo">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Qualidade garantida</span>
+                    </div>
+                    <div class="pd-selo">
+                        <i class="fa-solid fa-box"></i>
+                        <span>Embalagem segura</span>
+                    </div>
+                    <div class="pd-selo">
+                        <i class="fa-solid fa-truck-fast"></i>
+                        <span>Entrega rápida</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="pd-secao">
+            <h2>Informações técnicas</h2>
+            <div class="pd-tabela" id="pdTabela">
+                
+            </div>
+        </section>
+
+        <section class="pd-secao">
+            <h2>Avaliações dos clientes</h2>
+            <div class="pd-avaliacoes-lista" id="pdAvaliacoes">
+                <p class="pd-sem-avaliacoes">Nenhuma avaliação ainda. Seja o primeiro!</p>
+            </div>
+
+            <div class="pd-avaliar-box">
+                <h3>Deixe sua avaliação</h3>
+                <form id="formAvaliacao">
+                    <label for="notaInput">Nota</label>
+                    <div class="pd-estrelas" id="estrelasInput">
+                        <i class="fa-regular fa-star" data-nota="1"></i>
+                        <i class="fa-regular fa-star" data-nota="2"></i>
+                        <i class="fa-regular fa-star" data-nota="3"></i>
+                        <i class="fa-regular fa-star" data-nota="4"></i>
+                        <i class="fa-regular fa-star" data-nota="5"></i>
+                    </div>
+                    <input type="hidden" id="notaInput" value="0">
+
+                    <label for="comentarioInput">Comentário (opcional)</label>
+                    <textarea id="comentarioInput" rows="4" placeholder="Conte sua experiência com o produto..."></textarea>
+
+                    <label for="imagensInput">Fotos do produto (opcional, até 3 imagens)</label>
+                    <div class="pd-upload-area" id="uploadArea">
+                        <input type="file" id="imagensInput" accept="image/*" multiple hidden>
+                        <div class="pd-upload-placeholder" id="uploadPlaceholder">
+                            <i class="fa-solid fa-camera"></i>
+                            <span>Clique ou arraste para adicionar fotos</span>
+                        </div>
+                        <div class="pd-upload-preview" id="uploadPreview"></div>
+                    </div>
+
+                    <button type="submit" class="btn-enviar-avaliacao">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar avaliação
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <section class="pd-secao">
+            <h2>Produtos semelhantes</h2>
+            <div class="produtos-grid pd-semelhantes" id="pdSemelhantes">
+                
+            </div>
+        </section>
+
+    </main>
+
+    <a class="whatsapp-float" href="#">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <div id="footer-placeholder"></div>
+
+    
+    <div class="modal-confirmar-overlay" id="modalConfirmarProduto" style="display:none">
+        <div class="modal-confirmar-box">
+            <p id="modalConfirmarProdutoMsg">Tem certeza?</p>
+            <div class="modal-confirmar-btns">
+                <button class="modal-confirmar-btn cancelar" id="btnConfirmarProdutoNao">Cancelar</button>
+                <button class="modal-confirmar-btn confirmar" id="btnConfirmarProdutoSim">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="../js/main.js"></script>
+    <script type="module" src="../js/produto-detalhe.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,154 @@
+
+.quem-somos {
+    padding: 5rem 5%;
+    background: var(--bg-white);
+}
+
+.quem-somos-container {
+    display: flex;
+    align-items: center;
+    gap: 4rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.quem-somos-content {
+    flex: 1;
+}
+
+.quem-somos h2 {
+    font-size: 2.5rem;
+    color: var(--text-gray);
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.quem-somos h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: var(--primary-blue);
+}
+
+.quem-somos-descricao {
+    font-size: 1.1rem;
+    color: var(--text-gray-light);
+    line-height: 1.8;
+    margin-bottom: 2rem;
+}
+
+.quem-somos-lista {
+    list-style: none;
+    margin-bottom: 2.5rem;
+}
+
+.quem-somos-lista li {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.1rem;
+}
+
+.check-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: var(--primary-blue);
+    color: var(--bg-white);
+    border-radius: 50%;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.quem-somos-link {
+    display: inline-block;
+    color: var(--primary-blue);
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: transform 0.3s;
+}
+
+.quem-somos-link:hover {
+    transform: translateX(5px);
+}
+
+.quem-somos-imagem {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pack-destaque {
+    background: #fff;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 20px 30px rgba(34, 86, 230, 0.15);
+    overflow: hidden;
+    padding: 0;
+    border: 4px solid var(--primary-blue);
+}
+
+.quem-somos-logo {
+    width: 100%;
+    object-fit: contain;
+    }
+
+.pack-text {
+    font-size: 4rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+    .quem-somos {
+        padding: 3rem 5%;
+    }
+
+    .quem-somos-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+
+    .quem-somos h2 {
+        font-size: 1.8rem;
+    }
+
+    .quem-somos h2::after {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .quem-somos-lista li {
+        justify-content: center;
+    }
+
+    .pack-destaque {
+        width: 220px;
+        height: 220px;
+        padding: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .quem-somos-descricao {
+        font-size: 0.95rem;
+    }
+
+    .quem-somos-lista li {
+        font-size: 0.95rem;
+    }
+}

@@ -1,0 +1,110 @@
+<section class="cta-footer">
+    <div class="cta-footer-inner">
+        <h2>Precisa de embalagens para o seu negócio?</h2>
+        <p>Fale agora com nossa equipe e solicite um orçamento personalizado. Atendemos pedidos de qualquer volume.</p>
+        <div class="cta-buttons">
+            <a class="btn-whatsapp" href="https://wa.me/5583996389725" target="_blank">
+                <i class="fa-brands fa-whatsapp"></i> Falar no WhatsApp
+            </a>
+            <a class="btn-outline" href="#contato">
+                Solicitar orçamento →
+            </a>
+        </div>
+        <button class="footer-btn-suporte" id="btnSuporteFooter">
+            <i class="fa-solid fa-headset"></i> Precisa de ajuda?
+        </button>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-col">
+            <div class="footer-logo">
+                <strong>JSL</strong>
+                <span>Soluções em Embalagens</span>
+            </div>
+            <p class="footer-descricao">
+                Qualidade, resistência e variedade para atender empresas de todos os portes.
+            </p>
+        </div>
+
+        <div class="footer-col">
+            <h4>LINKS RÁPIDOS</h4>
+            <ul class="footer-links">
+                <li><a href="#" data-page="index">Home</a></li>
+                <li><a href="#" data-page="produtos">Produtos</a></li>
+                <li><a href="#" data-page="sobre">Sobre</a></li>
+                <li><a href="#" data-page="contato">Contato</a></li>
+                <li><a href="#" data-page="politicas">Políticas de Troca</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-col">
+            <h4>CONTATO</h4>
+            <ul class="footer-contato">
+                <li><i class="fa-solid fa-phone"></i> (83) 99638-9725</li>
+                <li><i class="fa-brands fa-whatsapp"></i> (83) 99638-9725</li>
+                <li><i class="fa-regular fa-envelope"></i> contato@jslsolucoesemembalagens.com</li>
+                <li><i class="fa-regular fa-building"></i> R. Francisco Guimarães, Centro, Itaporanga - PB</li>
+                <li><i class="fa-regular fa-id-card"></i> CNPJ: 44.900.167/0001-84</li>
+            </ul>
+        </div>
+
+        <div class="footer-col footer-social-col">
+            <h4>REDES SOCIAIS</h4>
+            <div class="footer-social-icons">
+                <a href="https://instagram.com/jsl.representacoes" target="_blank" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://wa.me/5583996389725" target="_blank" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        © 2026 JSL Soluções em Embalagens. Todos os direitos reservados.
+    </div>
+</footer>
+
+<div class="suporte-modal-overlay" id="suporteModal" style="display:none">
+    <div class="suporte-modal">
+        <div class="suporte-modal-header">
+            <h3><i class="fa-solid fa-headset"></i> Suporte JSL</h3>
+            <button class="suporte-modal-fechar" id="btnFecharSuporte"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="suporte-modal-body">
+            <p>Selecione o tipo de dificuldade e descreva seu problema. Você será redirecionado para nosso WhatsApp.</p>
+
+            <div class="suporte-campo">
+                <p class="suporte-label-text">Qual área você precisa de ajuda?</p>
+                <div class="suporte-opcoes" id="suporteOpcoes" role="group" aria-label="Qual área você precisa de ajuda?">
+                    <button type="button" class="suporte-opcao" data-valor="Navegação no site">
+                        <i class="fa-solid fa-globe"></i> Navegação no site
+                    </button>
+                    <button type="button" class="suporte-opcao" data-valor="Dúvida sobre produto">
+                        <i class="fa-solid fa-box"></i> Dúvida sobre produto
+                    </button>
+                    <button type="button" class="suporte-opcao" data-valor="Problema no pagamento">
+                        <i class="fa-solid fa-credit-card"></i> Problema no pagamento
+                    </button>
+                    <button type="button" class="suporte-opcao" data-valor="Rastreio de entrega">
+                        <i class="fa-solid fa-truck"></i> Rastreio de entrega
+                    </button>
+                    <button type="button" class="suporte-opcao" data-valor="Troca ou devolução">
+                        <i class="fa-solid fa-rotate-left"></i> Troca ou devolução
+                    </button>
+                    <button type="button" class="suporte-opcao" data-valor="Outro assunto">
+                        <i class="fa-solid fa-ellipsis"></i> Outro assunto
+                    </button>
+                </div>
+            </div>
+
+            <div class="suporte-campo">
+                <label for="suporteDescricao">Descreva brevemente o problema</label>
+                <textarea id="suporteDescricao" class="suporte-textarea" rows="3" placeholder="Ex: Não consigo finalizar minha compra..."></textarea>
+            </div>
+
+            <button class="suporte-btn-enviar" id="btnEnviarSuporte" disabled>
+                <i class="fa-brands fa-whatsapp"></i> Enviar via WhatsApp
+            </button>
+        </div>
+    </div>
+</div>
