@@ -266,11 +266,6 @@
 .filtros {
   padding: 25px 80px;
   background: var(--bg-light);
-
-  position: sticky;
-  top: 0;
-  z-index: 10;
-
   border-bottom: 1px solid var(--border-gray-light);
 }
 

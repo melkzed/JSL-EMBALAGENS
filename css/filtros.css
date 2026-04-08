@@ -8,9 +8,9 @@
     flex-wrap: wrap;
     background: var(--bg-white);
     border-bottom: 1px solid var(--border-gray-light);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    position: static;
+    top: auto;
+    z-index: auto;
 }
 
 .busca-wrapper {
@@ -24,6 +24,7 @@
     border-radius: 8px;
     padding: 0.5rem 0.85rem;
     transition: border-color 0.2s;
+    position: static !important;
 }
 
 .busca-wrapper:focus-within {
@@ -153,9 +154,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--border-gray-light);
-    position: sticky;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-gray-light);
+        position: static;
     top: 0;
     background: var(--white);
     z-index: 1;

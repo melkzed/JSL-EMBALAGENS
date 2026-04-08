@@ -7,12 +7,13 @@
     <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://assets.pagseguro.com.br;
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://assets.pagseguro.com.br https://static.cloudflareinsights.com;
+        script-src-elem 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://assets.pagseguro.com.br https://static.cloudflareinsights.com;
         style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
         font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
         img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
-        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net https://api.pagseguro.com https://sandbox.api.pagseguro.com;
-        frame-src https://api.pagseguro.com https://sandbox.api.pagseguro.com;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br;
+        frame-src https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br https://*.cardinalcommerce.com;
         object-src 'none';
         base-uri 'self';
         form-action 'self';

@@ -1,14 +1,12 @@
-﻿
-
-import { supabase } from './supabaseClient.js'
+﻿import { supabase } from './supabaseClient.js'
 import { formatarPreco } from './utils.js'
 
 export const CONFIG_PAGAMENTO = {
-    
+
     pix: {
-        chave: '44900167000184',            
-        nome: 'JSL SOLUCOES EMBALAGENS',    
-        cidade: 'ITAPORANGA',               
+        chave: '44900167000184',
+        nome: 'JSL SOLUCOES EMBALAGENS',
+        cidade: 'ITAPORANGA',
         banco: 'Banco do Brasil',
         agencia: '21768',
         conta: '411019',
@@ -16,7 +14,7 @@ export const CONFIG_PAGAMENTO = {
     },
 
     pagSeguro: {
-        
+
     },
 
     descontoPix: 5,
@@ -308,7 +306,7 @@ function iniciarPollingPixStatus(pedidoId) {
                 }
             }
         } catch (err) {
-            
+
         }
     }, 5000)
 }
@@ -569,40 +567,72 @@ export function validarCartao() {
     const name = document.getElementById('cardName')?.value.trim() || ''
     const cpf = document.getElementById('cardCPF')?.value.replace(/\D/g, '') || ''
 
-    if (num.length < 13 || num.length > 19) {
-        erros.push({ campo: 'cardNumber', msg: 'Numero do cartao deve ter entre 13 e 19 digitos' })
+    // ─── Validação do número do cartão ───────────────────────────────────────
+    if (!num) {
+        erros.push({ campo: 'cardNumber', msg: 'Informe o número do cartão.' })
+    } else if (num.length < 13 || num.length > 19) {
+        erros.push({ campo: 'cardNumber', msg: 'Número do cartão deve ter entre 13 e 19 dígitos.' })
     } else if (!luhnCheck(num)) {
-        erros.push({ campo: 'cardNumber', msg: 'Numero do cartao invalido. Verifique os digitos' })
+        erros.push({ campo: 'cardNumber', msg: 'Número do cartão inválido. Verifique os dígitos.' })
     } else {
         const bin = validarBIN(num)
         if (!bin.valid) {
             if (bin.reason === 'unknown') {
-                erros.push({ campo: 'cardNumber', msg: 'Bandeira do cartao nao reconhecida. Aceitamos Visa, Mastercard, Elo, Amex e Hipercard' })
+                erros.push({ campo: 'cardNumber', msg: 'Bandeira não reconhecida. Aceitamos Visa, Mastercard, Elo, Amex e Hipercard.' })
             } else if (bin.reason === 'length') {
-                erros.push({ campo: 'cardNumber', msg: `Numero incompleto para cartao ${bin.brand}. Verifique os digitos` })
+                erros.push({ campo: 'cardNumber', msg: `Número incompleto para cartão ${bin.brand}. Verifique os dígitos.` })
             }
         }
     }
 
-    const partes = exp.split('/')
-    if (partes.length !== 2 || partes[0].length !== 2 || partes[1].length !== 2) {
-        erros.push({ campo: 'cardExpiry', msg: 'Data de validade invalida. Use o formato MM/AA' })
+    // ─── Validação da validade (MM/AA) ───────────────────────────────────────
+    // FIX: valida o formato completo antes de tudo
+    if (!exp) {
+        erros.push({ campo: 'cardExpiry', msg: 'Informe a data de validade.' })
+    } else if (!/^\d{2}\/\d{2}$/.test(exp)) {
+        erros.push({ campo: 'cardExpiry', msg: 'Data de validade inválida. Use o formato MM/AA.' })
     } else {
-        const mes = parseInt(partes[0])
-        const ano = parseInt('20' + partes[1])
+        const partes = exp.split('/')
+        const mes = parseInt(partes[0], 10)
+        const ano = parseInt('20' + partes[1], 10)
+
         if (mes < 1 || mes > 12) {
-            erros.push({ campo: 'cardExpiry', msg: 'Mes de validade invalido' })
+            erros.push({ campo: 'cardExpiry', msg: 'Mês de validade inválido.' })
         } else {
             const agora = new Date()
-            const expDate = new Date(ano, mes)
-            if (expDate <= agora) erros.push({ campo: 'cardExpiry', msg: 'Cartao vencido. Verifique a data de validade' })
+            // Compara com o último dia do mês de expiração
+            const expDate = new Date(ano, mes, 1) // 1º dia do mês seguinte = após o mês de validade
+            if (expDate <= agora) {
+                erros.push({ campo: 'cardExpiry', msg: 'Cartão vencido. Verifique a data de validade.' })
+            }
         }
     }
 
-    if (cvv.length < 3) erros.push({ campo: 'cardCVV', msg: 'CVV deve ter pelo menos 3 digitos' })
-    if (name.length < 3) erros.push({ campo: 'cardName', msg: 'Informe o nome completo como impresso no cartao' })
-    if (cpf.length !== 11 || !validarCPF(cpf)) erros.push({ campo: 'cardCPF', msg: 'CPF do titular invalido' })
+    // ─── Validação do CVV ────────────────────────────────────────────────────
+    // FIX: checa se está vazio e se tem dígitos suficientes
+    if (!cvv) {
+        erros.push({ campo: 'cardCVV', msg: 'Informe o CVV.' })
+    } else if (!/^\d{3,4}$/.test(cvv)) {
+        erros.push({ campo: 'cardCVV', msg: 'CVV inválido. Deve ter 3 ou 4 dígitos numéricos.' })
+    }
 
+    // ─── Validação do nome ───────────────────────────────────────────────────
+    if (!name) {
+        erros.push({ campo: 'cardName', msg: 'Informe o nome do titular.' })
+    } else if (name.length < 3) {
+        erros.push({ campo: 'cardName', msg: 'Informe o nome completo como impresso no cartão.' })
+    } else if (name.trim().split(/\s+/).length < 2) {
+        erros.push({ campo: 'cardName', msg: 'Informe nome e sobrenome do titular.' })
+    }
+
+    // ─── Validação do CPF ────────────────────────────────────────────────────
+    if (!cpf) {
+        erros.push({ campo: 'cardCPF', msg: 'Informe o CPF do titular.' })
+    } else if (cpf.length !== 11 || !validarCPF(cpf)) {
+        erros.push({ campo: 'cardCPF', msg: 'CPF do titular inválido.' })
+    }
+
+    // ─── Exibe erros na tela ─────────────────────────────────────────────────
     const errorsEl = document.getElementById('cardFormErrors')
     if (errorsEl) {
         if (erros.length > 0) {
@@ -624,6 +654,7 @@ export function validarCartao() {
                 errorsEl.insertAdjacentElement('afterend', supportBtn)
             }
 
+            // Scrolla até o primeiro erro
             const firstErrorInput = document.getElementById(erros[0].campo)
             if (firstErrorInput) {
                 firstErrorInput.focus()
@@ -670,12 +701,20 @@ function validarCPF(cpf) {
 
 function mostrarErrosGateway(mensagens) {
     const errorsEl = document.getElementById('cardFormErrors')
-    if (!errorsEl) return
+    if (!errorsEl) {
+        // FIX: fallback caso o elemento não esteja no DOM
+        console.error('[Gateway] Erros de pagamento:', mensagens)
+        alert(mensagens.join('\n'))
+        return
+    }
 
     errorsEl.style.display = ''
     errorsEl.innerHTML = mensagens.map(m =>
         `<p><i class="fa-solid fa-exclamation-circle"></i> ${m}</p>`
     ).join('')
+
+    // Scrolla até o erro
+    errorsEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
     const existingBtn = document.getElementById('cardSupportBtn')
     if (!existingBtn) {
@@ -703,12 +742,36 @@ export function getCardData() {
 }
 
 export async function processarPagamentoCartao(pedidoId, valor, tipo, userEmail) {
+    // FIX: roda a validação e interrompe imediatamente se houver erros
+
     const erros = validarCartao()
     if (erros.length > 0) {
+        console.warn('[Pagamento] Validação falhou:', erros)
         return { success: false, errors: erros }
     }
 
     const cardData = getCardData()
+
+    let encryptedCard = null
+    try {
+        encryptedCard = await criptografarCartao(cardData)
+    } catch (error) {
+        console.error('[Pagamento] Erro ao criptografar cartao:', error)
+        mostrarErrosGateway(['Erro ao proteger os dados do cartão. Recarregue a página e tente novamente.'])
+        return { success: false, errors: ['Erro ao proteger os dados do cartão.'] }
+    }
+
+    if (!encryptedCard) {
+        mostrarErrosGateway(['Erro ao proteger os dados do cartão. Tente novamente.'])
+        return { success: false }
+    }
+
+    // FIX: dupla checagem dos campos críticos antes de chamar o gateway
+    if (!cardData.expMonth || !cardData.expYear || cardData.expYear === '20' || !cardData.cvv) {
+        const msg = 'Preencha corretamente a validade e o CVV do cartão.'
+        mostrarErrosGateway([msg])
+        return { success: false, errors: [msg] }
+    }
 
     let authenticationId = null
     if (tipo === 'debit_card') {
@@ -720,28 +783,81 @@ export async function processarPagamentoCartao(pedidoId, valor, tipo, userEmail)
         authenticationId = auth3ds.authenticationId
     }
 
-    const resultado = await processarViaPagSeguro(cardData, pedidoId, valor, tipo, userEmail, authenticationId)
+    // Corrigir valor enviado para o PagSeguro conforme parcela selecionada
+    let valorFinal = valor;
+    if (tipo === 'credit_card' && cardData.installments > CONFIG_PAGAMENTO.parcelasSemJuros) {
+        const parcelas = calcularParcelas(valor, CONFIG_PAGAMENTO.maxParcelas);
+        const parcelaEscolhida = parcelas.find(p => p.qtd === cardData.installments);
+        if (parcelaEscolhida) {
+            valorFinal = parcelaEscolhida.total;
+        }
+    }
+
+    const resultado = await processarViaPagSeguro({
+        pedidoId,
+        valor: valorFinal,
+        tipo,
+        userEmail,
+        cardData,
+        encryptedCard,
+        authenticationId
+    })
+
+    // FIX: trata todos os casos de resposta inválida ou nula
+    if (!resultado) {
+        const msg = 'Não foi possível processar o pagamento. Tente novamente.'
+        mostrarErrosGateway([msg])
+        return { success: false, errors: [msg] }
+    }
 
     if (resultado.success) {
         return resultado
     }
 
-    if (resultado.errors?.length > 0) {
-        mostrarErrosGateway(resultado.errors)
-        return resultado
+    // Extrai e trata os erros do PagSeguro, tentando identificar o campo
+    let errosPag = []
+    if (Array.isArray(resultado.errors) && resultado.errors.length > 0) {
+        errosPag = resultado.errors
+    } else if (resultado.message) {
+        errosPag = [resultado.message]
+    } else if (resultado.error_messages) {
+        errosPag = Array.isArray(resultado.error_messages)
+            ? resultado.error_messages.map(e => e.description || e.message || JSON.stringify(e))
+            : [String(resultado.error_messages)]
+    } else {
+        errosPag = ['Não foi possível processar o pagamento. Tente novamente ou use outro cartão.']
     }
 
-    return {
-        success: true,
-        status: 'processing',
-        gateway: 'manual',
-        message: 'Pagamento registrado! Estamos processando seu pagamento com cartao. Voce recebera a confirmacao em breve.'
-    }
+    // Tenta marcar o campo correto se possível
+    const campoMap = [
+        { regex: /cart[aã]o/i, id: 'cardNumber' },
+        { regex: /cvv|c[oó]digo de seguran[cç]a|security code/i, id: 'cardCVV' },
+        { regex: /validade|expira/i, id: 'cardExpiry' },
+        { regex: /cpf/i, id: 'cardCPF' },
+        { regex: /nome/i, id: 'cardName' },
+    ];
+    errosPag.forEach(msg => {
+        for (const campo of campoMap) {
+            if (campo.regex.test(msg)) {
+                marcarErroInput(campo.id);
+                const el = document.getElementById(campo.id);
+                if (el) {
+                    el.focus();
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                break;
+            }
+        }
+    });
+
+    mostrarErrosGateway(errosPag)
+    // Não redireciona, apenas mostra erro na tela para o usuário corrigir
+    return { success: false, errors: errosPag }
 }
 
 async function autenticar3DS(cardData, valor, email) {
     try {
-        
+
         const { data: sessionData, error: sessionError } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
             body: { action: 'create-3ds-session' }
         })
@@ -794,7 +910,6 @@ async function autenticar3DS(cardData, valor, email) {
         }
 
         if (result.status === 'AUTH_NOT_SUPPORTED') {
-            
             console.warn('[3DS] Banco nao suporta 3DS, seguindo sem autenticacao')
             return { success: true, authenticationId: null }
         }
@@ -811,37 +926,48 @@ async function autenticar3DS(cardData, valor, email) {
     }
 }
 
-async function processarViaPagSeguro(cardData, pedidoId, valor, tipo, userEmail, authenticationId = null) {
+async function processarViaPagSeguro({
+    pedidoId,
+    valor,
+    tipo,
+    userEmail,
+    cardData,
+    encryptedCard,
+    authenticationId
+}) {
     try {
         const { data, error } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
             body: {
                 pedidoId,
                 valor,
+                parcelas: cardData.installments || 1,
                 tipo,
-                parcelas: cardData.installments,
-                email: userEmail,
-                cartao: {
-                    numero: cardData.number,
-                    titular: cardData.holderName,
-                    mesExpiracao: parseInt(cardData.expMonth),
-                    anoExpiracao: parseInt(cardData.expYear),
-                    cvv: cardData.cvv,
-                },
+                encryptedCard,
                 cpf: cardData.holderCPF,
-                authenticationId,
+                nomeCliente: cardData.holderName,
+                email: userEmail,
+                telefone: '',
+                authenticationId
             }
         })
 
         if (error) {
-            console.error('[PagSeguro] Erro na Edge Function:', error)
-            return { success: false, errors: ['Erro ao processar pagamento. Tente novamente ou escolha outro metodo.'] }
+            throw new Error(error.message || 'Erro no pagamento')
         }
 
-        return data || { success: false, errors: ['Resposta vazia do servidor.'] }
+        if (!data.success) {
+            return data
+        }
+
+        return data
 
     } catch (err) {
-        console.error('[PagSeguro] Erro de conexao:', err)
-        return { success: false, errors: ['Erro de conexao com processador de pagamento.'] }
+        console.error('Erro pagamento:', err)
+        return {
+            success: false,
+            gateway: 'pagseguro',
+            errors: [err?.message || 'Erro no pagamento']
+        }
     }
 }
 
@@ -849,32 +975,44 @@ export function calcularParcelas(valor, maxParcelas = CONFIG_PAGAMENTO.maxParcel
     const parcelas = []
     const { parcelasSemJuros, taxaJurosMensal, valorMinimoParcela } = CONFIG_PAGAMENTO
 
+    let peloMenosUma = false;
     for (let i = 1; i <= maxParcelas; i++) {
-        const valorParcela = valor / i
-        if (valorParcela < valorMinimoParcela) break
-
-        if (i <= parcelasSemJuros) {
-            parcelas.push({
-                qtd: i,
-                valor: valorParcela,
-                total: valor,
-                juros: false,
-                label: `${i}x de R$ ${formatarPreco(valorParcela)} sem juros`
-            })
+        let valorParcela, totalComJuros, label, juros = false;
+        if (i === 1) {
+            valorParcela = valor;
+            totalComJuros = valor;
+            label = `1x de R$ ${formatarPreco(valor)} sem juros`;
+        } else if (i <= parcelasSemJuros) {
+            valorParcela = valor / i;
+            totalComJuros = valor;
+            label = `${i}x de R$ ${formatarPreco(valorParcela)} sem juros`;
         } else {
-            const taxa = 1 + (taxaJurosMensal * (i - parcelasSemJuros))
-            const totalComJuros = valor * taxa
-            const valorComJuros = totalComJuros / i
-            parcelas.push({
-                qtd: i,
-                valor: valorComJuros,
-                total: totalComJuros,
-                juros: true,
-                label: `${i}x de R$ ${formatarPreco(valorComJuros)} (total R$ ${formatarPreco(totalComJuros)})`
-            })
+            const r = taxaJurosMensal;
+            const n = i;
+            valorParcela = valor * (Math.pow(1 + r, n) * r) / (Math.pow(1 + r, n) - 1);
+            totalComJuros = valorParcela * n;
+            juros = true;
+            label = `${i}x de R$ ${formatarPreco(valorParcela)} (total R$ ${formatarPreco(totalComJuros)})`;
         }
+        if (valorParcela < valorMinimoParcela && i > 1) break;
+        parcelas.push({
+            qtd: i,
+            valor: valorParcela,
+            total: totalComJuros,
+            juros,
+            label
+        });
+        peloMenosUma = true;
     }
-
+    if (!peloMenosUma) {
+        parcelas.push({
+            qtd: 1,
+            valor: valor,
+            total: valor,
+            juros: false,
+            label: `1x de R$ ${formatarPreco(valor)} sem juros`
+        });
+    }
     return parcelas
 }
 
@@ -892,3 +1030,45 @@ window.addEventListener('beforeunload', () => {
     if (window._pixTimerInterval) clearInterval(window._pixTimerInterval)
     if (window._pixPollingInterval) clearInterval(window._pixPollingInterval)
 })
+
+async function criptografarCartao(cardData) {
+    if (typeof PagSeguro === 'undefined') {
+        throw new Error('SDK do PagSeguro não carregado')
+    }
+
+    const publicKey = await obterPublicKeyPagSeguro()
+
+    const encrypted = await PagSeguro.encryptCard({
+        publicKey,
+        holder: cardData.holderName,
+        number: cardData.number,
+        expMonth: cardData.expMonth,
+        expYear: cardData.expYear,
+        securityCode: cardData.cvv
+    })
+
+    if (encrypted.hasErrors) {
+        console.error(encrypted.errors)
+        throw new Error('Erro ao criptografar cartão')
+    }
+
+    return encrypted.encryptedCard
+}
+
+async function obterPublicKeyPagSeguro() {
+    if (window.PAGSEGURO_PUBLIC_KEY) {
+        return window.PAGSEGURO_PUBLIC_KEY
+    }
+
+    const { data, error } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
+        body: { action: 'get-public-key' }
+    })
+
+    if (error || !data?.publicKey) {
+        console.error('[PagSeguro] Erro ao obter public key:', error)
+        throw new Error('Não foi possível obter a chave pública do PagSeguro')
+    }
+
+    window.PAGSEGURO_PUBLIC_KEY = data.publicKey
+    return data.publicKey
+}

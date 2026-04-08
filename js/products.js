@@ -75,10 +75,15 @@ export async function renderizarCardsProdutos(produtos, container, basePath = '.
         if (favs) favs.forEach(f => favoritosSet.add(f.product_id))
     }
 
+
+
     container.innerHTML = produtos.map(p => {
         const nome = escapeHtml(p.name || 'Produto')
-        const variantes = p.product_variants || []
+        let variantes = p.product_variants || []
+        // Ordena variantes do menor para o maior preço
+        variantes = variantes.slice().sort((a, b) => (a.price || 0) - (b.price || 0))
         const preco = variantes.length > 0 ? variantes[0].price || 0 : 0
+        const estoque = variantes.length > 0 ? (variantes[0].stock ?? 0) : 0
         const img = getImagemUrl(p)
         const cat = escapeHtml(p.categories?.name || '')
         const catSlug = encodeURIComponent(p.categories?.slug || '')
@@ -86,9 +91,11 @@ export async function renderizarCardsProdutos(produtos, container, basePath = '.
             ? `./produto.html?id=${p.id}`
             : `./html/produto.html?id=${p.id}`
         const isFav = favoritosSet.has(p.id)
+        const btnCarrinhoDisabled = '' // Nunca usa disabled, bloqueia via JS
+        const estoqueAviso = estoque <= 0 ? '<span class="estoque-zerado" style="color:#e53935;font-weight:600;">(sem estoque)</span>' : ''
 
         return `
-            <div class="produto-card" data-categoria="${catSlug}" data-preco="${preco}" data-id="${p.id}">
+            <div class="produto-card${estoque <= 0 ? ' indisponivel' : ''}" data-categoria="${catSlug}" data-preco="${preco}" data-id="${p.id}">
                 <span class="badge-categoria">${cat}</span>
                 <button class="btn-favorito ${isFav ? 'ativo' : ''}" data-product-id="${p.id}" title="${isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}">
                     <i class="fa-${isFav ? 'solid' : 'regular'} fa-heart"></i>
@@ -98,12 +105,13 @@ export async function renderizarCardsProdutos(produtos, container, basePath = '.
                     <h3>${nome}</h3>
                 </a>
                 <span class="preco">R$ ${formatarPreco(preco)} <small>/und</small></span>
+                ${estoqueAviso}
                 <div class="quantidade">
                     <button class="menos">-</button>
                     <span class="numero">1</span>
                     <button class="mais">+</button>
                 </div>
-                <button class="btn-carrinho">🛒 Adicionar ao carrinho</button>
+                <button class="btn-carrinho" ${btnCarrinhoDisabled}>🛒 Adicionar ao carrinho</button>
             </div>
         `
     }).join('')

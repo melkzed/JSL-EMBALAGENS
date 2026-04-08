@@ -1,0 +1,16 @@
+RewriteEngine On
+
+# Home
+RewriteRule ^$ /index.html [L]
+
+# Produtos
+RewriteRule ^produtos/?$ /html/produtos.html [L]
+
+# Sobre
+RewriteRule ^sobre/?$ /html/sobre.html [L]
+
+# Contato
+RewriteRule ^contato/?$ /html/contato.html [L]
+
+# Página de descrição do produto pelo nome
+RewriteRule ^produtos/([a-zA-Z0-9-_]+)/?$ /html/produto.html?produto=$1 [L]

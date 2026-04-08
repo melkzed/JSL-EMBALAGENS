@@ -7,11 +7,12 @@
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net;
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://assets.pagseguro.com.br;
+        script-src-elem 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://assets.pagseguro.com.br;
         style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
         font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
         img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
-        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net https://api.pagseguro.com https://sandbox.api.pagseguro.com;
         frame-src 'none';
         object-src 'none';
         base-uri 'self';
@@ -26,6 +27,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
 </head>
 
 <body>

@@ -6,7 +6,7 @@ import { escapeHtml, formatarPreco } from './utils.js'
 
 export const CONFIG_FRETE = {
     cepOrigem: '58780000', 
-    prazoPreparacao: 7,     
+    prazoPreparacao: 2,     // Reduzido de 7 para 2 dias
     fatorCubagemCorreios: 6000,  
     fatorCubagemTransp: 5000,    
     pesoMinimoCorreios: 0.3,     
@@ -91,39 +91,39 @@ function obterZonaPorCEP(cep) {
 
 
 const TABELA_CORREIOS_PAC = {
-    1: [17.50, 1.50],   
-    2: [19.80, 2.00],   
-    3: [23.50, 2.80],   
-    4: [27.90, 3.50],   
-    5: [32.50, 4.20],   
-    6: [38.00, 5.00],   
+    1: [12.00, 1.20],   // -30% base, -20% por kg
+    2: [14.00, 1.60],
+    3: [16.50, 2.24],
+    4: [19.50, 2.80],
+    5: [22.75, 3.36],
+    6: [26.50, 4.00],
 }
 
 const TABELA_CORREIOS_SEDEX = {
-    1: [25.90, 3.20],
-    2: [32.50, 4.00],
-    3: [39.80, 5.00],
-    4: [44.50, 5.80],
-    5: [52.00, 6.50],
-    6: [62.00, 7.80],
+    1: [18.00, 2.56],
+    2: [22.75, 3.20],
+    3: [27.85, 4.00],
+    4: [31.15, 4.64],
+    5: [36.40, 5.20],
+    6: [43.40, 6.24],
 }
 
 const TABELA_JADLOG = {
-    1: [16.00, 1.20],
-    2: [18.50, 1.80],
-    3: [22.00, 2.50],
-    4: [25.50, 3.00],
-    5: [30.00, 3.80],
-    6: [36.00, 4.50],
+    1: [11.20, 0.96],
+    2: [13.00, 1.44],
+    3: [15.40, 2.00],
+    4: [17.85, 2.40],
+    5: [21.00, 3.04],
+    6: [25.20, 3.60],
 }
 
 const TABELA_BRASPRESS = {
-    1: [25.00, 0.90],
-    2: [30.00, 1.50],
-    3: [36.00, 2.00],
-    4: [40.00, 2.30],
-    5: [45.00, 2.80],
-    6: [52.00, 3.50],
+    1: [17.50, 0.72],
+    2: [21.00, 1.20],
+    3: [25.20, 1.60],
+    4: [28.00, 1.84],
+    5: [31.50, 2.24],
+    6: [36.40, 2.80],
 }
 
 
@@ -339,19 +339,16 @@ export async function calcularFrete(cepDestino, itensCarrinho) {
 
     let opcoes = null
 
-    
     if (CONFIG_FRETE.usarAPI) {
         opcoes = await calcularFreteAPI(cep, dadosPeso, itensCarrinho)
     }
 
-    
+    // Se a API falhar, retorna erro e não usa cálculo local
     if (!opcoes) {
-        opcoes = calcularFreteLocal(cep, dadosPeso)
+        return { erro: 'Não foi possível calcular o frete no momento. Tente novamente mais tarde.', opcoes: [] }
     }
 
-    
     _cache.set(key, { opcoes, ts: Date.now() })
-
     return { opcoes, dadosPeso }
 }
 

@@ -1,25 +1,57 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
     <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self';
-        script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;
-        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
-        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
-        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
-        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://cdn.jsdelivr.net;
-        frame-src 'none';
-        object-src 'none';
-        base-uri 'self';
-        form-action 'self';
-    ">
+default-src 'self';
+
+script-src 
+'self' 
+'unsafe-inline' 
+https://cdn.jsdelivr.net 
+https://static.cloudflareinsights.com 
+https://assets.pagseguro.com.br;
+
+style-src 
+'self' 
+'unsafe-inline' 
+https://cdnjs.cloudflare.com 
+https://fonts.googleapis.com;
+
+font-src 
+'self' 
+https://cdnjs.cloudflare.com 
+https://fonts.gstatic.com;
+
+img-src 
+'self' 
+data: 
+blob: 
+https://otwmjdiqjhumqvyztnbl.supabase.co;
+
+connect-src 
+'self' 
+https://otwmjdiqjhumqvyztnbl.supabase.co 
+https://cdn.jsdelivr.net
+https://assets.pagseguro.com.br;
+
+frame-src 
+'self' 
+https://assets.pagseguro.com.br 
+https://*.cardinalcommerce.com;
+
+object-src 'none';
+base-uri 'self';
+form-action 'self';
+">
     <title>Admin - JSL Embalagens</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="css/admin.css">
 </head>
+
 <body class="admin-login-body">
     <div class="admin-login-container">
         <div class="admin-login-card">
@@ -30,10 +62,12 @@
             </div>
             <form id="formAdminLogin" autocomplete="off">
                 <div class="admin-input-group">
+                    <label for="adminEmail" class="visually-hidden">E-mail do administrador</label>
                     <i class="fa-solid fa-envelope"></i>
                     <input type="email" id="adminEmail" placeholder="E-mail do administrador" required>
                 </div>
                 <div class="admin-input-group">
+                    <label for="adminSenha" class="visually-hidden">Senha</label>
                     <i class="fa-solid fa-lock"></i>
                     <input type="password" id="adminSenha" placeholder="Senha" required>
                 </div>
@@ -71,4 +105,5 @@
         verificarSessaoAdmin()
     </script>
 </body>
+
 </html>

@@ -522,9 +522,16 @@ async function calcularFreteParaEndereco(end) {
 
     renderizarOpcoesFrete(freteContainer, resultado.opcoes, (opcao) => {
         freteSelecionado = opcao
-        
         const btn = document.getElementById('btnIrRevisao')
         if (btn) btn.disabled = false
+
+        // Atualiza resumo e parcelas automaticamente ao selecionar frete
+        if (document.getElementById('resumoFinal')) montarRevisao();
+        const metodo = document.querySelector('input[name="metodoPagamento"]:checked')?.value;
+        if (metodo === 'credit_card') {
+            const total = calcularTotalCarrinho();
+            atualizarSelectParcelas(total);
+        }
     })
 }
 
@@ -822,7 +829,22 @@ async function confirmarPedido() {
     if (metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') {
         const errosCartao = validarCartao()
         if (errosCartao.length > 0) {
-            mostrarToast(errosCartao[0], 'erro')
+            // Exibe todos os erros no formulário de cartão
+            const errorsEl = document.getElementById('cardFormErrors')
+            if (errorsEl) {
+                errorsEl.style.display = ''
+                errorsEl.innerHTML = errosCartao.map(msg => `<p><i class="fa-solid fa-exclamation-circle"></i> ${msg}</p>`).join('')
+            }
+            // Foca no primeiro campo com erro
+            const campos = ['cardNumber','cardExpiry','cardCVV','cardName','cardCPF']
+            for (const campo of campos) {
+                const el = document.getElementById(campo)
+                if (el && el.classList.contains('card-input-error')) {
+                    el.focus();
+                    break;
+                }
+            }
+            mostrarToast('Corrija os erros do cartão para continuar.', 'erro')
             return
         }
     }
@@ -1043,13 +1065,17 @@ async function confirmarPedido() {
             )
 
             if (!resultado.success && resultado.errors) {
-                
+                // Exibe todos os erros retornados pelo backend/gateway
+                const errorsEl = document.getElementById('cardFormErrors')
+                if (errorsEl) {
+                    errorsEl.style.display = ''
+                    errorsEl.innerHTML = resultado.errors.map(msg => `<p><i class='fa-solid fa-exclamation-circle'></i> ${msg}</p>`).join('')
+                }
+                mostrarToast(resultado.errors[0], 'erro')
                 mostrarResultadoCartao(pedido, itensParaInserir, resultado)
-                await limparCarrinho()
                 return
             }
 
-            
             if (resultado.gateway) {
                 await supabase.from('payments').update({
                     gateway: resultado.gateway,
@@ -1058,7 +1084,6 @@ async function confirmarPedido() {
                 }).eq('order_id', pedido.id)
             }
 
-            
             if (resultado.status === 'approved') {
                 await supabase.from('orders').update({ status: 'paid' }).eq('id', pedido.id)
             }
@@ -1367,7 +1392,6 @@ function initEventListeners() {
             const retiradaLoja = document.getElementById('checkoutRetiradaLoja')
             const btnRevisao = document.getElementById('btnIrRevisao')
 
-            
             document.querySelectorAll('.checkout-tipo-entrega-option').forEach(opt => {
                 opt.classList.remove('selecionado')
             })
@@ -1377,10 +1401,16 @@ function initEventListeners() {
                 if (entregaWrapper) entregaWrapper.style.display = 'none'
                 if (retiradaLoja) retiradaLoja.style.display = ''
                 if (btnRevisao) btnRevisao.disabled = false
+                // Atualiza resumo e parcelas ao selecionar retirada
+                if (document.getElementById('resumoFinal')) montarRevisao();
+                const metodo = document.querySelector('input[name="metodoPagamento"]:checked')?.value;
+                if (metodo === 'credit_card') {
+                    const total = calcularTotalCarrinho();
+                    atualizarSelectParcelas(total);
+                }
             } else {
                 if (entregaWrapper) entregaWrapper.style.display = ''
                 if (retiradaLoja) retiradaLoja.style.display = 'none'
-                
                 if (btnRevisao) btnRevisao.disabled = !(enderecoSelecionado && freteSelecionado)
             }
         })
@@ -1462,8 +1492,9 @@ function calcularTotalCarrinho() {
         const preco = parseFloat(item.product_variants?.price || 0)
         total += preco * item.quantity
     })
-    
-    if (freteSelecionado?.preco) {
+
+    // Só soma o frete se NÃO for retirada na loja
+    if (freteSelecionado?.preco && tipoEntrega !== 'retirada') {
         total += freteSelecionado.preco
     }
     return total

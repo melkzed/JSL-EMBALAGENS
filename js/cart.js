@@ -374,48 +374,75 @@ async function renderizarSidebar() {
 export function initBotoesAdicionarCarrinho() {
     let carrinhoEmCooldown = false
 
+    // Listener para exibir mensagem mesmo se o botão estiver desabilitado
+    // Bloqueia ação e exibe mensagem se estoque zerado, mesmo sem disabled
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-carrinho')
+        if (!btn) return
+        const card = btn.closest('.produto-card')
+        const estoqueEl = card?.querySelector('.estoque-zerado')
+        if (estoqueEl) {
+            mostrarToast('Produto sem estoque disponível', 'erro')
+            e.preventDefault()
+            e.stopPropagation()
+        }
+    }, true)
+
     document.addEventListener('click', async (e) => {
         const btn = e.target.closest('.btn-carrinho')
         if (!btn) return
 
-        
-        if (carrinhoEmCooldown || btn.disabled) return
+        if (btn.disabled || carrinhoEmCooldown) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        btn.disabled = true;
         carrinhoEmCooldown = true
 
         const card = btn.closest('.produto-card')
-        if (!card) { carrinhoEmCooldown = false; return }
+        if (!card) { btn.disabled = false; carrinhoEmCooldown = false; return }
+
+        const estoqueEl = card.querySelector('.estoque-zerado')
+        if (estoqueEl) {
+            btn.disabled = false;
+            carrinhoEmCooldown = false
+            e.preventDefault()
+            e.stopPropagation()
+            return
+        }
 
         const produtoId = card.dataset.id
-        if (!produtoId) { carrinhoEmCooldown = false; return }
+        if (!produtoId) { btn.disabled = false; carrinhoEmCooldown = false; return }
 
-        
         const qtdEl = card.querySelector('.quantidade .numero')
         const quantidade = qtdEl ? parseInt(qtdEl.textContent) || 1 : 1
 
-        
-        btn.disabled = true
+        const textoOriginal = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Adicionando...'
 
         const { data: variants } = await supabase
             .from('product_variants')
-            .select('id')
+            .select('id, stock, price')
             .eq('product_id', produtoId)
             .eq('active', true)
-            .order('sort_order', { ascending: true })
+            .order('price', { ascending: true })
             .limit(1)
 
         if (variants && variants.length > 0) {
-            await adicionarAoCarrinho(variants[0].id, quantidade)
+            if (variants[0].stock !== undefined && variants[0].stock <= 0) {
+                mostrarToast('Produto sem estoque disponível', 'erro')
+            } else {
+                await adicionarAoCarrinho(variants[0].id, quantidade)
+            }
         } else {
             mostrarToast('Produto sem variante disponível', 'erro')
         }
 
-        btn.disabled = false
-        btn.innerHTML = '🛒 Adicionar ao carrinho'
-
-        
+        btn.innerHTML = textoOriginal;
+        btn.disabled = false;
         setTimeout(() => {
             carrinhoEmCooldown = false
-        }, 2000)
+        }, 500)
     })
 }

@@ -7,7 +7,9 @@ const ALLOWED_ORIGINS = [
     'https://jslembalagens.com.br',
     'https://www.jslembalagens.com.br',
     'http://localhost:5500',
-    'http://127.0.0.1:5500'
+    'http://127.0.0.1:5500',
+    'http://127.0.0.1:5501',
+    'http://localhost:5501'
 ]
 
 function getCorsHeaders(req: Request) {
@@ -48,6 +50,29 @@ serve(async (req: Request) => {
         //  ROTA: CRIAR SESSÃO 3DS
         //  Chamada pelo frontend antes de autenticar débito
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        if (body.action === 'get-public-key') {
+            let publicKey = Deno.env.get('PAGSEGURO_PUBLIC_KEY')
+
+            if (!publicKey) {
+                const pkResponse = await fetch(`${PAGSEGURO_API_URL}/public-keys`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${PAGSEGURO_TOKEN}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ type: 'card' })
+                })
+
+                const pkData = await pkResponse.json()
+                publicKey = pkData.public_key
+            }
+
+            return new Response(
+                JSON.stringify({ publicKey }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
         if (body.action === 'create-3ds-session') {
             const sessionResponse = await fetch(`${PAGSEGURO_API_URL}/checkout-sdk/sessions`, {
                 method: 'POST',
@@ -81,6 +106,7 @@ serve(async (req: Request) => {
             valor,
             parcelas,
             tipo,              // 'credit_card' ou 'debit_card'
+            encryptedCard,
             cartao,            // { numero, titular, mesExpiracao, anoExpiracao, cvv }
             cpf,
             email,
@@ -90,11 +116,11 @@ serve(async (req: Request) => {
         } = body
 
         // Validação de entrada
-        if (!pedidoId || !valor || !cartao || !cpf) {
-            return new Response(
-                JSON.stringify({ success: false, errors: ['Dados incompletos para processar o pagamento.'] }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
+        if (!pedidoId || !valor || !encryptedCard || !cpf) {
+            return new Response(JSON.stringify({
+                success: false,
+                errors: ['Dados incompletos']
+            }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
         }
 
         // Validar formato do CPF
@@ -107,13 +133,7 @@ serve(async (req: Request) => {
         }
 
         // Validar dados do cartão
-        const numCartao = String(cartao.numero).replace(/\D/g, '')
-        if (numCartao.length < 13 || numCartao.length > 19) {
-            return new Response(
-                JSON.stringify({ success: false, errors: ['Número do cartão inválido.'] }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
+
 
         const valorEmCentavos = Math.round(parseFloat(valor) * 100)
         if (valorEmCentavos <= 0 || valorEmCentavos > 99999999) {
@@ -170,7 +190,7 @@ serve(async (req: Request) => {
         // Montar payload para o PagSeguro API v4
         const chargePayload: any = {
             reference_id: pedidoId,
-            description: `JSL Embalagens - Pedido`,
+            description: `Pedido ${pedidoId}`,
             amount: {
                 value: valorEmCentavos,
                 currency: 'BRL'
@@ -178,26 +198,18 @@ serve(async (req: Request) => {
             payment_method: {
                 type: isCredito ? 'CREDIT_CARD' : 'DEBIT_CARD',
                 installments: numParcelas,
-                capture: true,  // Captura automática
+                capture: true,
                 card: {
-                    number: numCartao,
-                    exp_month: String(cartao.mesExpiracao).padStart(2, '0'),
-                    exp_year: String(cartao.anoExpiracao),
-                    security_code: String(cartao.cvv),
+                    encrypted: encryptedCard,
                     holder: {
-                        name: cartao.titular || 'CLIENTE JSL',
-                        tax_id: cpfLimpo,
-                    },
-                    store: false,  // Não salvar cartão
-                },
+                        name: nomeCliente || 'CLIENTE',
+                        tax_id: cpfLimpo
+                    }
+                }
             },
             notification_urls: [
                 `${Deno.env.get('SUPABASE_URL')}/functions/v1/processar-pagamento-pagseguro?webhook=true`
-            ],
-            metadata: {
-                order_id: pedidoId,
-                email: email || '',
-            }
+            ]
         }
 
         // Se débito, enviar autenticação 3DS (quando disponível)
