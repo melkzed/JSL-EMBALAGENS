@@ -38,6 +38,13 @@ export async function carregarProdutos() {
   return data || []
 }
 
+function getProdutoHref(produto, inHtmlFolder) {
+    const slug = encodeURIComponent(produto.slug || produto.id || '')
+    return inHtmlFolder
+        ? `../produtos/${slug}`
+        : `./produtos/${slug}`
+}
+
 export function getImagemUrl(produto) {
     const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
     const inHtml = path.includes('/html/')
@@ -87,9 +94,7 @@ export async function renderizarCardsProdutos(produtos, container, basePath = '.
         const img = getImagemUrl(p)
         const cat = escapeHtml(p.categories?.name || '')
         const catSlug = encodeURIComponent(p.categories?.slug || '')
-        const linkProduto = inHtmlFolder
-            ? `./produto.html?id=${p.id}`
-            : `./html/produto.html?id=${p.id}`
+        const linkProduto = getProdutoHref(p, inHtmlFolder)
         const isFav = favoritosSet.has(p.id)
         const btnCarrinhoDisabled = '' // Nunca usa disabled, bloqueia via JS
         const estoqueAviso = estoque <= 0 ? '<span class="estoque-zerado" style="color:#e53935;font-weight:600;">(sem estoque)</span>' : ''

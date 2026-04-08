@@ -76,6 +76,46 @@ async function carregarProduto(id) {
     return data
 }
 
+async function carregarProdutoPorSlug(slug) {
+    const { data, error } = await supabase
+        .from("products")
+        .select(`
+            *,
+            product_variants (*),
+            product_images (*),
+            categories (*)
+        `)
+        .eq("slug", slug)
+        .single()
+
+    if (error) {
+        console.error("Erro ao buscar produto por slug:", error)
+        return null
+    }
+
+    if (data && data.category_id) {
+        const { data: specs } = await supabase
+            .from("category_specs")
+            .select("*")
+            .eq("category_id", data.category_id)
+            .order("sort_order")
+
+        data._categorySpecs = specs || []
+
+        if (data.product_variants?.length) {
+            const variantIds = data.product_variants.map(v => v.id)
+            const { data: specValues } = await supabase
+                .from("variant_spec_values")
+                .select("*")
+                .in("variant_id", variantIds)
+
+            data._specValues = specValues || []
+        }
+    }
+
+    return data
+}
+
 
 
 async function carregarAvaliacoes(productId) {
@@ -306,7 +346,7 @@ function renderizarProduto(produto) {
     if (breadcrumbNome) breadcrumbNome.textContent = produto.name || produto.nome || ''
 
     
-    document.title = `${produto.name || produto.nome || 'Produto'} - JSL`
+    atualizarSeoProduto(produto)
 
     
     const imgPrincipal = document.getElementById('imgPrincipal')
@@ -600,14 +640,105 @@ function renderizarSemelhantes(produtos) {
         const preco = variantes.length > 0 ? variantes[0].price || 0 : 0
         const img = getImagemUrl(p)
 
+        const slug = encodeURIComponent(p.slug || p.id)
+
         return `
-            <a href="./produto.html?id=${p.id}" class="produto-card" style="text-decoration:none; color: inherit; margin-bottom: 0;">
+            <a href="../produtos/${slug}" class="produto-card" style="text-decoration:none; color: inherit; margin-bottom: 0;">
                 <img src="${img}" alt="${escapeHtml(nome)}">
                 <h3>${escapeHtml(nome)}</h3>
                 <span class="preco">R$ ${formatarPreco(preco)} <small>/und</small></span>
             </a>
         `
     }).join('')
+}
+
+function atualizarMetaTag(nome, conteudo, atributo = 'name') {
+    let tag = document.head.querySelector(`meta[${atributo}="${nome}"]`)
+    if (!tag) {
+        tag = document.createElement('meta')
+        tag.setAttribute(atributo, nome)
+        document.head.appendChild(tag)
+    }
+    tag.setAttribute('content', conteudo)
+}
+
+function atualizarCanonical(url) {
+    let tag = document.head.querySelector('link[rel="canonical"]')
+    if (!tag) {
+        tag = document.createElement('link')
+        tag.setAttribute('rel', 'canonical')
+        document.head.appendChild(tag)
+    }
+    tag.setAttribute('href', url)
+}
+
+function atualizarJsonLdProduto(produto, canonicalUrl, imageUrl, preco, stock) {
+    let tag = document.getElementById('produtoJsonLd')
+    if (!tag) {
+        tag = document.createElement('script')
+        tag.type = 'application/ld+json'
+        tag.id = 'produtoJsonLd'
+        document.head.appendChild(tag)
+    }
+
+    const data = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": produto.name || 'Produto',
+        "description": produto.description || 'Produto disponível na JSL Embalagens.',
+        "image": [imageUrl],
+        "sku": produto.slug || produto.id || undefined,
+        "category": produto.categories?.name || undefined,
+        "brand": {
+            "@type": "Brand",
+            "name": "JSL Embalagens"
+        },
+        "offers": {
+            "@type": "Offer",
+            "url": canonicalUrl,
+            "priceCurrency": "BRL",
+            "price": Number(preco || 0).toFixed(2),
+            "availability": stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "seller": {
+                "@type": "Organization",
+                "name": "JSL Embalagens"
+            }
+        }
+    }
+
+    tag.textContent = JSON.stringify(data)
+}
+
+function atualizarSeoProduto(produto) {
+    const nome = produto.name || produto.nome || 'Produto'
+    const categoria = produto.categories?.name || 'Embalagens'
+    const descricaoBase = produto.description || produto.descricao || `${nome} disponível na JSL Embalagens. Solicite orçamento e confira especificações, variantes e condições de compra.`
+    const descricao = descricaoBase.slice(0, 155)
+    const imagePath = getImagemUrl(produto)
+    const imagem = imagePath.startsWith('http')
+        ? imagePath
+        : `https://www.jslembalagens.com.br${imagePath.replace('..', '')}`
+    const canonicalUrl = `https://www.jslembalagens.com.br/produtos/${encodeURIComponent(produto.slug || produto.id || '')}`
+    const variants = produto.product_variants || []
+    const preco = variants.length > 0 ? variants[0].price || 0 : 0
+    const stock = variants.length > 0 ? (variants[0].stock ?? 0) : 0
+
+    document.title = `${nome} | ${categoria} | JSL Embalagens`
+    atualizarMetaTag('description', descricao)
+    atualizarMetaTag('robots', 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
+    atualizarMetaTag('og:locale', 'pt_BR', 'property')
+    atualizarMetaTag('og:type', 'product', 'property')
+    atualizarMetaTag('og:title', `${nome} | JSL Embalagens`, 'property')
+    atualizarMetaTag('og:description', descricao, 'property')
+    atualizarMetaTag('og:url', canonicalUrl, 'property')
+    atualizarMetaTag('og:site_name', 'JSL Embalagens', 'property')
+    atualizarMetaTag('og:image', imagem, 'property')
+    atualizarMetaTag('twitter:card', 'summary_large_image')
+    atualizarMetaTag('twitter:title', `${nome} | JSL Embalagens`)
+    atualizarMetaTag('twitter:description', descricao)
+    atualizarMetaTag('twitter:image', imagem)
+    atualizarCanonical(canonicalUrl)
+    atualizarJsonLdProduto(produto, canonicalUrl, imagem, preco, stock)
 }
 
 
@@ -830,19 +961,21 @@ function limparUploadImagens() {
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search)
     const produtoId = params.get('id')
+    const produtoSlug = params.get('produto')
 
     const loading = document.getElementById('produtoLoading')
     const erro = document.getElementById('produtoErro')
     const detalhe = document.getElementById('produtoDetalhe')
 
-    if (!produtoId) {
+    if (!produtoId && !produtoSlug) {
         if (loading) loading.style.display = 'none'
         if (erro) erro.style.display = 'flex'
         return
     }
 
-    
-    const produto = await carregarProduto(produtoId)
+    const produto = produtoSlug
+        ? await carregarProdutoPorSlug(produtoSlug)
+        : await carregarProduto(produtoId)
 
     if (!produto) {
         if (loading) loading.style.display = 'none'

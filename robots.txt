@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /html/checkout.html
+Disallow: /html/carrinho.html
+Disallow: /html/perfil.html
+Disallow: /html/confirmar-email.html
+
+Sitemap: https://www.jslembalagens.com.br/sitemap.xml
