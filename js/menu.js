@@ -1,6 +1,6 @@
 export function initMenu() {
     const links = document.querySelectorAll(".menu a")
-    const currentPath = window.location.pathname
+    const currentPath = window.location.pathname.replace(/\/+$/, '') || '/'
 
     links.forEach(link => {
         const href = link.getAttribute("href")
@@ -8,7 +8,13 @@ export function initMenu() {
         if (!href) return
 
         
-        if (currentPath.includes(href.replace('/', ''))) {
+        const normalizedHref = href.replace(/\/+$/, '') || '/'
+
+        if (
+            normalizedHref === '/'
+                ? currentPath === '/'
+                : currentPath === normalizedHref || currentPath.startsWith(normalizedHref + '/')
+        ) {
             link.classList.add("ativo")
         }
 

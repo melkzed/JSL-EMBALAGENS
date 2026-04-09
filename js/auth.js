@@ -82,12 +82,7 @@ async function verificarAdmin(userId) {
 
 export async function cadastrar(email, senha, nome) {
     if (!supabase) return { sucesso: false, erro: 'Erro de conexão. Recarregue a página.' }
-    
-    const currentPath = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
-    const isInHtml = currentPath.includes('/html/')
-    const confirmUrl = window.location.origin + (isInHtml
-        ? currentPath.substring(0, currentPath.lastIndexOf('/')) + '/confirmar-email.html'
-        : '/html/confirmar-email.html')
+    const confirmUrl = window.location.origin + '/confirmar-email'
 
     const { data, error } = await supabase.auth.signUp({
         email,
@@ -164,7 +159,7 @@ export async function logout() {
 export async function recuperarSenha(email) {
     if (!supabase) return { sucesso: false, erro: 'Erro de conexão. Recarregue a página.' }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/html/perfil.html'
+        redirectTo: window.location.origin + '/perfil'
     })
 
     if (error) {
@@ -180,11 +175,9 @@ function atualizarUIUsuario() {
     const adminLinks = document.querySelectorAll('.admin-link')
 
     
-    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
-    const inHtml = path.includes('/html/')
-    const adminUrl = inHtml ? '../admin/painel.html' : './admin/painel.html'
-    const perfilUrl = inHtml ? './perfil.html' : './html/perfil.html'
-    const homeUrl = inHtml ? '../index.html' : './index.html'
+    const adminUrl = '/admin/painel.html'
+    const perfilUrl = '/perfil'
+    const homeUrl = '/'
 
     adminLinks.forEach(el => {
         if (isAdmin) {
@@ -411,9 +404,7 @@ export function initAuthModal() {
     `
     document.body.appendChild(modal)
 
-    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
-    const inHtml = path.includes('/html/')
-    const perfilUrl = inHtml ? './perfil.html' : './html/perfil.html'
+    const perfilUrl = '/perfil'
 
     document.getElementById('authLinkPerfil').href = perfilUrl
     document.getElementById('authLinkEnderecos').href = perfilUrl + '?tab=enderecos'

@@ -238,13 +238,11 @@ export function initCarrinhoSidebar() {
     `
     document.body.appendChild(sidebar)
 
-    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
-    const inHtml = path.includes('/html/')
     const btnVer = document.getElementById('btnVerCarrinho')
-    btnVer.href = inHtml ? './carrinho.html' : './html/carrinho.html'
+    btnVer.href = '/carrinho'
 
     const btnFinalizar = document.getElementById('btnFinalizar')
-    btnFinalizar.href = inHtml ? './checkout.html' : './html/checkout.html'
+    btnFinalizar.href = '/checkout'
 
     const overlay = document.getElementById('carrinhoOverlay')
     const fechar = document.getElementById('carrinhoFechar')

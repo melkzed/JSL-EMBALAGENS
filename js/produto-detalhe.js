@@ -77,7 +77,7 @@ async function carregarProduto(id) {
 }
 
 async function carregarProdutoPorSlug(slug) {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
         .from("products")
         .select(`
             *,
@@ -88,7 +88,23 @@ async function carregarProdutoPorSlug(slug) {
         .eq("slug", slug)
         .single()
 
-    if (error) {
+    if (error || !data) {
+        const fallback = await supabase
+            .from("products")
+            .select(`
+                *,
+                product_variants (*),
+                product_images (*),
+                categories (*)
+            `)
+            .eq("id", slug)
+            .single()
+
+        data = fallback.data
+        error = fallback.error
+    }
+
+    if (error || !data) {
         console.error("Erro ao buscar produto por slug:", error)
         return null
     }

@@ -14,9 +14,14 @@ function isInHtmlFolder() {
     return path.includes('/html/')
 }
 
+function getBasePath() {
+    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
+    return (path === '/' || path === '/index.html') ? './' : '../'
+}
+
 
 async function carregarComponentes() {
-    const basePath = isInHtmlFolder() ? '../' : './'
+    const basePath = getBasePath()
 
     const navbar = await fetch(basePath + "components/navbar.html")
     document.getElementById("navbar-placeholder").innerHTML = await navbar.text()
@@ -35,46 +40,25 @@ async function carregarComponentes() {
 
 function ajustarLinksNavegacao() {
     const links = document.querySelectorAll('a[data-page]');
-    const inHtml = isInHtmlFolder();
 
     links.forEach(link => {
         const page = link.getAttribute('data-page');
-        if (inHtml) {
-            switch (page) {
-                case 'index':
-                    link.href = '../index.html';
-                    break;
-                case 'produtos':
-                    link.href = './produtos.html';
-                    break;
-                case 'sobre':
-                    link.href = './sobre.html';
-                    break;
-                case 'contato':
-                    link.href = './contato.html';
-                    break;
-                case 'politicas':
-                    link.href = './politicas.html';
-                    break;
-            }
-        } else {
-            switch (page) {
-                case 'index':
-                    link.href = './index.html';
-                    break;
-                case 'produtos':
-                    link.href = './html/produtos.html';
-                    break;
-                case 'sobre':
-                    link.href = './html/sobre.html';
-                    break;
-                case 'contato':
-                    link.href = './html/contato.html';
-                    break;
-                case 'politicas':
-                    link.href = './html/politicas.html';
-                    break;
-            }
+        switch (page) {
+            case 'index':
+                link.href = '/';
+                break;
+            case 'produtos':
+                link.href = '/produtos';
+                break;
+            case 'sobre':
+                link.href = '/sobre';
+                break;
+            case 'contato':
+                link.href = '/contato';
+                break;
+            case 'politicas':
+                link.href = '/politicas';
+                break;
         }
     });
 }
@@ -403,7 +387,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (categoriasGrid && categorias.length > 0) {
         const inHtml = isInHtmlFolder()
         const basePath = inHtml ? '../' : './'
-        const produtosPath = inHtml ? './produtos.html' : './html/produtos.html'
+    const produtosPath = '/produtos'
         const fallbackImg = basePath + 'img/imagemExemplo.jpg'
 
         const categoriasDestaque = categorias.filter(c => c.featured)
