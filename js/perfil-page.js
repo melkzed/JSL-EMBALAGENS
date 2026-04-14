@@ -3,6 +3,33 @@ import { getUser, getProfile, verificarSessao, recuperarSenha, logout } from "./
 import { animarSlideDown } from "./animacoes.js"
 import { escapeHtml, isUrlSegura, formatarPreco, mostrarToast } from "./utils.js"
 
+function isFriendlyUrlHost() {
+    const host = window.location.hostname
+    return host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+}
+
+function getPageHref(page) {
+    if (isFriendlyUrlHost()) {
+        if (page === 'index') return '/'
+        if (page === 'produtos') return '/produtos'
+        if (page === 'checkout') return '/checkout'
+    }
+
+    if (page === 'index') return '../index.html'
+    if (page === 'produtos') return './produtos.html'
+    if (page === 'checkout') return './checkout.html'
+    return '#'
+}
+
+function getProdutoHref(slugOrId) {
+    const slug = encodeURIComponent(slugOrId || '')
+    if (isFriendlyUrlHost()) {
+        return `/produtos/${slug}`
+    }
+
+    return `./produto.html?produto=${slug}`
+}
+
 
 let _confirmarCb = null
 function confirmarAcao(msg) {
@@ -25,7 +52,7 @@ document.getElementById('btnConfirmarPerfilNao')?.addEventListener('click', () =
 async function verificarLogin() {
     const logado = await verificarSessao()
     if (!logado) {
-        window.location.href = '/produtos'
+        window.location.href = getPageHref('produtos')
         return false
     }
     return true
@@ -829,7 +856,7 @@ async function carregarPedidos() {
                 <i class="fa-solid fa-box-open"></i>
                 <h3>Nenhum pedido ainda</h3>
                 <p>Quando você fizer uma compra, seus pedidos aparecerão aqui</p>
-                <a href="/produtos" class="perfil-btn-outline">Ver produtos</a>
+                <a href="${getPageHref('produtos')}" class="perfil-btn-outline">Ver produtos</a>
             </div>
         `
         return
@@ -904,7 +931,7 @@ async function carregarPedidos() {
                     const prodId = item.product_variants?.products?.id
                     const sizeLabel = item.product_variants?.size_label ? ' (' + item.product_variants.size_label + ')' : ''
                     const nameHtml = prodId
-                        ? `<a href="/produtos/${prodId}" style="color:var(--primary-blue);text-decoration:none;font-weight:600">${escapeHtml(prodName)}</a>`
+                        ? `<a href="${getProdutoHref(prodId)}" style="color:var(--primary-blue);text-decoration:none;font-weight:600">${escapeHtml(prodName)}</a>`
                         : escapeHtml(prodName)
                     return `<span>${nameHtml}${sizeLabel} × ${item.quantity}</span>`
                 }).join('')}
@@ -921,7 +948,7 @@ async function carregarPedidos() {
                                     const prodId = item.product_variants?.products?.id
                                     const sizeLabel = item.product_variants?.size_label ? ' <small>(' + escapeHtml(item.product_variants.size_label) + ')</small>' : ''
                                     const nameHtml = prodId
-                                        ? `<a href="/produtos/${prodId}" style="color:var(--primary-blue);text-decoration:none">${prodName}</a>${sizeLabel}`
+                                        ? `<a href="${getProdutoHref(prodId)}" style="color:var(--primary-blue);text-decoration:none">${prodName}</a>${sizeLabel}`
                                         : `${prodName}${sizeLabel}`
                                     return `
                                     <tr>
@@ -949,7 +976,7 @@ async function carregarPedidos() {
                     ${pedido.notes ? `<div class="perfil-pedido-detalhe-item"><h4><i class="fa-solid fa-comment"></i> Observações</h4><p>${escapeHtml(pedido.notes)}</p></div>` : ''}
                 </div>
                 ${podeCancelar ? `<button class="perfil-btn-cancelar-pedido" data-cancelar-id="${pedido.id}"><i class="fa-solid fa-ban"></i> Cancelar pedido</button>` : ''}
-                ${pagamentoPendente ? `<a href="/checkout?retomar=${pedido.id}" class="perfil-btn-retomar-pagamento"><i class="fa-solid fa-credit-card"></i> Continuar pagamento</a>` : ''}
+                ${pagamentoPendente ? `<a href="${getPageHref('checkout')}?retomar=${pedido.id}" class="perfil-btn-retomar-pagamento"><i class="fa-solid fa-credit-card"></i> Continuar pagamento</a>` : ''}
             </div>
             <div class="perfil-pedido-footer">
                 <span>Total: <strong>R$ ${formatarPreco(pedido.total)}</strong></span>
@@ -1044,7 +1071,7 @@ async function carregarFavoritos() {
                 <i class="fa-solid fa-heart"></i>
                 <h3>Nenhum favorito ainda</h3>
                 <p>Adicione produtos aos seus favoritos para vê-los aqui</p>
-                <a href="/produtos" class="perfil-btn-outline">Explorar produtos</a>
+                <a href="${getPageHref('produtos')}" class="perfil-btn-outline">Explorar produtos</a>
             </div>
         `
         return
@@ -1059,7 +1086,7 @@ async function carregarFavoritos() {
         const preco = variantes.length > 0 ? variantes[0].price : 0
 
         return `
-            <a href="/produtos/${product.slug || product.id}" class="perfil-favorito-card">
+            <a href="${getProdutoHref(product.slug || product.id)}" class="perfil-favorito-card">
                 <img src="${img}" alt="${escapeHtml(product.name)}">
                 <h4>${escapeHtml(product.name)}</h4>
                 <span class="perfil-favorito-preco">R$ ${formatarPreco(preco)}</span>

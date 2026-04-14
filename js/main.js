@@ -14,9 +14,50 @@ function isInHtmlFolder() {
     return path.includes('/html/')
 }
 
+function isFriendlyUrlHost() {
+    const host = window.location.hostname
+    return host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+}
+
 function getBasePath() {
     const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
     return (path === '/' || path === '/index.html') ? './' : '../'
+}
+
+function getPageHref(page) {
+    const inHtmlFolder = isInHtmlFolder()
+    const useFriendlyUrls = isFriendlyUrlHost()
+
+    const routes = {
+        index: useFriendlyUrls ? '/' : (inHtmlFolder ? '../index.html' : './index.html'),
+        produtos: useFriendlyUrls ? '/produtos' : (inHtmlFolder ? './produtos.html' : './html/produtos.html'),
+        sobre: useFriendlyUrls ? '/sobre' : (inHtmlFolder ? './sobre.html' : './html/sobre.html'),
+        contato: useFriendlyUrls ? '/contato' : (inHtmlFolder ? './contato.html' : './html/contato.html'),
+        politicas: useFriendlyUrls ? '/politicas' : (inHtmlFolder ? './politicas.html' : './html/politicas.html'),
+        carrinho: useFriendlyUrls ? '/carrinho' : (inHtmlFolder ? './carrinho.html' : './html/carrinho.html'),
+        checkout: useFriendlyUrls ? '/checkout' : (inHtmlFolder ? './checkout.html' : './html/checkout.html'),
+        perfil: useFriendlyUrls ? '/perfil' : (inHtmlFolder ? './perfil.html' : './html/perfil.html'),
+        'confirmar-email': useFriendlyUrls ? '/confirmar-email' : (inHtmlFolder ? './confirmar-email.html' : './html/confirmar-email.html')
+    }
+
+    return routes[page] || '#'
+}
+
+function getCurrentPageKey() {
+    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/').replace(/\/+$/, '') || '/'
+
+    if (path === '/' || path === '/index.html') return 'index'
+    if (path === '/produtos' || path === '/html/produtos.html') return 'produtos'
+    if (path === '/sobre' || path === '/html/sobre.html') return 'sobre'
+    if (path === '/contato' || path === '/html/contato.html') return 'contato'
+    if (path === '/politicas' || path === '/html/politicas.html') return 'politicas'
+    if (path === '/carrinho' || path === '/html/carrinho.html') return 'carrinho'
+    if (path === '/checkout' || path === '/html/checkout.html') return 'checkout'
+    if (path === '/perfil' || path === '/html/perfil.html') return 'perfil'
+    if (path === '/confirmar-email' || path === '/html/confirmar-email.html') return 'confirmar-email'
+    if (path === '/html/produto.html' || path.startsWith('/produtos/')) return 'produtos'
+
+    return ''
 }
 
 
@@ -40,25 +81,15 @@ async function carregarComponentes() {
 
 function ajustarLinksNavegacao() {
     const links = document.querySelectorAll('a[data-page]');
+    const currentPageKey = getCurrentPageKey()
 
     links.forEach(link => {
         const page = link.getAttribute('data-page');
-        switch (page) {
-            case 'index':
-                link.href = '/';
-                break;
-            case 'produtos':
-                link.href = '/produtos';
-                break;
-            case 'sobre':
-                link.href = '/sobre';
-                break;
-            case 'contato':
-                link.href = '/contato';
-                break;
-            case 'politicas':
-                link.href = '/politicas';
-                break;
+        link.href = getPageHref(page)
+        link.dataset.route = page
+
+        if (page === currentPageKey) {
+            link.classList.add('ativo')
         }
     });
 }
@@ -387,7 +418,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (categoriasGrid && categorias.length > 0) {
         const inHtml = isInHtmlFolder()
         const basePath = inHtml ? '../' : './'
-    const produtosPath = '/produtos'
+        const produtosPath = getPageHref('produtos')
         const fallbackImg = basePath + 'img/imagemExemplo.jpg'
 
         const categoriasDestaque = categorias.filter(c => c.featured)

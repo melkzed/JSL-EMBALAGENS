@@ -6,10 +6,11 @@
     <script>
         const params = new URLSearchParams(window.location.search)
         const pedidoId = params.get('pedido')
+        const isFriendlyHost = ['www.jslembalagens.com.br', 'jslembalagens.com.br'].includes(window.location.hostname)
         if (pedidoId) {
-            window.location.href = `./perfil.html?tab=pedidos`
+            window.location.href = isFriendlyHost ? '/perfil?tab=pedidos' : './html/perfil.html?tab=pedidos'
         } else {
-            window.location.href = './index.html'
+            window.location.href = isFriendlyHost ? '/' : './index.html'
         }
     </script>
 </head>

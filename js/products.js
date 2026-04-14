@@ -38,11 +38,20 @@ export async function carregarProdutos() {
   return data || []
 }
 
+function isFriendlyUrlHost() {
+    const host = window.location.hostname
+    return host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+}
+
 function getProdutoHref(produto, inHtmlFolder) {
     const slug = encodeURIComponent(produto.slug || produto.id || '')
+    if (isFriendlyUrlHost()) {
+        return `/produtos/${slug}`
+    }
+
     return inHtmlFolder
-        ? `../produtos/${slug}`
-        : `./produtos/${slug}`
+        ? `./produto.html?produto=${slug}`
+        : `./html/produto.html?produto=${slug}`
 }
 
 export function getImagemUrl(produto) {

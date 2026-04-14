@@ -33,6 +33,20 @@ function showNotificacao(msg, tipo = 'sucesso') {
     }, 4500)
 }
 
+function isFriendlyUrlHost() {
+    const host = window.location.hostname
+    return host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+}
+
+function getProdutoHref(slugOrId) {
+    const slug = encodeURIComponent(slugOrId || '')
+    if (isFriendlyUrlHost()) {
+        return `/produtos/${slug}`
+    }
+
+    return `./produto.html?produto=${slug}`
+}
+
 
 
 async function carregarProduto(id) {
@@ -659,7 +673,7 @@ function renderizarSemelhantes(produtos) {
         const slug = encodeURIComponent(p.slug || p.id)
 
         return `
-            <a href="../produtos/${slug}" class="produto-card" style="text-decoration:none; color: inherit; margin-bottom: 0;">
+            <a href="${getProdutoHref(slug)}" class="produto-card" style="text-decoration:none; color: inherit; margin-bottom: 0;">
                 <img src="${img}" alt="${escapeHtml(nome)}">
                 <h3>${escapeHtml(nome)}</h3>
                 <span class="preco">R$ ${formatarPreco(preco)} <small>/und</small></span>
