@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Retorno do Pagamento - JSL Embalagens</title>
+    <script>
+        const params = new URLSearchParams(window.location.search)
+        const pedidoId = params.get('pedido')
+        if (pedidoId) {
+            window.location.href = `./perfil.html?tab=pedidos`
+        } else {
+            window.location.href = './index.html'
+        }
+    </script>
+</head>
+<body>
+    <p>Processando retorno...</p>
+</body>
+</html>

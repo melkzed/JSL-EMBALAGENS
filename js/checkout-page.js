@@ -6,8 +6,7 @@ import { escapeHtml, formatarPreco, mostrarToast } from "./utils.js"
 import {
     renderizarPixQRCode,
     renderizarFormCartao,
-    validarCartao,
-    processarPagamentoCartao,
+    criarCheckoutPagBank,
     atualizarSelectParcelas,
     CONFIG_PAGAMENTO
 } from "./pagamento.js"
@@ -24,7 +23,7 @@ import {
 let enderecoSelecionado = null
 let itensCarrinho = []
 let freteSelecionado = null
-let tipoEntrega = 'entrega' 
+let tipoEntrega = 'entrega'
 let _checkCepValidado = false
 let _enderecosData = []
 
@@ -93,7 +92,6 @@ function mostrarBannerLogin() {
         abrirAuthModal('authCadastroPanel')
     })
 
-    
     window.addEventListener('auth-changed', async (e) => {
         if (e.detail?.user) {
             window.location.reload()
@@ -104,7 +102,7 @@ function mostrarBannerLogin() {
 
 
 async function iniciarCheckout() {
-    
+
     const params = new URLSearchParams(window.location.search)
     const retomarId = params.get('retomar')
 
@@ -113,7 +111,6 @@ async function iniciarCheckout() {
         return
     }
 
-    
     const profile = getProfile()
     if (!profile?.cpf) {
         const checkPage = document.getElementById('checkoutPage')
@@ -157,7 +154,6 @@ async function retomarPagamento(orderId) {
     const user = getUser()
     if (!user) return
 
-    
     const { data: pedido, error } = await supabase
         .from('orders')
         .select(`
@@ -201,7 +197,6 @@ async function retomarPagamento(orderId) {
         total_price: item.total_price
     }))
 
-    
     const endPedido = {
         street: pedido.shipping_street,
         number: pedido.shipping_number,
@@ -213,10 +208,8 @@ async function retomarPagamento(orderId) {
         recipient: pedido.shipping_recipient
     }
 
-    
     irParaStep(3)
 
-    
     const pixArea = document.getElementById('pixPaymentArea')
     const cardArea = document.getElementById('cardPaymentResult')
     const sucessoArea = document.getElementById('checkoutSucesso')
@@ -225,7 +218,6 @@ async function retomarPagamento(orderId) {
     if (sucessoArea) sucessoArea.style.display = 'none'
 
     if (metodo === 'pix') {
-        
         if (pixArea) {
             pixArea.style.display = ''
             pixArea.innerHTML = ''
@@ -255,7 +247,6 @@ async function retomarPagamento(orderId) {
             pixArea.appendChild(infoExtra)
         }
     } else if (metodo === 'credit_card' || metodo === 'debit_card') {
-        
         if (cardArea) {
             cardArea.style.display = ''
             cardArea.innerHTML = `
@@ -293,7 +284,6 @@ async function retomarPagamento(orderId) {
             `
         }
     } else {
-        
         if (sucessoArea) {
             sucessoArea.style.display = ''
             const iconeSucesso = document.querySelector('.checkout-sucesso-icon')
@@ -382,11 +372,9 @@ async function carregarEnderecos() {
         </label>
     `).join('')
 
-    
     const padrao = data.find(e => e.is_default) || data[0]
     selecionarEndereco(padrao, data)
 
-    
     container.querySelectorAll('input[name="enderecoEntrega"]').forEach(radio => {
         radio.addEventListener('change', () => {
             const end = data.find(e => e.id === radio.value)
@@ -394,7 +382,6 @@ async function carregarEnderecos() {
         })
     })
 
-    
     container.querySelectorAll('[data-editar-id]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault()
@@ -404,7 +391,6 @@ async function carregarEnderecos() {
         })
     })
 
-    
     container.querySelectorAll('[data-excluir-id]').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.preventDefault()
@@ -423,7 +409,6 @@ function abrirEdicaoEnderecoCheckout(end) {
     wrapper.style.display = ''
     wrapper.querySelector('h3').textContent = 'Editar endereço'
 
-    
     document.getElementById('checkCEP').value = end.zip_code || ''
     document.getElementById('checkApelido').value = end.label || 'Casa'
     document.getElementById('checkRua').value = end.street || ''
@@ -434,9 +419,8 @@ function abrirEdicaoEnderecoCheckout(end) {
     document.getElementById('checkEstado').value = end.state || ''
     document.getElementById('checkDestinatario').value = end.recipient || ''
 
-    
     wrapper.dataset.editandoId = end.id
-    _checkCepValidado = true 
+    _checkCepValidado = true
 
     wrapper.scrollIntoView({ behavior: 'smooth' })
 }
@@ -457,7 +441,6 @@ async function excluirEnderecoCheckout(id) {
         return
     }
 
-    
     if (enderecoSelecionado?.id === id) {
         enderecoSelecionado = null
         freteSelecionado = null
@@ -474,7 +457,6 @@ async function excluirEnderecoCheckout(id) {
 function selecionarEndereco(end, lista) {
     enderecoSelecionado = end
 
-    
     document.querySelectorAll('.checkout-endereco-card').forEach(card => {
         card.classList.remove('selecionado')
     })
@@ -484,10 +466,8 @@ function selecionarEndereco(end, lista) {
         card.querySelector('input').checked = true
     }
 
-    
     calcularFreteParaEndereco(end)
 
-    
     const btn = document.getElementById('btnIrRevisao')
     if (btn) btn.disabled = true
 }
@@ -502,7 +482,6 @@ async function calcularFreteParaEndereco(end) {
     const cep = end.zip_code?.replace(/\D/g, '')
     if (!cep || cep.length !== 8) return
 
-    
     freteSection.style.display = ''
     mostrarFreteLoading(freteContainer)
     freteSelecionado = null
@@ -525,12 +504,11 @@ async function calcularFreteParaEndereco(end) {
         const btn = document.getElementById('btnIrRevisao')
         if (btn) btn.disabled = false
 
-        // Atualiza resumo e parcelas automaticamente ao selecionar frete
-        if (document.getElementById('resumoFinal')) montarRevisao();
-        const metodo = document.querySelector('input[name="metodoPagamento"]:checked')?.value;
+        if (document.getElementById('resumoFinal')) montarRevisao()
+        const metodo = document.querySelector('input[name="metodoPagamento"]:checked')?.value
         if (metodo === 'credit_card') {
-            const total = calcularTotalCarrinho();
-            atualizarSelectParcelas(total);
+            const total = calcularTotalCarrinho()
+            atualizarSelectParcelas(total)
         }
     })
 }
@@ -544,7 +522,6 @@ async function salvarNovoEndereco(e) {
 
     const btn = e.target.querySelector('button[type="submit"]')
 
-    
     const cep = document.getElementById('checkCEP').value.trim()
     const rua = document.getElementById('checkRua').value.trim()
     const numero = document.getElementById('checkNumero').value.trim()
@@ -562,7 +539,6 @@ async function salvarNovoEndereco(e) {
     if (!cidade) { mostrarToast('Preencha a cidade', 'erro'); return }
     if (!estado) { mostrarToast('Selecione o estado (UF)', 'erro'); return }
 
-    
     if (!_checkCepValidado) {
         btn.disabled = true
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Validando CEP...'
@@ -581,7 +557,6 @@ async function salvarNovoEndereco(e) {
     const editandoId = wrapper?.dataset.editandoId || null
 
     try {
-        
         const { data: perfil } = await supabase
             .from('profiles')
             .select('id')
@@ -634,7 +609,6 @@ async function salvarNovoEndereco(e) {
             return
         }
 
-        
         if (wrapper) delete wrapper.dataset.editandoId
         wrapper.style.display = 'none'
         document.getElementById('checkoutFormEndereco')?.reset()
@@ -704,7 +678,6 @@ async function buscarCEPCheckout(silencioso = false) {
 
 
 function montarRevisao() {
-    
     const endDiv = document.getElementById('revisaoEndereco')
     if (tipoEntrega === 'retirada') {
         endDiv.innerHTML = `
@@ -731,7 +704,6 @@ function montarRevisao() {
         `
     }
 
-    
     const itensDiv = document.getElementById('revisaoItens')
     let totalGeral = 0
 
@@ -763,7 +735,6 @@ function montarRevisao() {
             `
         }).join('')
 
-    
     const resumoDiv = document.getElementById('resumoFinal')
     const observacoes = document.getElementById('checkoutObservacoes')?.value.trim()
     const isRetirada = tipoEntrega === 'retirada'
@@ -816,37 +787,10 @@ async function confirmarPedido() {
         return
     }
 
-    
     const profile = getProfile()
     if (!profile?.cpf) {
         mostrarToast('Você precisa cadastrar seu CPF no perfil antes de finalizar a compra.', 'erro')
         return
-    }
-
-    const metodoPagamento = document.querySelector('input[name="metodoPagamento"]:checked')?.value || 'pix'
-
-    
-    if (metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') {
-        const errosCartao = validarCartao()
-        if (errosCartao.length > 0) {
-            // Exibe todos os erros no formulário de cartão
-            const errorsEl = document.getElementById('cardFormErrors')
-            if (errorsEl) {
-                errorsEl.style.display = ''
-                errorsEl.innerHTML = errosCartao.map(msg => `<p><i class="fa-solid fa-exclamation-circle"></i> ${msg}</p>`).join('')
-            }
-            // Foca no primeiro campo com erro
-            const campos = ['cardNumber','cardExpiry','cardCVV','cardName','cardCPF']
-            for (const campo of campos) {
-                const el = document.getElementById(campo)
-                if (el && el.classList.contains('card-input-error')) {
-                    el.focus();
-                    break;
-                }
-            }
-            mostrarToast('Corrija os erros do cartão para continuar.', 'erro')
-            return
-        }
     }
 
     const btn = document.getElementById('btnConfirmarPedido')
@@ -854,8 +798,10 @@ async function confirmarPedido() {
     btn.disabled = true
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processando...'
 
+    const metodoPagamento = document.querySelector('input[name="metodoPagamento"]:checked')?.value || 'pix'
+
     try {
-        
+        // ── Criar perfil se não existir ──
         const { data: perfil } = await supabase
             .from('profiles')
             .select('id')
@@ -880,7 +826,7 @@ async function confirmarPedido() {
         const end = isRetirada ? LOJA_RETIRADA : enderecoSelecionado
         const observacoes = document.getElementById('checkoutObservacoes')?.value.trim() || null
 
-        
+        // ── Calcular totais ──
         let subtotal = 0
         const itensParaInserir = itensCarrinho.map(item => {
             const variant = item.product_variants
@@ -888,7 +834,6 @@ async function confirmarPedido() {
             const preco = parseFloat(variant?.price || 0)
             const totalItem = preco * item.quantity
             subtotal += totalItem
-
             return {
                 variant_id: variant.id,
                 product_name: product?.name || 'Produto',
@@ -900,18 +845,17 @@ async function confirmarPedido() {
             }
         })
 
-        
-        let metodoParaBanco = metodoPagamento
-        if (metodoPagamento === 'whatsapp') metodoParaBanco = 'transfer'
-
-        
         const custoFrete = isRetirada ? 0 : (freteSelecionado?.preco || 0)
         const totalPedido = subtotal + custoFrete
         const freteDescricao = isRetirada
             ? 'Retirada na loja'
             : (freteSelecionado ? `${freteSelecionado.transportadora} ${freteSelecionado.servico}` : null)
 
-        
+        let metodoParaBanco = metodoPagamento
+        if (metodoPagamento === 'whatsapp') metodoParaBanco = 'transfer'
+        if (metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') metodoParaBanco = 'credit_card'
+
+        // ── Criar pedido ──
         console.log('[Checkout] Criando pedido...')
         const { data: pedido, error: erroPedido } = await supabase
             .from('orders')
@@ -947,13 +891,10 @@ async function confirmarPedido() {
 
         console.log('[Checkout] Pedido criado:', pedido.id, pedido.order_number)
 
-        
-        const itensComOrderId = itensParaInserir.map(item => ({
-            ...item,
-            order_id: pedido.id
-        }))
-
+        // ── Inserir itens ──
+        const itensComOrderId = itensParaInserir.map(item => ({ ...item, order_id: pedido.id }))
         console.log('[Checkout] Inserindo', itensComOrderId.length, 'itens...')
+
         const { error: erroItens } = await supabase
             .from('order_items')
             .insert(itensComOrderId)
@@ -969,7 +910,7 @@ async function confirmarPedido() {
 
         console.log('[Checkout] Itens inseridos com sucesso')
 
-        
+        // ── Criar registro de pagamento ──
         const { error: erroPag } = await supabase.from('payments').insert([{
             order_id: pedido.id,
             method: metodoParaBanco,
@@ -978,9 +919,8 @@ async function confirmarPedido() {
         }])
         if (erroPag) console.warn('[Checkout] Aviso pagamento:', erroPag.message)
 
-        
+        // ── Criar shipment ──
         if (isRetirada) {
-            
             try {
                 const { error: erroShip } = await supabase.from('shipments').insert([{
                     order_id: pedido.id,
@@ -996,7 +936,6 @@ async function confirmarPedido() {
             }
         } else if (freteSelecionado) {
             try {
-                
                 const nomeTransp = freteSelecionado.transportadora
                 let carrierId = null
 
@@ -1010,7 +949,6 @@ async function confirmarPedido() {
                 if (carrier) {
                     carrierId = carrier.id
                 } else {
-                    
                     const trackingUrls = {
                         'Correios': 'https://rastreio.correios.com.br/?objetos={code}',
                         'Jadlog': 'https://www.jadlog.com.br/siteInstitucional/tracking.jad?cte={code}',
@@ -1029,11 +967,10 @@ async function confirmarPedido() {
                     if (novoCarrier) carrierId = novoCarrier.id
                 }
 
-                
                 const hoje = new Date()
                 const diasUteis = freteSelecionado.prazoMax || 15
                 const estimativa = new Date(hoje)
-                estimativa.setDate(estimativa.getDate() + Math.ceil(diasUteis * 1.4)) 
+                estimativa.setDate(estimativa.getDate() + Math.ceil(diasUteis * 1.4))
 
                 const { error: erroShip } = await supabase.from('shipments').insert([{
                     order_id: pedido.id,
@@ -1044,60 +981,44 @@ async function confirmarPedido() {
                     notes: `${freteSelecionado.transportadora} ${freteSelecionado.servico} — Prazo: ${freteSelecionado.prazoMin}-${freteSelecionado.prazoMax} dias úteis`
                 }])
 
-                if (erroShip) {
-                    console.warn('[Checkout] Aviso shipment:', erroShip.message)
-                } else {
-                    console.log('[Checkout] Shipment criado para', nomeTransp)
-                }
+                if (erroShip) console.warn('[Checkout] Aviso shipment:', erroShip.message)
+                else console.log('[Checkout] Shipment criado para', nomeTransp)
             } catch (shipErr) {
                 console.warn('[Checkout] Erro ao criar shipment:', shipErr)
             }
         }
 
-        
+        // ── Pagamento via PagBank (cartão crédito/débito) ──
         if (metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') {
-            console.log('[Checkout] Processando pagamento com cartão...')
-            const resultado = await processarPagamentoCartao(
+            console.log('[Checkout] Criando checkout PagBank...')
+            const resultado = await criarCheckoutPagBank(
                 pedido.id,
                 totalPedido,
-                metodoPagamento,
-                user.email
+                itensCarrinho,
+                {
+                    nome: profile?.full_name || '',
+                    email: user.email,
+                    cpf: profile?.cpf || '',
+                    telefone: profile?.phone || ''
+                }
             )
 
-            if (!resultado.success && resultado.errors) {
-                // Exibe todos os erros retornados pelo backend/gateway
-                const errorsEl = document.getElementById('cardFormErrors')
-                if (errorsEl) {
-                    errorsEl.style.display = ''
-                    errorsEl.innerHTML = resultado.errors.map(msg => `<p><i class='fa-solid fa-exclamation-circle'></i> ${msg}</p>`).join('')
-                }
-                mostrarToast(resultado.errors[0], 'erro')
-                mostrarResultadoCartao(pedido, itensParaInserir, resultado)
+            if (!resultado.success) {
+                mostrarToast(resultado.errors?.[0] || 'Erro ao criar checkout. Tente novamente.', 'erro')
+                btn.disabled = false
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar pedido'
                 return
             }
 
-            if (resultado.gateway) {
-                await supabase.from('payments').update({
-                    gateway: resultado.gateway,
-                    gateway_transaction_id: resultado.gatewayId || null,
-                    status: resultado.status || 'processing'
-                }).eq('order_id', pedido.id)
-            }
-
-            if (resultado.status === 'approved') {
-                await supabase.from('orders').update({ status: 'paid' }).eq('id', pedido.id)
-            }
-
             await limparCarrinho()
-            mostrarResultadoCartao(pedido, itensParaInserir, resultado)
+            window.location.href = resultado.checkoutUrl
             return
         }
 
-        
+        // ── PIX ou WhatsApp ──
         console.log('[Checkout] Limpando carrinho...')
         await limparCarrinho()
 
-        
         if (metodoPagamento === 'pix') {
             mostrarPagamentoPix(pedido, itensParaInserir, totalPedido)
         } else {
@@ -1112,11 +1033,11 @@ async function confirmarPedido() {
     }
 }
 
+
+
 function mostrarConfirmacao(pedido, itens, metodo) {
-    
     irParaStep(3)
 
-    
     const pixArea = document.getElementById('pixPaymentArea')
     const cardArea = document.getElementById('cardPaymentResult')
     const sucessoArea = document.getElementById('checkoutSucesso')
@@ -1157,7 +1078,6 @@ function mostrarConfirmacao(pedido, itens, metodo) {
         </div>
     `
 
-    
     if (metodo === 'whatsapp') {
         const msg = montarMensagemWhatsApp(pedido, itens, end)
         infoHTML += `
@@ -1176,22 +1096,18 @@ function mostrarConfirmacao(pedido, itens, metodo) {
 function mostrarPagamentoPix(pedido, itens, valor) {
     irParaStep(3)
 
-    
     const cardArea = document.getElementById('cardPaymentResult')
     const sucessoArea = document.getElementById('checkoutSucesso')
     if (cardArea) cardArea.style.display = 'none'
     if (sucessoArea) sucessoArea.style.display = 'none'
 
-    
     const pixArea = document.getElementById('pixPaymentArea')
     pixArea.style.display = ''
 
     const numero = pedido.order_number || pedido.id.slice(0, 8).toUpperCase()
 
-    
     renderizarPixQRCode(pixArea, valor, numero, pedido.id)
 
-    
     const infoExtra = document.createElement('div')
     infoExtra.className = 'pix-pedido-info'
     infoExtra.innerHTML = `
@@ -1212,93 +1128,6 @@ function mostrarPagamentoPix(pedido, itens, valor) {
 }
 
 
-
-function mostrarResultadoCartao(pedido, itens, resultado) {
-    irParaStep(3)
-
-    
-    const pixArea = document.getElementById('pixPaymentArea')
-    const sucessoArea = document.getElementById('checkoutSucesso')
-    if (pixArea) pixArea.style.display = 'none'
-
-    const cardArea = document.getElementById('cardPaymentResult')
-    cardArea.style.display = ''
-
-    const numero = pedido.order_number || `#${pedido.id.slice(0, 8).toUpperCase()}`
-    const end = enderecoSelecionado
-
-    if (resultado.success || resultado.status === 'approved' || resultado.status === 'processing') {
-        
-        if (sucessoArea) sucessoArea.style.display = 'none'
-        const isApproved = resultado.status === 'approved'
-
-        cardArea.innerHTML = `
-            <div class="card-result ${isApproved ? 'approved' : 'processing'}">
-                <div class="card-result-icon">
-                    <i class="fa-solid ${isApproved ? 'fa-circle-check' : 'fa-clock'}"></i>
-                </div>
-                <h2>${isApproved ? 'Pagamento aprovado!' : 'Pagamento em processamento'}</h2>
-                <p class="checkout-pedido-numero">Pedido ${escapeHtml(numero)}</p>
-                <p class="card-result-msg">${escapeHtml(resultado.message || '')}</p>
-                
-                <div class="checkout-sucesso-info">
-                    <div class="checkout-info-grupo">
-                        <h4><i class="fa-solid fa-credit-card"></i> Pagamento</h4>
-                        <p>${isApproved ? '<span style="color:var(--success-green);">✓ Aprovado</span>' : '<span style="color:#f59e0b;">⏳ Processando</span>'}</p>
-                    </div>
-                    <div class="checkout-info-grupo">
-                        <h4><i class="fa-solid fa-truck"></i> Entrega</h4>
-                        <p>${escapeHtml(end.street)}, ${escapeHtml(end.number)} - ${escapeHtml(end.neighborhood)}</p>
-                        <p>${escapeHtml(end.city)}/${escapeHtml(end.state)} - CEP: ${escapeHtml(end.zip_code)}</p>
-                    </div>
-                    <div class="checkout-info-grupo">
-                        <h4><i class="fa-solid fa-box"></i> Resumo</h4>
-                        <p>${itens.length} ${itens.length === 1 ? 'item' : 'itens'} - Total: <strong>R$ ${formatarPreco(pedido.total)}</strong></p>
-                    </div>
-                </div>
-                
-                <div class="checkout-sucesso-acoes">
-                    <a href="./perfil.html?tab=pedidos" class="checkout-btn-primary">
-                        <i class="fa-solid fa-box"></i> Ver meus pedidos
-                    </a>
-                    <a href="./produtos.html" class="checkout-btn-outline">
-                        <i class="fa-solid fa-arrow-left"></i> Continuar comprando
-                    </a>
-                </div>
-            </div>
-        `
-    } else {
-        
-        if (sucessoArea) sucessoArea.style.display = 'none'
-        const erros = resultado.errors || ['Pagamento não aprovado. Tente outro método.']
-
-        cardArea.innerHTML = `
-            <div class="card-result refused">
-                <div class="card-result-icon">
-                    <i class="fa-solid fa-circle-xmark"></i>
-                </div>
-                <h2>Pagamento não aprovado</h2>
-                <p class="checkout-pedido-numero">Pedido ${escapeHtml(numero)}</p>
-                <div class="card-result-errors">
-                    ${erros.map(e => `<p><i class="fa-solid fa-exclamation-triangle"></i> ${escapeHtml(e)}</p>`).join('')}
-                </div>
-                <p class="card-result-msg">
-                    Seu pedido foi criado e está aguardando pagamento. 
-                    Você pode tentar pagar novamente ou escolher outro método.
-                </p>
-                <div class="checkout-sucesso-acoes">
-                    <a href="./perfil.html?tab=pedidos" class="checkout-btn-primary">
-                        <i class="fa-solid fa-box"></i> Ver meus pedidos
-                    </a>
-                    <a href="https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent('Olá! Preciso de ajuda com o pagamento do pedido ' + numero)}" 
-                       target="_blank" class="checkout-btn-whatsapp">
-                        <i class="fa-brands fa-whatsapp"></i> Falar com suporte
-                    </a>
-                </div>
-            </div>
-        `
-    }
-}
 
 function montarMensagemWhatsApp(pedido, itens, end) {
     const numero = pedido.order_number || pedido.id.slice(0, 8).toUpperCase()
@@ -1340,12 +1169,10 @@ function montarMensagemWhatsApp(pedido, itens, end) {
 
 
 function irParaStep(step) {
-    
     document.getElementById('checkoutStep1').style.display = step === 1 ? '' : 'none'
     document.getElementById('checkoutStep2').style.display = step === 2 ? '' : 'none'
     document.getElementById('checkoutStep3').style.display = step === 3 ? '' : 'none'
 
-    
     document.querySelectorAll('.checkout-step').forEach(el => {
         const s = parseInt(el.dataset.step)
         el.classList.remove('ativo', 'completo')
@@ -1359,7 +1186,6 @@ function irParaStep(step) {
 
 
 function initEventListeners() {
-    
     document.getElementById('btnNovoEnderecoCheckout')?.addEventListener('click', () => {
         const wrapper = document.getElementById('checkoutNovoEndereco')
         if (wrapper) {
@@ -1384,7 +1210,6 @@ function initEventListeners() {
     document.getElementById('checkoutFormEndereco')?.addEventListener('submit', salvarNovoEndereco)
     document.getElementById('checkBtnCEP')?.addEventListener('click', () => buscarCEPCheckout(false))
 
-    
     document.querySelectorAll('input[name="tipoEntrega"]').forEach(radio => {
         radio.addEventListener('change', () => {
             tipoEntrega = radio.value
@@ -1401,12 +1226,11 @@ function initEventListeners() {
                 if (entregaWrapper) entregaWrapper.style.display = 'none'
                 if (retiradaLoja) retiradaLoja.style.display = ''
                 if (btnRevisao) btnRevisao.disabled = false
-                // Atualiza resumo e parcelas ao selecionar retirada
-                if (document.getElementById('resumoFinal')) montarRevisao();
-                const metodo = document.querySelector('input[name="metodoPagamento"]:checked')?.value;
+                if (document.getElementById('resumoFinal')) montarRevisao()
+                const metodo = document.querySelector('input[name="metodoPagamento"]:checked')?.value
                 if (metodo === 'credit_card') {
-                    const total = calcularTotalCarrinho();
-                    atualizarSelectParcelas(total);
+                    const total = calcularTotalCarrinho()
+                    atualizarSelectParcelas(total)
                 }
             } else {
                 if (entregaWrapper) entregaWrapper.style.display = ''
@@ -1416,7 +1240,6 @@ function initEventListeners() {
         })
     })
 
-    
     document.getElementById('btnIrRevisao')?.addEventListener('click', () => {
         if (tipoEntrega === 'entrega') {
             if (!enderecoSelecionado) {
@@ -1438,7 +1261,6 @@ function initEventListeners() {
 
     document.getElementById('btnConfirmarPedido')?.addEventListener('click', confirmarPedido)
 
-    
     document.querySelectorAll('.checkout-pagamento-opcao input').forEach(radio => {
         radio.addEventListener('change', () => {
             document.querySelectorAll('.checkout-pagamento-opcao').forEach(opt => {
@@ -1446,19 +1268,11 @@ function initEventListeners() {
             })
             radio.closest('.checkout-pagamento-opcao').classList.add('selecionada')
 
-            
             const cardContainer = document.getElementById('cardFormContainer')
             const metodo = radio.value
 
-            if (metodo === 'credit_card' || metodo === 'debit_card') {
-                cardContainer.style.display = ''
-                renderizarFormCartao(cardContainer, metodo)
-                
-                if (metodo === 'credit_card') {
-                    const total = calcularTotalCarrinho()
-                    atualizarSelectParcelas(total)
-                }
-            } else {
+            // Cartão não é mais necessário no formulário — PagBank redireciona
+            if (cardContainer) {
                 cardContainer.style.display = 'none'
                 cardContainer.innerHTML = ''
             }
@@ -1476,7 +1290,6 @@ function initMascaraCEP() {
             cepInput.classList.remove('input-erro', 'input-sucesso')
             _checkCepValidado = false
 
-            
             if (val.length === 8) {
                 buscarCEPCheckout(true)
             }
@@ -1493,7 +1306,6 @@ function calcularTotalCarrinho() {
         total += preco * item.quantity
     })
 
-    // Só soma o frete se NÃO for retirada na loja
     if (freteSelecionado?.preco && tipoEntrega !== 'retirada') {
         total += freteSelecionado.preco
     }

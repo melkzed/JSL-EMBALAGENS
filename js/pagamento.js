@@ -741,118 +741,31 @@ export function getCardData() {
     }
 }
 
-export async function processarPagamentoCartao(pedidoId, valor, tipo, userEmail) {
-    // FIX: roda a validação e interrompe imediatamente se houver erros
+export async function criarCheckoutPagBank(pedidoId, valor, itensCarrinho, dadosCliente) {
+    const itens = itensCarrinho.map(item => ({
+        nome: item.product_variants?.products?.name || 'Produto',
+        quantidade: item.quantity,
+        preco: parseFloat(item.product_variants?.price || 0)
+    }))
 
-    const erros = validarCartao()
-    if (erros.length > 0) {
-        console.warn('[Pagamento] Validação falhou:', erros)
+    const { data, error } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
+        body: {
+            pedidoId,
+            valor,
+            itens,
+            nomeCliente: dadosCliente.nome,
+            email: dadosCliente.email,
+            cpf: dadosCliente.cpf,
+            telefone: dadosCliente.telefone || ''
+        }
+    })
+
+    if (error || !data?.success) {
+        const erros = data?.errors || ['Erro ao criar checkout. Tente novamente.']
         return { success: false, errors: erros }
     }
 
-    const cardData = getCardData()
-
-    let encryptedCard = null
-    try {
-        encryptedCard = await criptografarCartao(cardData)
-    } catch (error) {
-        console.error('[Pagamento] Erro ao criptografar cartao:', error)
-        mostrarErrosGateway(['Erro ao proteger os dados do cartão. Recarregue a página e tente novamente.'])
-        return { success: false, errors: ['Erro ao proteger os dados do cartão.'] }
-    }
-
-    if (!encryptedCard) {
-        mostrarErrosGateway(['Erro ao proteger os dados do cartão. Tente novamente.'])
-        return { success: false }
-    }
-
-    // FIX: dupla checagem dos campos críticos antes de chamar o gateway
-    if (!cardData.expMonth || !cardData.expYear || cardData.expYear === '20' || !cardData.cvv) {
-        const msg = 'Preencha corretamente a validade e o CVV do cartão.'
-        mostrarErrosGateway([msg])
-        return { success: false, errors: [msg] }
-    }
-
-    let authenticationId = null
-    if (tipo === 'debit_card') {
-        const auth3ds = await autenticar3DS(cardData, valor, userEmail)
-        if (!auth3ds.success) {
-            mostrarErrosGateway(auth3ds.errors || ['Falha na autenticacao 3D Secure. Tente novamente.'])
-            return { success: false, errors: auth3ds.errors || ['Falha na autenticacao 3D Secure.'] }
-        }
-        authenticationId = auth3ds.authenticationId
-    }
-
-    // Corrigir valor enviado para o PagSeguro conforme parcela selecionada
-    let valorFinal = valor;
-    if (tipo === 'credit_card' && cardData.installments > CONFIG_PAGAMENTO.parcelasSemJuros) {
-        const parcelas = calcularParcelas(valor, CONFIG_PAGAMENTO.maxParcelas);
-        const parcelaEscolhida = parcelas.find(p => p.qtd === cardData.installments);
-        if (parcelaEscolhida) {
-            valorFinal = parcelaEscolhida.total;
-        }
-    }
-
-    const resultado = await processarViaPagSeguro({
-        pedidoId,
-        valor: valorFinal,
-        tipo,
-        userEmail,
-        cardData,
-        encryptedCard,
-        authenticationId
-    })
-
-    // FIX: trata todos os casos de resposta inválida ou nula
-    if (!resultado) {
-        const msg = 'Não foi possível processar o pagamento. Tente novamente.'
-        mostrarErrosGateway([msg])
-        return { success: false, errors: [msg] }
-    }
-
-    if (resultado.success) {
-        return resultado
-    }
-
-    // Extrai e trata os erros do PagSeguro, tentando identificar o campo
-    let errosPag = []
-    if (Array.isArray(resultado.errors) && resultado.errors.length > 0) {
-        errosPag = resultado.errors
-    } else if (resultado.message) {
-        errosPag = [resultado.message]
-    } else if (resultado.error_messages) {
-        errosPag = Array.isArray(resultado.error_messages)
-            ? resultado.error_messages.map(e => e.description || e.message || JSON.stringify(e))
-            : [String(resultado.error_messages)]
-    } else {
-        errosPag = ['Não foi possível processar o pagamento. Tente novamente ou use outro cartão.']
-    }
-
-    // Tenta marcar o campo correto se possível
-    const campoMap = [
-        { regex: /cart[aã]o/i, id: 'cardNumber' },
-        { regex: /cvv|c[oó]digo de seguran[cç]a|security code/i, id: 'cardCVV' },
-        { regex: /validade|expira/i, id: 'cardExpiry' },
-        { regex: /cpf/i, id: 'cardCPF' },
-        { regex: /nome/i, id: 'cardName' },
-    ];
-    errosPag.forEach(msg => {
-        for (const campo of campoMap) {
-            if (campo.regex.test(msg)) {
-                marcarErroInput(campo.id);
-                const el = document.getElementById(campo.id);
-                if (el) {
-                    el.focus();
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-                break;
-            }
-        }
-    });
-
-    mostrarErrosGateway(errosPag)
-    // Não redireciona, apenas mostra erro na tela para o usuário corrigir
-    return { success: false, errors: errosPag }
+    return { success: true, checkoutUrl: data.checkoutUrl }
 }
 
 async function autenticar3DS(cardData, valor, email) {
@@ -1059,6 +972,10 @@ async function obterPublicKeyPagSeguro() {
     if (window.PAGSEGURO_PUBLIC_KEY) {
         return window.PAGSEGURO_PUBLIC_KEY
     }
+
+    const { data: { session } } = await supabase.auth.getSession()
+    console.log('[Debug] Sessão ativa:', session)
+    console.log('[Debug] Token:', session?.access_token)
 
     const { data, error } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
         body: { action: 'get-public-key' }
