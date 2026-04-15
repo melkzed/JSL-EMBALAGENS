@@ -13,7 +13,7 @@
         style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
         font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
         img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
-        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br https://sdk.pagseguro.com;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br https://sdk.pagseguro.com https://static.cloudflareinsights.com https://cloudflareinsights.com;
         frame-src https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br https://sdk.pagseguro.com https://*.cardinalcommerce.com;
         object-src 'none';
         base-uri 'self';
@@ -318,7 +318,7 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
 
-
+    <!-- IMPORTANTE: Supabase deve carregar ANTES dos módulos ES (sem defer) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="../js/main.js"></script>
     <script type="module" src="../js/checkout-page.js"></script>
