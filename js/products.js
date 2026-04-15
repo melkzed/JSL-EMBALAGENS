@@ -39,6 +39,9 @@ export async function carregarProdutos() {
 }
 
 function isFriendlyUrlHost() {
+    const explicitFriendly = window.__JSL_ENABLE_FRIENDLY_ROUTES__ === true
+    if (!explicitFriendly) return false
+
     const host = window.location.hostname
     return host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
 }

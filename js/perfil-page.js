@@ -4,8 +4,14 @@ import { animarSlideDown } from "./animacoes.js"
 import { escapeHtml, isUrlSegura, formatarPreco, mostrarToast } from "./utils.js"
 
 function isFriendlyUrlHost() {
+    const explicitFriendly = window.__JSL_ENABLE_FRIENDLY_ROUTES__ === true
+    if (!explicitFriendly) return false
+
     const host = window.location.hostname
-    return host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
+    const isKnownHost = host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+    const isHtmlBasedUrl = path.endsWith('.html') || path.includes('/html/')
+    return isKnownHost && !isHtmlBasedUrl
 }
 
 function getPageHref(page) {
