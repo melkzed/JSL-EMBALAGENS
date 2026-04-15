@@ -122,6 +122,7 @@ serve(async (req: Request) => {
         const {
             pedidoId,
             valor,
+            itens,
             parcelas,
             tipo,              // 'credit_card' ou 'debit_card'
             encryptedCard,
@@ -131,7 +132,92 @@ serve(async (req: Request) => {
             nomeCliente,
             telefone,
             authenticationId,  // ID da autenticação 3DS (obrigatório para débito)
+            redirectUrl,
         } = body
+
+        const valorEmCentavos = Math.round(parseFloat(valor) * 100)
+        if (valorEmCentavos <= 0 || valorEmCentavos > 99999999) {
+            return new Response(
+                JSON.stringify({ success: false, errors: ['Valor inválido.'] }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  ROTA: CHECKOUT HOSPEDADO PAGBANK
+        //  Utilizada quando o frontend quer redirecionar para o checkout do PagBank
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        if (!encryptedCard && Array.isArray(itens) && itens.length > 0) {
+            const cpfLimpoCheckout = (cpf || '').replace(/\D/g, '')
+
+            if (!pedidoId || !cpfLimpoCheckout || cpfLimpoCheckout.length !== 11) {
+                return new Response(
+                    JSON.stringify({ success: false, errors: ['Dados incompletos para criar checkout.'] }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+
+            const itensCheckout = itens.map((item: any, idx: number) => ({
+                reference_id: `${pedidoId}-${idx + 1}`,
+                name: String(item?.nome || 'Produto').substring(0, 120),
+                quantity: Math.max(1, parseInt(item?.quantidade, 10) || 1),
+                unit_amount: Math.max(1, Math.round(parseFloat(item?.preco || 0) * 100)),
+            }))
+
+            const checkoutPayload: any = {
+                reference_id: pedidoId,
+                customer: {
+                    name: nomeCliente || 'CLIENTE',
+                    email: email || 'cliente@jslembalagens.com.br',
+                    tax_id: cpfLimpoCheckout,
+                },
+                items: itensCheckout,
+                payment_methods: [
+                    { type: 'CREDIT_CARD' },
+                    { type: 'DEBIT_CARD' },
+                    { type: 'PIX' },
+                ],
+                soft_descriptor: 'JSL EMBALAGENS',
+            }
+
+            if (redirectUrl) {
+                checkoutPayload.redirect_url = redirectUrl
+            }
+
+            const checkoutResponse = await fetch(`${PAGSEGURO_API_URL}/checkouts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${PAGSEGURO_TOKEN}`,
+                    'x-idempotency-key': `checkout_${pedidoId}`,
+                },
+                body: JSON.stringify(checkoutPayload),
+            })
+
+            const checkoutData = await checkoutResponse.json().catch(() => ({}))
+            const checkoutUrl = checkoutData?.links?.find((l: any) => l?.rel === 'PAY')?.href || null
+
+            if (!checkoutResponse.ok || !checkoutUrl) {
+                const erros = checkoutData?.error_messages?.map((e: any) =>
+                    traduzirErroPagSeguro(e.code, e.description)
+                ) || ['Não foi possível criar o checkout de pagamento.']
+
+                return new Response(
+                    JSON.stringify({ success: false, gateway: 'pagseguro', errors: erros }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    gateway: 'pagseguro',
+                    checkoutUrl,
+                    amount: valorEmCentavos,
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
 
         // Validação de entrada
         if (!pedidoId || !valor || !encryptedCard || !cpf) {
@@ -152,14 +238,6 @@ serve(async (req: Request) => {
 
         // Validar dados do cartão
 
-
-        const valorEmCentavos = Math.round(parseFloat(valor) * 100)
-        if (valorEmCentavos <= 0 || valorEmCentavos > 99999999) {
-            return new Response(
-                JSON.stringify({ success: false, errors: ['Valor inválido.'] }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // 1. CRIPTOGRAFAR CARTÃO VIA PAGSEGURO
