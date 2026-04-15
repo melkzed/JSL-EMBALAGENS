@@ -6,11 +6,17 @@
     <script>
         const params = new URLSearchParams(window.location.search)
         const pedidoId = params.get('pedido')
+        const host = window.location.hostname
+        const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
         const isFriendlyHost =
-            window.__JSL_ENABLE_FRIENDLY_ROUTES__ === true &&
-            ['www.jslembalagens.com.br', 'jslembalagens.com.br'].includes(window.location.hostname)
+            ['www.jslembalagens.com.br', 'jslembalagens.com.br'].includes(host) &&
+            !path.includes('/html/') &&
+            !path.endsWith('.html')
         if (pedidoId) {
-            window.location.href = isFriendlyHost ? '/perfil?tab=pedidos' : './html/perfil.html?tab=pedidos'
+            const pedidoSeguro = encodeURIComponent(pedidoId)
+            window.location.href = isFriendlyHost
+                ? `/perfil?tab=pedidos&pedido=${pedidoSeguro}`
+                : `./html/perfil.html?tab=pedidos&pedido=${pedidoSeguro}`
         } else {
             window.location.href = isFriendlyHost ? '/' : './index.html'
         }

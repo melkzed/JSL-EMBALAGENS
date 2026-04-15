@@ -38,6 +38,7 @@ serve(async (req: Request) => {
                 JSON.stringify({
                     success: false,
                     gateway: 'pagseguro',
+                    errorCode: 'PAGSEGURO_TOKEN_MISSING',
                     errors: ['Gateway PagSeguro não configurado. Configure PAGSEGURO_TOKEN.'],
                 }),
                 { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -77,6 +78,34 @@ serve(async (req: Request) => {
 
                 const pkData = await pkResponse.json().catch(() => ({}))
                 publicKey = pkData.public_key
+
+                if (!pkResponse.ok) {
+                    const errorCode =
+                        pkResponse.status === 401 || pkResponse.status === 403
+                            ? 'PAGSEGURO_TOKEN_INVALID'
+                            : 'PAGSEGURO_PUBLIC_KEY_ERROR'
+                    return new Response(
+                        JSON.stringify({
+                            success: false,
+                            gateway: 'pagseguro',
+                            errorCode,
+                            errors: ['Não foi possível obter a chave pública do PagSeguro.'],
+                        }),
+                        { status: pkResponse.status || 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                    )
+                }
+            }
+
+            if (!publicKey) {
+                return new Response(
+                    JSON.stringify({
+                        success: false,
+                        gateway: 'pagseguro',
+                        errorCode: 'PAGSEGURO_PUBLIC_KEY_MISSING',
+                        errors: ['Chave pública do PagSeguro não disponível.'],
+                    }),
+                    { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
             }
 
             return new Response(
@@ -135,8 +164,9 @@ serve(async (req: Request) => {
             redirectUrl,
         } = body
 
-        const valorEmCentavos = Math.round(parseFloat(valor) * 100)
-        if (valorEmCentavos <= 0 || valorEmCentavos > 99999999) {
+        const valorNumerico = parseFloat(valor)
+        const valorEmCentavos = Math.round(valorNumerico * 100)
+        if (!Number.isFinite(valorNumerico) || !Number.isFinite(valorEmCentavos) || valorEmCentavos <= 0 || valorEmCentavos > 99999999) {
             return new Response(
                 JSON.stringify({ success: false, errors: ['Valor inválido.'] }),
                 { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -202,11 +232,22 @@ serve(async (req: Request) => {
                     traduzirErroPagSeguro(e.code, e.description)
                 ) || ['Não foi possível criar o checkout de pagamento.']
 
+                const errorCode =
+                    checkoutResponse.status === 401 || checkoutResponse.status === 403
+                        ? 'PAGSEGURO_TOKEN_INVALID'
+                        : 'PAGSEGURO_CHECKOUT_ERROR'
+
                 return new Response(
-                    JSON.stringify({ success: false, gateway: 'pagseguro', errors: erros }),
-                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                    JSON.stringify({ success: false, gateway: 'pagseguro', errorCode, errors: erros }),
+                    { status: checkoutResponse.status || 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                 )
             }
+
+            const supabaseUrl = Deno.env.get('SUPABASE_URL')
+            const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+            const diagnostics = (!supabaseUrl || !supabaseKey)
+                ? ['SUPABASE_PERSISTENCE_DISABLED']
+                : []
 
             return new Response(
                 JSON.stringify({
@@ -214,6 +255,10 @@ serve(async (req: Request) => {
                     gateway: 'pagseguro',
                     checkoutUrl,
                     amount: valorEmCentavos,
+                    warnings: diagnostics.length > 0
+                        ? ['Pagamento pode não ser sincronizado automaticamente sem SUPABASE_SERVICE_ROLE_KEY.']
+                        : [],
+                    diagnostics,
                 }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
@@ -337,6 +382,10 @@ serve(async (req: Request) => {
             const erros = chargeData.error_messages?.map((e: any) =>
                 traduzirErroPagSeguro(e.code, e.description)
             ) || ['Erro ao processar pagamento via PagSeguro.']
+            const errorCode =
+                chargeResponse.status === 401 || chargeResponse.status === 403
+                    ? 'PAGSEGURO_TOKEN_INVALID'
+                    : 'PAGSEGURO_CHARGE_ERROR'
 
             console.error('[PagSeguro] Erros:', erros)
 
@@ -344,9 +393,10 @@ serve(async (req: Request) => {
                 JSON.stringify({
                     success: false,
                     gateway: 'pagseguro',
+                    errorCode,
                     errors: erros,
                 }),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                { status: chargeResponse.status || 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
 
