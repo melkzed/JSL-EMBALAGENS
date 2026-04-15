@@ -2,6 +2,40 @@
 import { animarAuthContainer } from "./animacoes.js"
 import { isUrlSegura } from "./utils.js"
 
+function isInHtmlFolder() {
+    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
+    return path.includes('/html/')
+}
+
+function isFriendlyUrlHost() {
+    const explicitFriendly = window.__JSL_ENABLE_FRIENDLY_ROUTES__ === true
+    if (!explicitFriendly) return false
+
+    const host = window.location.hostname
+    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
+    const isKnownHost = host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+    const isHtmlBasedUrl = path.endsWith('.html') || path.includes('/html/')
+    return isKnownHost && !isHtmlBasedUrl
+}
+
+function getPageHref(page) {
+    const inHtmlFolder = isInHtmlFolder()
+    const useFriendlyUrls = isFriendlyUrlHost()
+
+    const routes = {
+        index: useFriendlyUrls ? '/' : (inHtmlFolder ? '../index.html' : './index.html'),
+        perfil: useFriendlyUrls ? '/perfil' : (inHtmlFolder ? './perfil.html' : './html/perfil.html'),
+        'confirmar-email': useFriendlyUrls ? '/confirmar-email' : (inHtmlFolder ? './confirmar-email.html' : './html/confirmar-email.html')
+    }
+
+    return routes[page] || '#'
+}
+
+function getAbsolutePageUrl(page) {
+    const href = getPageHref(page)
+    return new URL(href, window.location.origin + '/').toString()
+}
+
 let currentUser = null
 let currentProfile = null
 let isAdmin = false
@@ -82,7 +116,7 @@ async function verificarAdmin(userId) {
 
 export async function cadastrar(email, senha, nome) {
     if (!supabase) return { sucesso: false, erro: 'Erro de conexão. Recarregue a página.' }
-    const confirmUrl = window.location.origin + '/confirmar-email'
+    const confirmUrl = getAbsolutePageUrl('confirmar-email')
 
     const { data, error } = await supabase.auth.signUp({
         email,
@@ -159,7 +193,7 @@ export async function logout() {
 export async function recuperarSenha(email) {
     if (!supabase) return { sucesso: false, erro: 'Erro de conexão. Recarregue a página.' }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/perfil'
+        redirectTo: getAbsolutePageUrl('perfil')
     })
 
     if (error) {
@@ -176,8 +210,8 @@ function atualizarUIUsuario() {
 
     
     const adminUrl = '/admin/painel.html'
-    const perfilUrl = '/perfil'
-    const homeUrl = '/'
+    const perfilUrl = getPageHref('perfil')
+    const homeUrl = getPageHref('index')
 
     adminLinks.forEach(el => {
         if (isAdmin) {
@@ -404,7 +438,7 @@ export function initAuthModal() {
     `
     document.body.appendChild(modal)
 
-    const perfilUrl = '/perfil'
+    const perfilUrl = getPageHref('perfil')
 
     document.getElementById('authLinkPerfil').href = perfilUrl
     document.getElementById('authLinkEnderecos').href = perfilUrl + '?tab=enderecos'
