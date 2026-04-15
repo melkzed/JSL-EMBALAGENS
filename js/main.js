@@ -15,6 +15,9 @@ function isInHtmlFolder() {
 }
 
 function isFriendlyUrlHost() {
+    const explicitFriendly = window.__JSL_ENABLE_FRIENDLY_ROUTES__ === true
+    if (!explicitFriendly) return false
+
     const host = window.location.hostname
     const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
     const isKnownHost = host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
