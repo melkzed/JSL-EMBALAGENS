@@ -44,7 +44,19 @@ serve(async (req: Request) => {
             )
         }
 
-        const body = await req.json()
+        let body: any = {}
+        try {
+            body = await req.json()
+        } catch {
+            return new Response(
+                JSON.stringify({
+                    success: false,
+                    gateway: 'pagseguro',
+                    errors: ['Corpo da requisição inválido.'],
+                }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         //  ROTA: CRIAR SESSÃO 3DS
@@ -63,7 +75,7 @@ serve(async (req: Request) => {
                     body: JSON.stringify({ type: 'card' })
                 })
 
-                const pkData = await pkResponse.json()
+                const pkData = await pkResponse.json().catch(() => ({}))
                 publicKey = pkData.public_key
             }
 
@@ -91,7 +103,13 @@ serve(async (req: Request) => {
                 )
             }
 
-            const sessionData = await sessionResponse.json()
+            const sessionData = await sessionResponse.json().catch(() => ({}))
+            if (!sessionData?.session) {
+                return new Response(
+                    JSON.stringify({ success: false, errors: ['Sessão 3D Secure inválida.'] }),
+                    { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
             return new Response(
                 JSON.stringify({ success: true, session: sessionData.session }),
                 { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -104,6 +122,7 @@ serve(async (req: Request) => {
         const {
             pedidoId,
             valor,
+            itens,
             parcelas,
             tipo,              // 'credit_card' ou 'debit_card'
             encryptedCard,
@@ -113,7 +132,95 @@ serve(async (req: Request) => {
             nomeCliente,
             telefone,
             authenticationId,  // ID da autenticação 3DS (obrigatório para débito)
+            redirectUrl,
         } = body
+
+        const valorEmCentavos = Math.round(parseFloat(valor) * 100)
+        if (!Number.isFinite(valorEmCentavos) || valorEmCentavos <= 0 || valorEmCentavos > 99999999) {
+            return new Response(
+                JSON.stringify({ success: false, errors: ['Valor inválido.'] }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        //  ROTA: CHECKOUT HOSPEDADO PAGBANK
+        //  Utilizada quando o frontend quer redirecionar para o checkout do PagBank
+        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        if (!encryptedCard && Array.isArray(itens) && itens.length > 0) {
+            const cpfLimpoCheckout = (cpf || '').replace(/\D/g, '')
+
+            if (!pedidoId || !cpfLimpoCheckout || cpfLimpoCheckout.length !== 11) {
+                return new Response(
+                    JSON.stringify({ success: false, errors: ['Dados incompletos para criar checkout.'] }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+
+            const itensCheckout = itens.map((item: any, idx: number) => ({
+                reference_id: `${pedidoId}-${idx + 1}`,
+                name: String(item?.nome || 'Produto').substring(0, 120),
+                quantity: Math.max(1, parseInt(item?.quantidade, 10) || 1),
+                unit_amount: Math.max(1, Math.round(parseFloat(item?.preco || 0) * 100)),
+            }))
+
+            const checkoutPayload: any = {
+                reference_id: pedidoId,
+                customer: {
+                    name: nomeCliente || 'CLIENTE',
+                    email: email || 'cliente@jslembalagens.com.br',
+                    tax_id: cpfLimpoCheckout,
+                },
+                items: itensCheckout,
+            }
+
+            if (redirectUrl) {
+                checkoutPayload.redirect_url = redirectUrl
+            }
+
+            if (Deno.env.get('SUPABASE_URL')) {
+                checkoutPayload.notification_urls = [
+                    `${Deno.env.get('SUPABASE_URL')}/functions/v1/processar-pagamento-pagseguro?webhook=true`
+                ]
+            }
+
+            console.log('[PagSeguro][Checkout] Payload:', JSON.stringify(checkoutPayload))
+
+            const checkoutResponse = await fetch(`${PAGSEGURO_API_URL}/checkouts`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${PAGSEGURO_TOKEN}`,
+                    'x-idempotency-key': `checkout_${pedidoId}`,
+                },
+                body: JSON.stringify(checkoutPayload),
+            })
+
+            const checkoutData = await checkoutResponse.json().catch(() => ({}))
+            const checkoutUrl = checkoutData?.links?.find((l: any) => l?.rel === 'PAY')?.href || null
+            console.log('[PagSeguro][Checkout] Resposta:', checkoutResponse.status, JSON.stringify(checkoutData))
+
+            if (!checkoutResponse.ok || !checkoutUrl) {
+                const erros = checkoutData?.error_messages?.map((e: any) =>
+                    traduzirErroPagSeguro(e.code, e.description)
+                ) || [checkoutData?.message || `Não foi possível criar o checkout de pagamento (HTTP ${checkoutResponse.status}).`]
+
+                return new Response(
+                    JSON.stringify({ success: false, gateway: 'pagseguro', errors: erros }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                )
+            }
+
+            return new Response(
+                JSON.stringify({
+                    success: true,
+                    gateway: 'pagseguro',
+                    checkoutUrl,
+                    amount: valorEmCentavos,
+                }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
 
         // Validação de entrada
         if (!pedidoId || !valor || !encryptedCard || !cpf) {
@@ -134,14 +241,6 @@ serve(async (req: Request) => {
 
         // Validar dados do cartão
 
-
-        const valorEmCentavos = Math.round(parseFloat(valor) * 100)
-        if (valorEmCentavos <= 0 || valorEmCentavos > 99999999) {
-            return new Response(
-                JSON.stringify({ success: false, errors: ['Valor inválido.'] }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         // 1. CRIPTOGRAFAR CARTÃO VIA PAGSEGURO
@@ -169,10 +268,10 @@ serve(async (req: Request) => {
                     const pkGetResponse = await fetch(`${PAGSEGURO_API_URL}/public-keys/card`, {
                         headers: { 'Authorization': `Bearer ${PAGSEGURO_TOKEN}` }
                     })
-                    const pkGetData = await pkGetResponse.json()
+                    const pkGetData = await pkGetResponse.json().catch(() => ({}))
                     publicKey = pkGetData.public_key
                 } else if (pkResponse.ok) {
-                    const pkData = await pkResponse.json()
+                    const pkData = await pkResponse.json().catch(() => ({}))
                     publicKey = pkData.public_key
                 }
             } catch (e) {
@@ -232,7 +331,7 @@ serve(async (req: Request) => {
             body: JSON.stringify(chargePayload),
         })
 
-        const chargeData = await chargeResponse.json()
+        const chargeData = await chargeResponse.json().catch(() => ({}))
 
         console.log('[PagSeguro] Resposta:', chargeResponse.status, JSON.stringify(chargeData).substring(0, 500))
 
@@ -258,9 +357,10 @@ serve(async (req: Request) => {
         // 3. ATUALIZAR BANCO DE DADOS
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-        const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-        const supabaseAdmin = createClient(supabaseUrl, supabaseKey)
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+        const canPersistPayment = Boolean(supabaseUrl && supabaseKey)
+        const supabaseAdmin = canPersistPayment ? createClient(supabaseUrl!, supabaseKey!) : null
 
         // Mapear status PagSeguro → nosso status
         const statusMap: Record<string, string> = {
@@ -287,34 +387,38 @@ serve(async (req: Request) => {
             updateData.paid_at = new Date().toISOString()
         }
 
-        const { data: payRow, error: payErr } = await supabaseAdmin
-            .from('payments')
-            .update(updateData)
-            .eq('order_id', pedidoId)
-            .select('id')
+        if (supabaseAdmin) {
+            const { error: payErr } = await supabaseAdmin
+                .from('payments')
+                .update(updateData)
+                .eq('order_id', pedidoId)
+                .select('id')
 
-        if (payErr) {
-            console.error('[PagSeguro] Erro ao atualizar payment:', payErr)
-        }
-
-        // Se aprovado, atualizar pedido
-        if (paymentStatus === 'approved') {
-            const { error: ordErr } = await supabaseAdmin
-                .from('orders')
-                .update({ status: 'paid', updated_at: new Date().toISOString() })
-                .eq('id', pedidoId)
-
-            if (ordErr) {
-                console.error('[PagSeguro] Erro ao atualizar order:', ordErr)
+            if (payErr) {
+                console.error('[PagSeguro] Erro ao atualizar payment:', payErr)
             }
 
-            await supabaseAdmin
-                .from('order_status_history')
-                .insert({
-                    order_id: pedidoId,
-                    status: 'paid',
-                    notes: `Pagamento aprovado via PagSeguro (ID: ${chargeData.id})`,
-                }).catch(() => { })
+            // Se aprovado, atualizar pedido
+            if (paymentStatus === 'approved') {
+                const { error: ordErr } = await supabaseAdmin
+                    .from('orders')
+                    .update({ status: 'paid', updated_at: new Date().toISOString() })
+                    .eq('id', pedidoId)
+
+                if (ordErr) {
+                    console.error('[PagSeguro] Erro ao atualizar order:', ordErr)
+                }
+
+                await supabaseAdmin
+                    .from('order_status_history')
+                    .insert({
+                        order_id: pedidoId,
+                        status: 'paid',
+                        notes: `Pagamento aprovado via PagSeguro (ID: ${chargeData.id})`,
+                    }).catch(() => { })
+            }
+        } else {
+            console.error('[PagSeguro] SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY ausente; não foi possível persistir status do pagamento.')
         }
 
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
