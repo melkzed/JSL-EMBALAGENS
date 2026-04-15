@@ -27,6 +27,47 @@ export const CONFIG_PAGAMENTO = {
     valorMinimoParcela: 5,
 }
 
+function getCheckoutRetornoUrl(pedidoId) {
+    const base = new URL(window.location.origin)
+    base.pathname = '/checkout-retorno.html'
+    base.search = ''
+    if (pedidoId) {
+        base.searchParams.set('pedido', pedidoId)
+    }
+    return base.toString()
+}
+
+function classificarErroInvoke(error, data) {
+    const mensagemSupabase = String(error?.message || '').toLowerCase()
+    const errosGateway = Array.isArray(data?.errors) ? data.errors.join(' ').toLowerCase() : ''
+    const codigo = String(data?.errorCode || '').toLowerCase()
+
+    const tokenProblema =
+        codigo.includes('token') ||
+        mensagemSupabase.includes('401') ||
+        mensagemSupabase.includes('403') ||
+        mensagemSupabase.includes('jwt') ||
+        errosGateway.includes('token') ||
+        errosGateway.includes('unauthorized') ||
+        errosGateway.includes('não configurado')
+
+    if (tokenProblema) {
+        return ['Falha de autenticação no gateway. Verifique o token PAGSEGURO_TOKEN na Supabase (Edge Function Secrets).']
+    }
+
+    const supabaseProblema =
+        codigo.includes('supabase') ||
+        mensagemSupabase.includes('functionshttperror') ||
+        mensagemSupabase.includes('failed to fetch') ||
+        mensagemSupabase.includes('network')
+
+    if (supabaseProblema) {
+        return ['Falha de comunicação com Supabase Functions. Verifique deploy da função e conectividade da instância Supabase.']
+    }
+
+    return ['Erro ao criar checkout. Tente novamente.']
+}
+
 function pixTLV(id, value) {
     const len = value.length.toString().padStart(2, '0')
     return id + len + value
@@ -756,13 +797,18 @@ export async function criarCheckoutPagBank(pedidoId, valor, itensCarrinho, dados
             nomeCliente: dadosCliente.nome,
             email: dadosCliente.email,
             cpf: dadosCliente.cpf,
-            telefone: dadosCliente.telefone || ''
+            telefone: dadosCliente.telefone || '',
+            redirectUrl: getCheckoutRetornoUrl(pedidoId)
         }
     })
 
     if (error || !data?.success) {
-        const erros = data?.errors || ['Erro ao criar checkout. Tente novamente.']
+        const erros = data?.errors || classificarErroInvoke(error, data)
         return { success: false, errors: erros }
+    }
+
+    if (!data?.checkoutUrl || !/^https?:\/\//i.test(data.checkoutUrl)) {
+        return { success: false, errors: ['Checkout retornou uma URL inválida. Tente novamente.'] }
     }
 
     return { success: true, checkoutUrl: data.checkoutUrl }
