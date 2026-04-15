@@ -783,6 +783,17 @@ export function getCardData() {
 }
 
 export async function criarCheckoutPagBank(pedidoId, valor, itensCarrinho, dadosCliente) {
+    // Garante sessão válida antes de chamar a Edge Function (evita 401)
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+    if (sessionError || !sessionData?.session) {
+        // Tenta refresh da sessão
+        const { error: refreshError } = await supabase.auth.refreshSession()
+        if (refreshError) {
+            console.error('[PagBank] Sessão expirada:', refreshError)
+            return { success: false, errors: ['Sua sessão expirou. Faça login novamente para continuar.'] }
+        }
+    }
+
     const itens = itensCarrinho.map(item => ({
         nome: item.product_variants?.products?.name || 'Produto',
         quantidade: item.quantity,
