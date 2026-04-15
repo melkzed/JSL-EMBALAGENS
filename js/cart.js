@@ -1,6 +1,29 @@
 ﻿import { supabase } from "./supabaseClient.js"
 import { animarCarrinhoOverlay, animarCarrinhoPainel } from "./animacoes.js"
-import { formatarPreco, mostrarToast } from "./utils.js"
+import { escapeHtml, formatarPreco, isUrlSegura, mostrarToast } from "./utils.js"
+
+function getPaginaInternaHref(page) {
+    const linkMenu = document.querySelector(`a[data-page="${page}"]`)
+    const hrefMenu = linkMenu?.getAttribute('href')
+
+    if (hrefMenu && hrefMenu !== '#') {
+        return hrefMenu
+    }
+
+    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
+    const inHtmlFolder = path.includes('/html/')
+    const isRootPage = path === '/' || path === '/index.html' || path === '/checkout-retorno.html'
+
+    if (inHtmlFolder) {
+        return `./${page}.html`
+    }
+
+    if (isRootPage) {
+        return `./html/${page}.html`
+    }
+
+    return `../html/${page}.html`
+}
 
 
 function getSessionId() {
@@ -239,10 +262,10 @@ export function initCarrinhoSidebar() {
     document.body.appendChild(sidebar)
 
     const btnVer = document.getElementById('btnVerCarrinho')
-    btnVer.href = '/carrinho'
+    btnVer.href = getPaginaInternaHref('carrinho')
 
     const btnFinalizar = document.getElementById('btnFinalizar')
-    btnFinalizar.href = '/checkout'
+    btnFinalizar.href = getPaginaInternaHref('checkout')
 
     const overlay = document.getElementById('carrinhoOverlay')
     const fechar = document.getElementById('carrinhoFechar')
@@ -313,14 +336,16 @@ async function renderizarSidebar() {
     body.innerHTML = itens.map(item => {
         const variant = item.product_variants
         const product = variant?.products
-        const nome = product?.name || 'Produto'
-        const label = variant?.size_label || ''
+        const nome = escapeHtml(product?.name || 'Produto')
+        const label = escapeHtml(variant?.size_label || '')
         const preco = variant?.price || 0
         const subtotal = preco * item.quantity
         total += subtotal
 
         const imgs = product?.product_images || []
-        const img = imgs.length > 0 ? imgs[0].url : (inHtml ? '../img/imagemExemplo.jpg' : './img/imagemExemplo.jpg')
+        const defaultImg = inHtml ? '../img/imagemExemplo.jpg' : './img/imagemExemplo.jpg'
+        const imgPrincipal = imgs.length > 0 ? imgs[0].url : ''
+        const img = isUrlSegura(imgPrincipal) ? imgPrincipal : defaultImg
 
         return `
             <div class="carrinho-item" data-item-id="${item.id}">

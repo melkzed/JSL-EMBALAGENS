@@ -273,7 +273,7 @@ async function retomarPagamento(orderId) {
                     </div>
                     <div class="checkout-sucesso-acoes">
                         <a href="https://wa.me/5583996389725?text=${encodeURIComponent('Olá! Preciso concluir o pagamento do pedido ' + numero + ' no valor de R$ ' + formatarPreco(totalPedido))}" 
-                           target="_blank" class="checkout-btn-whatsapp">
+                           target="_blank" rel="noopener noreferrer" class="checkout-btn-whatsapp">
                             <i class="fa-brands fa-whatsapp"></i> Falar com suporte
                         </a>
                         <a href="./perfil.html?tab=pedidos" class="checkout-btn-outline">
@@ -306,7 +306,7 @@ async function retomarPagamento(orderId) {
                     <p>${escapeHtml(endPedido.city)}/${escapeHtml(endPedido.state)} - CEP: ${escapeHtml(endPedido.zip_code)}</p>
                 </div>
                 <a href="https://wa.me/5583996389725?text=${encodeURIComponent(msg)}" 
-                   target="_blank" class="checkout-btn-whatsapp">
+                   target="_blank" rel="noopener noreferrer" class="checkout-btn-whatsapp">
                     <i class="fa-brands fa-whatsapp"></i> Enviar pedido pelo WhatsApp
                 </a>
             `
@@ -1082,7 +1082,7 @@ function mostrarConfirmacao(pedido, itens, metodo) {
         const msg = montarMensagemWhatsApp(pedido, itens, end)
         infoHTML += `
             <a href="https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(msg)}" 
-               target="_blank" class="checkout-btn-whatsapp">
+               target="_blank" rel="noopener noreferrer" class="checkout-btn-whatsapp">
                 <i class="fa-brands fa-whatsapp"></i> Enviar pedido pelo WhatsApp
             </a>
         `

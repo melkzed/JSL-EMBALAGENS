@@ -16,12 +16,18 @@ function isInHtmlFolder() {
 
 function isFriendlyUrlHost() {
     const host = window.location.hostname
-    return host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
+    const isKnownHost = host === 'www.jslembalagens.com.br' || host === 'jslembalagens.com.br'
+    const isHtmlBasedUrl = path.endsWith('.html') || path.includes('/html/')
+    return isKnownHost && !isHtmlBasedUrl
 }
 
 function getBasePath() {
     const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
-    return (path === '/' || path === '/index.html') ? './' : '../'
+    if (path === '/' || path === '/index.html') return './'
+    if (path.includes('/html/')) return '../'
+    if (/^\/[^/]+\.html$/.test(path)) return './'
+    return '../'
 }
 
 function getPageHref(page) {
@@ -47,15 +53,15 @@ function getCurrentPageKey() {
     const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/').replace(/\/+$/, '') || '/'
 
     if (path === '/' || path === '/index.html') return 'index'
-    if (path === '/produtos' || path === '/html/produtos.html') return 'produtos'
-    if (path === '/sobre' || path === '/html/sobre.html') return 'sobre'
-    if (path === '/contato' || path === '/html/contato.html') return 'contato'
-    if (path === '/politicas' || path === '/html/politicas.html') return 'politicas'
-    if (path === '/carrinho' || path === '/html/carrinho.html') return 'carrinho'
-    if (path === '/checkout' || path === '/html/checkout.html') return 'checkout'
-    if (path === '/perfil' || path === '/html/perfil.html') return 'perfil'
-    if (path === '/confirmar-email' || path === '/html/confirmar-email.html') return 'confirmar-email'
-    if (path === '/html/produto.html' || path.startsWith('/produtos/')) return 'produtos'
+    if (path === '/produtos' || path === '/html/produtos.html' || path === '/produtos.html') return 'produtos'
+    if (path === '/sobre' || path === '/html/sobre.html' || path === '/sobre.html') return 'sobre'
+    if (path === '/contato' || path === '/html/contato.html' || path === '/contato.html') return 'contato'
+    if (path === '/politicas' || path === '/html/politicas.html' || path === '/politicas.html') return 'politicas'
+    if (path === '/carrinho' || path === '/html/carrinho.html' || path === '/carrinho.html') return 'carrinho'
+    if (path === '/checkout' || path === '/html/checkout.html' || path === '/checkout.html') return 'checkout'
+    if (path === '/perfil' || path === '/html/perfil.html' || path === '/perfil.html') return 'perfil'
+    if (path === '/confirmar-email' || path === '/html/confirmar-email.html' || path === '/confirmar-email.html') return 'confirmar-email'
+    if (path === '/html/produto.html' || path === '/produto.html' || path.startsWith('/produtos/')) return 'produtos'
 
     return ''
 }
@@ -140,7 +146,8 @@ function initSuporteModal() {
         const desc = descricao?.value.trim() || ''
         const texto = `Olá! Preciso de ajuda.\n\n📋 Área: ${categoriaSelecionada}${desc ? '\n📝 Descrição: ' + desc : ''}`
         const url = `https://wa.me/5583996389725?text=${encodeURIComponent(texto)}`
-        window.open(url, '_blank')
+        const novaAba = window.open(url, '_blank', 'noopener,noreferrer')
+        if (novaAba) novaAba.opener = null
         fechar()
     })
 }
