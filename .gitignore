@@ -1,1 +1,5 @@
 /.vscode
+
+# Local docs/evidence artifacts (do not commit)
+docs/
+pagbank-evidencias/
