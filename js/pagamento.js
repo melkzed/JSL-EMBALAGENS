@@ -1,4 +1,4 @@
-﻿import { supabase } from './supabaseClient.js'
+import { supabase } from './supabaseClient.js'
 import { formatarPreco } from './utils.js'
 import { invokeFunctionPublic } from './supabaseClient.js'
 

@@ -1,4 +1,4 @@
-﻿import { supabase } from "./supabaseClient.js"
+import { supabase } from "./supabaseClient.js"
 import { animarCarrinhoOverlay, animarCarrinhoPainel } from "./animacoes.js"
 import { escapeHtml, formatarPreco, isUrlSegura, mostrarToast } from "./utils.js"
 

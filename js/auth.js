@@ -1,4 +1,4 @@
-﻿import { supabase } from "./supabaseClient.js"
+import { supabase } from "./supabaseClient.js"
 import { animarAuthContainer } from "./animacoes.js"
 import { isUrlSegura } from "./utils.js"
 

@@ -1,4 +1,4 @@
-﻿import { initMenu } from "./menu.js"
+import { initMenu } from "./menu.js"
 import { initQuantidade } from "./quantidade.js"
 import { initAnimacoes } from "./animacoes.js"
 import { initWhatsapp } from "./whatsapp.js"
