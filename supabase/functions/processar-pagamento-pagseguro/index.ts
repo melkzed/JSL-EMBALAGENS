@@ -204,6 +204,10 @@ function extrairMensagemErroPagBank(data, fallbackMessage) {
     return [fallbackMessage]
 }
 
+function getClientSafeErrorStatus(status) {
+    return status >= 500 ? status : 200
+}
+
 async function obterPedidoCompleto(supabase, pedidoId) {
     if (!supabase || !pedidoId) return null
 
@@ -379,7 +383,7 @@ serve(async (req) => {
                         const code = (postRes.status === 401 || postRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_KEY_ERROR'
                         return new Response(
                             JSON.stringify({ success: false, errorCode: code, errors: ['Não foi possível obter a chave pública.'] }),
-                            { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                            { status: getClientSafeErrorStatus(postRes.status), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                         )
                     }
                 }
@@ -408,7 +412,7 @@ serve(async (req) => {
             if (!sessRes.ok) {
                 return new Response(
                     JSON.stringify({ success: false, errors: ['Não foi possível iniciar autenticação 3D Secure.'] }),
-                    { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                    { status: getClientSafeErrorStatus(sessRes.status), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                 )
             }
 
@@ -523,7 +527,7 @@ serve(async (req) => {
                 const code = (res.status === 401 || res.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_CHECKOUT_ERROR'
                 return new Response(
                     JSON.stringify({ success: false, errorCode: code, errors: erros }),
-                    { status: res.status || 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                    { status: getClientSafeErrorStatus(res.status || 400), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                 )
             }
 
@@ -631,7 +635,7 @@ serve(async (req) => {
             const code = (orderRes.status === 401 || orderRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_ORDER_ERROR'
             return new Response(
                 JSON.stringify({ success: false, errorCode: code, errors: erros }),
-                { status: orderRes.status || 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                { status: getClientSafeErrorStatus(orderRes.status || 400), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
 
