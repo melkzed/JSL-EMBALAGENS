@@ -849,6 +849,52 @@ export async function criarCheckoutPagBank(pedidoId, valor, itensCarrinho, dados
     return { success: true, checkoutUrl: data.checkoutUrl }
 }
 
+export async function processarPagamentoCartao({ pedidoId, valor, tipo = 'credit_card', userEmail }) {
+    const errosValidacao = validarCartao()
+    if (errosValidacao.length > 0) {
+        return { success: false, status: 'refused', errors: errosValidacao }
+    }
+
+    const cardData = getCardData()
+
+    try {
+        let authenticationId = null
+
+        if (tipo === 'debit_card') {
+            const authResult = await autenticar3DS(cardData, valor, userEmail)
+            if (!authResult.success) {
+                const erros = authResult.errors || ['Nao foi possivel autenticar o cartao.']
+                mostrarErrosGateway(erros)
+                return { success: false, status: 'refused', errors: erros }
+            }
+            authenticationId = authResult.authenticationId
+        }
+
+        const encryptedCard = await criptografarCartao(cardData)
+        const resultado = await processarViaPagSeguro({
+            pedidoId,
+            valor,
+            tipo,
+            userEmail,
+            cardData,
+            encryptedCard,
+            authenticationId,
+        })
+
+        if (!resultado?.success) {
+            const erros = resultado?.errors || ['Erro no pagamento']
+            mostrarErrosGateway(erros)
+            return { ...resultado, success: false, status: resultado?.status || 'refused', errors: erros }
+        }
+
+        return { ...resultado, success: true, status: resultado?.status || 'approved' }
+    } catch (err) {
+        const erros = [err?.message || 'Erro ao processar pagamento']
+        mostrarErrosGateway(erros)
+        return { success: false, status: 'refused', errors: erros }
+    }
+}
+
 async function autenticar3DS(cardData, valor, email) {
     try {
 

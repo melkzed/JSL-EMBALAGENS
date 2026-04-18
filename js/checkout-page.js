@@ -6,7 +6,7 @@ import { escapeHtml, formatarPreco, mostrarToast } from "./utils.js"
 import {
     renderizarPixQRCode,
     renderizarFormCartao,
-    criarCheckoutPagBank,
+    processarPagamentoCartao,
     atualizarSelectParcelas,
     CONFIG_PAGAMENTO
 } from "./pagamento.js"
@@ -990,28 +990,23 @@ async function confirmarPedido() {
 
         // ── Pagamento via PagBank (cartão crédito/débito) ──
         if (metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') {
-            console.log('[Checkout] Criando checkout PagBank...')
-            const resultado = await criarCheckoutPagBank(
-                pedido.id,
-                totalPedido,
-                itensCarrinho,
-                {
-                    nome: profile?.full_name || '',
-                    email: user.email,
-                    cpf: profile?.cpf || '',
-                    telefone: profile?.phone || ''
-                }
-            )
+            console.log('[Checkout] Processando pagamento com cartao...')
+            const resultado = await processarPagamentoCartao({
+                pedidoId: pedido.id,
+                valor: totalPedido,
+                tipo: metodoPagamento,
+                userEmail: user.email
+            })
 
             if (!resultado.success) {
-                mostrarToast(resultado.errors?.[0] || 'Erro ao criar checkout. Tente novamente.', 'erro')
+                mostrarToast(resultado.errors?.[0] || 'Erro ao processar pagamento. Tente novamente.', 'erro')
                 btn.disabled = false
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar pedido'
                 return
             }
 
             await limparCarrinho()
-            window.location.href = resultado.checkoutUrl
+            mostrarResultadoCartao(pedido, itensParaInserir, metodoPagamento, resultado)
             return
         }
 
@@ -1125,6 +1120,63 @@ function mostrarPagamentoPix(pedido, itens, valor) {
         </div>
     `
     pixArea.appendChild(infoExtra)
+}
+
+function mostrarResultadoCartao(pedido, itens, metodo, resultado) {
+    irParaStep(3)
+
+    const pixArea = document.getElementById('pixPaymentArea')
+    const cardArea = document.getElementById('cardPaymentResult')
+    const sucessoArea = document.getElementById('checkoutSucesso')
+    if (pixArea) pixArea.style.display = 'none'
+    if (sucessoArea) sucessoArea.style.display = 'none'
+    if (!cardArea) return
+
+    cardArea.style.display = ''
+
+    const status = resultado?.status || 'approved'
+    const numero = pedido.order_number || pedido.id.slice(0, 8).toUpperCase()
+    const icone = status === 'approved'
+        ? 'fa-circle-check'
+        : (status === 'processing' ? 'fa-hourglass-half' : 'fa-circle-xmark')
+    const titulo = status === 'approved'
+        ? 'Pagamento aprovado!'
+        : (status === 'processing' ? 'Pagamento em analise' : 'Pagamento nao aprovado')
+    const mensagem = resultado?.message || (
+        status === 'approved'
+            ? 'Seu pagamento foi confirmado com sucesso.'
+            : (status === 'processing'
+                ? 'Recebemos sua solicitacao e o PagBank esta analisando o pagamento.'
+                : 'Nao foi possivel concluir o pagamento.')
+    )
+
+    cardArea.innerHTML = `
+        <div class="card-result ${status}">
+            <div class="card-result-icon">
+                <i class="fa-solid ${icone}"></i>
+            </div>
+            <h2>${titulo}</h2>
+            <p class="card-result-msg">${mensagem}</p>
+            <div class="checkout-info-grupo" style="max-width:420px;margin:1.5rem auto 0;text-align:left;">
+                <h4><i class="fa-solid fa-box"></i> Pedido ${escapeHtml(numero)}</h4>
+                <p>${itens.length} ${itens.length === 1 ? 'item' : 'itens'} - Total: <strong>R$ ${formatarPreco(pedido.total)}</strong></p>
+                <p>Metodo: <strong>${metodo === 'debit_card' ? 'Cartao de Debito' : 'Cartao de Credito'}</strong></p>
+            </div>
+            <div class="checkout-sucesso-acoes" style="margin-top:1.5rem;">
+                <a href="./perfil.html?tab=pedidos" class="checkout-btn-primary">
+                    <i class="fa-solid fa-box"></i> Ver meus pedidos
+                </a>
+                <a href="./produtos.html" class="checkout-btn-outline">
+                    <i class="fa-solid fa-arrow-left"></i> Continuar comprando
+                </a>
+            </div>
+        </div>
+    `
+
+    if (status === 'approved') {
+        const iconeSucesso = cardArea.querySelector('.card-result-icon')
+        if (iconeSucesso) animarCheckBounce(iconeSucesso)
+    }
 }
 
 
@@ -1271,10 +1323,19 @@ function initEventListeners() {
             const cardContainer = document.getElementById('cardFormContainer')
             const metodo = radio.value
 
-            // Cartão não é mais necessário no formulário — PagBank redireciona
+            // Cartao usa formulario local e processamento direto via API /orders
             if (cardContainer) {
-                cardContainer.style.display = 'none'
-                cardContainer.innerHTML = ''
+                if (metodo === 'credit_card' || metodo === 'debit_card') {
+                    cardContainer.style.display = ''
+                    renderizarFormCartao(cardContainer, metodo)
+                    if (metodo === 'credit_card') {
+                        const total = calcularTotalCarrinho()
+                        atualizarSelectParcelas(total)
+                    }
+                } else {
+                    cardContainer.style.display = 'none'
+                    cardContainer.innerHTML = ''
+                }
             }
         })
     })
