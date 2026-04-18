@@ -1,9 +1,19 @@
+# JSL Embalagens — robots.txt
 User-agent: *
 Allow: /
 Disallow: /admin/
-Disallow: /html/checkout.html
-Disallow: /html/carrinho.html
-Disallow: /html/perfil.html
+Disallow: /docs/
+Disallow: /pagbank-evidencias/
+Disallow: /html/pagbank-sandbox.html
 Disallow: /html/confirmar-email.html
+Disallow: /checkout
+Disallow: /carrinho
+Disallow: /perfil
+
+# Deixar Googlebot rastrear CSS e JS (importante para renderização)
+User-agent: Googlebot
+Allow: /css/
+Allow: /js/
+Allow: /img/
 
 Sitemap: https://www.jslembalagens.com.br/sitemap.xml

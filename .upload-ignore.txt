@@ -1,6 +1,11 @@
-# Pastas/arquivos que NÃO devem ser enviados para o servidor:
+# Pastas/arquivos que nao devem ser enviados para o servidor:
 .vscode/
 supabase/
+supabase/migrations/
+migrations/
+docs/
+documentos/
+pagbank-evidencias/
 node_modules/
 .git/
 _remove-comments.js

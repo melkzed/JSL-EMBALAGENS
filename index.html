@@ -1,10 +1,44 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+
+    <!-- ===================== SEO PRIMÁRIO ===================== -->
+    <title>JSL Embalagens | Caixas, Sacolas, Descartáveis e Embalagens para Empresas</title>
+    <meta name="description" content="JSL Embalagens em Itaporanga-PB: caixas de papelão, sacolas plásticas, embalagens para delivery, descartáveis e muito mais. Entrega para todo o Brasil. Solicite orçamento!">
+    <meta name="keywords" content="embalagens, caixas de papelão, sacolas plásticas, descartáveis, embalagens delivery, embalagens para empresas, embalagem atacado, JSL embalagens, Itaporanga PB, embalagem nordeste">
+    <meta name="author" content="JSL Embalagens">
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+    <link rel="canonical" href="https://www.jslembalagens.com.br/">
+
+    <!-- ===================== OPEN GRAPH ===================== -->
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="JSL Embalagens | Caixas, Sacolas e Descartáveis para Empresas">
+    <meta property="og:description" content="Embalagens de qualidade para comércios, delivery, indústrias e empresas. Atendimento especializado e entrega para todo o Brasil.">
+    <meta property="og:url" content="https://www.jslembalagens.com.br/">
+    <meta property="og:site_name" content="JSL Embalagens">
+    <meta property="og:image" content="https://www.jslembalagens.com.br/img/imagemExemplo.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Embalagens JSL — caixas, sacolas e descartáveis para empresas">
+
+    <!-- ===================== TWITTER CARD ===================== -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JSL Embalagens | Caixas, Sacolas e Descartáveis">
+    <meta name="twitter:description" content="Soluções em embalagens para empresas e comércios com entrega para todo o Brasil.">
+    <meta name="twitter:image" content="https://www.jslembalagens.com.br/img/imagemExemplo.jpg">
+
+    <!-- ===================== PRECONNECT ===================== -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://otwmjdiqjhumqvyztnbl.supabase.co" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+
+    <!-- ===================== CSP ===================== -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com https://assets.pagseguro.com.br;
@@ -18,80 +52,155 @@
         base-uri 'self';
         form-action 'self';
     ">
-    <title>JSL Embalagens | Soluções em Embalagens, Sacolas, Descartáveis e Produtos para Empresas</title>
-    <meta name="description" content="JSL Embalagens em Itaporanga - PB. Soluções em embalagens, sacolas, descartáveis e produtos para comércios, delivery, indústrias e empresas de todo o Brasil.">
-    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
-    <link rel="canonical" href="https://www.jslembalagens.com.br/">
-    <meta property="og:locale" content="pt_BR">
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="JSL Embalagens | Soluções em Embalagens para Empresas e Negócios">
-    <meta property="og:description" content="Embalagens, sacolas, descartáveis e soluções para empresas com atendimento especializado e entrega para todo o Brasil.">
-    <meta property="og:url" content="https://www.jslembalagens.com.br/">
-    <meta property="og:site_name" content="JSL Embalagens">
-    <meta property="og:image" content="https://www.jslembalagens.com.br/img/imagemExemplo.jpg">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="JSL Embalagens | Soluções em Embalagens">
-    <meta name="twitter:description" content="Soluções em embalagens, sacolas e descartáveis para empresas e comércios.">
-    <meta name="twitter:image" content="https://www.jslembalagens.com.br/img/imagemExemplo.jpg">
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://otwmjdiqjhumqvyztnbl.supabase.co" crossorigin>
+
+    <!-- ===================== CSS ===================== -->
     <link rel="stylesheet" href="./css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- ===================== SCRIPTS ===================== -->
     <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
+
+    <!-- ===================== SCHEMA.ORG (JSON-LD) ===================== -->
     <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@graph": [
-                {
-                    "@type": "Organization",
-                    "@id": "https://www.jslembalagens.com.br/#organization",
-                    "name": "JSL Embalagens",
-                    "alternateName": "JSL Soluções em Embalagens",
-                    "url": "https://www.jslembalagens.com.br/",
-                    "logo": "https://www.jslembalagens.com.br/img/jsl_logo_completa.svg",
-                    "email": "contato@jslsolucoesemembalagens.com",
-                    "telephone": "+55-83-99638-9725",
-                    "sameAs": [
-                        "https://instagram.com/jsl.representacoes",
-                        "https://wa.me/5583996389725"
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Organization",
+                "@id": "https://www.jslembalagens.com.br/#organization",
+                "name": "JSL Embalagens",
+                "alternateName": ["JSL Soluções em Embalagens", "JSL Representações"],
+                "url": "https://www.jslembalagens.com.br/",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://www.jslembalagens.com.br/img/jsl_logo_completa.svg",
+                    "width": 300,
+                    "height": 100
+                },
+                "email": "contato@jslsolucoesemembalagens.com",
+                "telephone": "+55-83-99638-9725",
+                "sameAs": [
+                    "https://instagram.com/jsl.representacoes",
+                    "https://wa.me/5583996389725"
+                ],
+                "foundingDate": "2009",
+                "description": "Empresa especializada em soluções em embalagens para comércios, delivery, indústrias e empresas de todo o Brasil."
+            },
+            {
+                "@type": "LocalBusiness",
+                "@id": "https://www.jslembalagens.com.br/#localbusiness",
+                "name": "JSL Embalagens",
+                "image": "https://www.jslembalagens.com.br/img/imagemExemplo.jpg",
+                "url": "https://www.jslembalagens.com.br/",
+                "telephone": "+55-83-99638-9725",
+                "email": "contato@jslsolucoesemembalagens.com",
+                "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "R. Francisco Guimarães",
+                    "addressLocality": "Itaporanga",
+                    "addressRegion": "PB",
+                    "postalCode": "58780-000",
+                    "addressCountry": "BR"
+                },
+                "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": -7.0419,
+                    "longitude": -38.1544
+                },
+                "areaServed": {
+                    "@type": "Country",
+                    "name": "Brasil"
+                },
+                "priceRange": "$$",
+                "openingHoursSpecification": [
+                    {
+                        "@type": "OpeningHoursSpecification",
+                        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+                        "opens": "08:00",
+                        "closes": "18:00"
+                    },
+                    {
+                        "@type": "OpeningHoursSpecification",
+                        "dayOfWeek": "Saturday",
+                        "opens": "08:00",
+                        "closes": "12:00"
+                    }
+                ],
+                "hasOfferCatalog": {
+                    "@type": "OfferCatalog",
+                    "name": "Catálogo JSL Embalagens",
+                    "itemListElement": [
+                        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Caixas de Papelão"}},
+                        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Sacolas Plásticas"}},
+                        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Embalagens para Delivery"}},
+                        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Descartáveis"}},
+                        {"@type": "Offer", "itemOffered": {"@type": "Product", "name": "Potes e Bandejas"}}
                     ]
-                },
-                {
-                    "@type": "LocalBusiness",
-                    "@id": "https://www.jslembalagens.com.br/#localbusiness",
-                    "name": "JSL Embalagens",
-                    "image": "https://www.jslembalagens.com.br/img/imagemExemplo.jpg",
-                    "url": "https://www.jslembalagens.com.br/",
-                    "telephone": "+55-83-99638-9725",
-                    "email": "contato@jslsolucoesemembalagens.com",
-                    "address": {
-                        "@type": "PostalAddress",
-                        "streetAddress": "R. Francisco Guimarães",
-                        "addressLocality": "Itaporanga",
-                        "addressRegion": "PB",
-                        "postalCode": "58780-000",
-                        "addressCountry": "BR"
-                    },
-                    "areaServed": "BR",
-                    "priceRange": "$$"
-                },
-                {
-                    "@type": "WebSite",
-                    "@id": "https://www.jslembalagens.com.br/#website",
-                    "url": "https://www.jslembalagens.com.br/",
-                    "name": "JSL Embalagens",
-                    "publisher": {
-                        "@id": "https://www.jslembalagens.com.br/#organization"
-                    },
-                    "inLanguage": "pt-BR"
                 }
-            ]
-        }
+            },
+            {
+                "@type": "WebSite",
+                "@id": "https://www.jslembalagens.com.br/#website",
+                "url": "https://www.jslembalagens.com.br/",
+                "name": "JSL Embalagens",
+                "publisher": {
+                    "@id": "https://www.jslembalagens.com.br/#organization"
+                },
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://www.jslembalagens.com.br/produtos?busca={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                },
+                "inLanguage": "pt-BR"
+            },
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": "https://www.jslembalagens.com.br/"
+                    }
+                ]
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "A JSL Embalagens entrega para todo o Brasil?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Sim! A JSL Embalagens realiza entregas para todo o território nacional com agilidade e segurança."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Quais tipos de embalagens a JSL comercializa?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Trabalhamos com caixas de papelão, sacolas plásticas, embalagens para delivery, descartáveis, potes, bandejas e muito mais."
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Como solicitar um orçamento?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Entre em contato pelo WhatsApp (83) 99638-9725 ou acesse a página de contato no site."
+                        }
+                    }
+                ]
+            }
+        ]
+    }
     </script>
+    <!-- Habilitar rotas amigáveis no JS -->
+    <script>window.__JSL_ENABLE_FRIENDLY_ROUTES__ = true;</script>
 </head>
 
 <body>
@@ -111,7 +220,7 @@
                     os portes — do consumidor final à grande indústria.
                 </p>
                 <div class="hero-buttons">
-                    <a href="./html/produtos.html" class="hero-btn-primary">
+                    <a href="/produtos" class="hero-btn-primary">
                         Ver catálogo completo <span>→</span>
                     </a>
                     <a href="https://wa.me/5583996389725" class="hero-btn-outline">
@@ -138,7 +247,7 @@
                 <div class="hero-badge-quality">
                     <i class="fa-solid fa-check"></i> QUALIDADE GARANTIDA
                 </div>
-                <img src="./img/imagemExemplo.jpg" alt="Embalagens JSL" class="hero-img" fetchpriority="high">
+                <img src="./img/imagemExemplo.jpg" alt="Embalagens JSL — caixas, sacolas e descartáveis para empresas" class="hero-img" fetchpriority="high" width="600" height="450">
                 <div class="hero-badge-delivery">
                     <span class="hero-badge-delivery-icon">📦</span>
                     <div class="hero-badge-delivery-text">
@@ -155,60 +264,38 @@
     </section>
 
     <section class="categorias">
-        <h2>Nossas Categorias</h2>
+        <h2>Nossas Categorias de Embalagens</h2>
         <p class="subtitulo">
             Encontre a embalagem ideal para o seu negócio
         </p>
-        <div class="categorias-grid" id="categoriasGrid">
-            
-        </div>
+        <div class="categorias-grid" id="categoriasGrid"></div>
     </section>
 
     <section class="beneficios">
-        <h2>Por que escolher a JSL?</h2>
+        <h2>Por que escolher a JSL Embalagens?</h2>
         <p class="subtitulo">
             Nossos diferenciais fazem a diferença no seu negócio
         </p>
         <div class="beneficios-grid">
             <div class="beneficio-card">
-                <div class="icon">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
+                <div class="icon"><i class="fa-solid fa-shield-halved"></i></div>
                 <h3>Alta qualidade</h3>
-                <p>
-                    Embalagens resistentes e de primeira linha para garantir
-                    a segurança dos seus produtos.
-                </p>
+                <p>Embalagens resistentes e de primeira linha para garantir a segurança dos seus produtos.</p>
             </div>
             <div class="beneficio-card">
-                <div class="icon">
-                    <i class="fa-solid fa-chart-line"></i>
-                </div>
+                <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
                 <h3>Preço competitivo</h3>
-                <p>
-                    Excelente custo-benefício para sua empresa,
-                    sem abrir mão da qualidade.
-                </p>
+                <p>Excelente custo-benefício para sua empresa, sem abrir mão da qualidade.</p>
             </div>
             <div class="beneficio-card">
-                <div class="icon">
-                    <i class="fa-solid fa-truck"></i>
-                </div>
+                <div class="icon"><i class="fa-solid fa-truck"></i></div>
                 <h3>Entrega rápida</h3>
-                <p>
-                    Logística ágil para todo o Brasil,
-                    com prazos que cabem na sua necessidade.
-                </p>
+                <p>Logística ágil para todo o Brasil, com prazos que cabem na sua necessidade.</p>
             </div>
             <div class="beneficio-card">
-                <div class="icon">
-                    <i class="fa-solid fa-headset"></i>
-                </div>
+                <div class="icon"><i class="fa-solid fa-headset"></i></div>
                 <h3>Atendimento personalizado</h3>
-                <p>
-                    Equipe dedicada para entender e atender
-                    suas demandas específicas.
-                </p>
+                <p>Equipe dedicada para entender e atender suas demandas específicas.</p>
             </div>
         </div>
     </section>
@@ -222,34 +309,17 @@
                     segurança e eficiência em seus processos de embalagem. Atendemos desde pequenos negócios até grandes
                     empresas, garantindo produtos resistentes e com excelente custo-benefício.
                 </p>
-
                 <ul class="quem-somos-lista">
-                    <li>
-                        <span class="check-icon">✓</span>
-                        Soluções completas em embalagens
-                    </li>
-                    <li>
-                        <span class="check-icon">✓</span>
-                        Atendemos pequenos negócios e grandes empresas
-                    </li>
-                    <li>
-                        <span class="check-icon">✓</span>
-                        Produtos resistentes com excelente custo-benefício
-                    </li>
-                    <li>
-                        <span class="check-icon">✓</span>
-                        Entrega para todo o Brasil
-                    </li>
+                    <li><span class="check-icon">✓</span> Soluções completas em embalagens</li>
+                    <li><span class="check-icon">✓</span> Atendemos pequenos negócios e grandes empresas</li>
+                    <li><span class="check-icon">✓</span> Produtos resistentes com excelente custo-benefício</li>
+                    <li><span class="check-icon">✓</span> Entrega para todo o Brasil</li>
                 </ul>
-
-                <a href="./html/sobre.html" class="quem-somos-link">
-                    Leia mais sobre nós →
-                </a>
+                <a href="/sobre" class="quem-somos-link">Leia mais sobre nós →</a>
             </div>
-
             <div class="quem-somos-imagem">
                 <div class="pack-destaque">
-                    <img src="./img/jsl_logo_completa.svg" alt="JSL Soluções em Embalagens" class="quem-somos-logo" loading="lazy">
+                    <img src="./img/jsl_logo_completa.svg" alt="JSL Soluções em Embalagens — Logo" class="quem-somos-logo" loading="lazy" width="300" height="100">
                 </div>
             </div>
         </div>
@@ -262,22 +332,36 @@
                     <h2>Produtos em destaque</h2>
                     <p>Os mais procurados pelos nossos clientes</p>
                 </div>
-                <a href="./html/produtos.html" class="btn-outline">
-                    Ver catálogo completo →
-                </a>
+                <a href="/produtos" class="btn-outline">Ver catálogo completo →</a>
             </div>
-
-            <div class="produtos-grid">
-                
-            </div>
+            <div class="produtos-grid"></div>
+        </div>
     </section>
 
-    <a class="whatsapp-float" href="https://wa.me/5583996389725">
+    <!-- FAQ visível para Google (texto indexável) -->
+    <section class="faq-seo" style="max-width:860px;margin:0 auto 3rem;padding:0 1.5rem;">
+        <h2>Dúvidas frequentes sobre embalagens</h2>
+        <details>
+            <summary><strong>A JSL entrega para todo o Brasil?</strong></summary>
+            <p>Sim! Realizamos entregas para todos os estados brasileiros com agilidade e segurança.</p>
+        </details>
+        <details>
+            <summary><strong>Quais embalagens vocês vendem?</strong></summary>
+            <p>Trabalhamos com caixas de papelão, sacolas plásticas, embalagens para delivery, descartáveis, potes e bandejas, entre outros produtos.</p>
+        </details>
+        <details>
+            <summary><strong>Como solicitar orçamento?</strong></summary>
+            <p>Fale conosco pelo <a href="https://wa.me/5583996389725">WhatsApp (83) 99638-9725</a> ou pela nossa <a href="/contato">página de contato</a>.</p>
+        </details>
+    </section>
+
+    <a class="whatsapp-float" href="https://wa.me/5583996389725" aria-label="Falar no WhatsApp">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
     <div id="footer-placeholder"></div>
 
+    <script>window.__JSL_ENABLE_FRIENDLY_ROUTES__ = true;</script>
     <script type="module" src="./js/main.js"></script>
 </body>
 

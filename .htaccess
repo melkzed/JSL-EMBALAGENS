@@ -1,31 +1,96 @@
+# ============================================================
+#  JSL EMBALAGENS — .htaccess SEO & URL Amigável
+# ============================================================
+
+Options -Indexes
 RewriteEngine On
 
-# Home
+# ----- HTTPS obrigatório -----
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# ----- WWW canônico (sempre com www) -----
+RewriteCond %{HTTP_HOST} ^jslembalagens\.com\.br$ [NC]
+RewriteRule ^ https://www.jslembalagens.com.br%{REQUEST_URI} [R=301,L]
+
+# ----- Remover .html das URLs -----
+RewriteCond %{THE_REQUEST} /([^.]+)\.html [NC]
+RewriteRule ^ /%1 [R=301,L]
+
+# ----- HOME -----
 RewriteRule ^$ /index.html [L]
 
-# Produtos
+# ----- PRODUTOS (catálogo) -----
 RewriteRule ^produtos/?$ /html/produtos.html [L]
 
-# Sobre
+# ----- PRODUTO individual por slug (caminho limpo) -----
+# jslembalagens.com.br/produtos/caixa-de-papelao
+RewriteRule ^produtos/([a-zA-Z0-9À-ÿ_-]+)/?$ /html/produto.html?produto=$1 [QSA,L]
+
+# ----- SOBRE -----
 RewriteRule ^sobre/?$ /html/sobre.html [L]
 
-# Contato
+# ----- CONTATO -----
 RewriteRule ^contato/?$ /html/contato.html [L]
 
-# Politicas
+# ----- POLITICAS -----
 RewriteRule ^politicas/?$ /html/politicas.html [L]
 
-# Carrinho
+# ----- CARRINHO -----
 RewriteRule ^carrinho/?$ /html/carrinho.html [L]
 
-# Checkout
+# ----- CHECKOUT -----
 RewriteRule ^checkout/?$ /html/checkout.html [L]
 
-# Perfil
+# ----- PERFIL -----
 RewriteRule ^perfil/?$ /html/perfil.html [L]
 
-# Confirmacao de email
+# ----- CONFIRMAÇÃO EMAIL -----
 RewriteRule ^confirmar-email/?$ /html/confirmar-email.html [L]
 
-# Página de descrição do produto pelo nome
-RewriteRule ^produtos/([a-zA-Z0-9-_]+)/?$ /html/produto.html?produto=$1 [L]
+# ----- Proteger pastas internas (admin, js, css, components) -----
+RewriteRule ^(admin|js|css|components|docs|pagbank-evidencias)(/.*)?$ - [F,L]
+
+# ----- Esconder arquivos sensíveis -----
+<FilesMatch "\.(env|json|md|txt|git|log|sql|bak|zip|tar)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# ----- Exceção: robots.txt e sitemap -----
+<Files "robots.txt">
+    Order Allow,Deny
+    Allow from all
+</Files>
+<Files "sitemap.xml">
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# ----- Cache para assets estáticos (performance = ranking) -----
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/svg+xml     "access plus 1 year"
+    ExpiresByType image/jpeg        "access plus 1 year"
+    ExpiresByType image/png         "access plus 1 year"
+    ExpiresByType image/webp        "access plus 1 year"
+    ExpiresByType text/css          "access plus 6 months"
+    ExpiresByType application/javascript "access plus 6 months"
+    ExpiresByType text/html         "access plus 1 day"
+</IfModule>
+
+# ----- Compressão GZIP -----
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# ----- Headers de segurança -----
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=()"
+</IfModule>
+
+# ----- Página 404 personalizada -----
+ErrorDocument 404 /index.html

@@ -1,28 +1,89 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- HOME -->
   <url>
     <loc>https://www.jslembalagens.com.br/</loc>
+    <lastmod>2026-04-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+
+  <!-- CATÁLOGO DE PRODUTOS -->
   <url>
     <loc>https://www.jslembalagens.com.br/produtos</loc>
+    <lastmod>2026-04-18</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
+
+  <!-- SOBRE -->
   <url>
     <loc>https://www.jslembalagens.com.br/sobre</loc>
+    <lastmod>2026-04-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+
+  <!-- CONTATO -->
   <url>
     <loc>https://www.jslembalagens.com.br/contato</loc>
+    <lastmod>2026-04-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- POLÍTICAS -->
   <url>
     <loc>https://www.jslembalagens.com.br/politicas</loc>
+    <lastmod>2026-04-18</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
+
+  <!--
+    PRODUTOS INDIVIDUAIS
+    Substitua os slugs abaixo pelos slugs reais do seu banco Supabase.
+    Exemplo de como gerar via JS:
+      const { data } = await supabase.from('products').select('slug, updated_at')
+      data.forEach(p => console.log(`<url><loc>https://www.jslembalagens.com.br/produtos/${p.slug}</loc>...`))
+  -->
+
+  <!-- Exemplos de slugs — ajuste conforme seus produtos reais -->
+  <url>
+    <loc>https://www.jslembalagens.com.br/produtos/caixa-de-papelao</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://www.jslembalagens.com.br/produtos/sacola-plastica</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://www.jslembalagens.com.br/produtos/embalagem-para-delivery</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://www.jslembalagens.com.br/produtos/pote-descartavel</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <url>
+    <loc>https://www.jslembalagens.com.br/produtos/bandeja-isopor</loc>
+    <lastmod>2026-04-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
 </urlset>

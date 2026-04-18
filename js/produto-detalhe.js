@@ -706,6 +706,7 @@ function atualizarCanonical(url) {
 }
 
 function atualizarJsonLdProduto(produto, canonicalUrl, imageUrl, preco, stock) {
+    // ---- JSON-LD do produto ----
     let tag = document.getElementById('produtoJsonLd')
     if (!tag) {
         tag = document.createElement('script')
@@ -717,10 +718,12 @@ function atualizarJsonLdProduto(produto, canonicalUrl, imageUrl, preco, stock) {
     const data = {
         "@context": "https://schema.org",
         "@type": "Product",
+        "@id": canonicalUrl,
         "name": produto.name || 'Produto',
         "description": produto.description || 'Produto disponível na JSL Embalagens.',
         "image": [imageUrl],
-        "sku": produto.slug || produto.id || undefined,
+        "sku": produto.slug || String(produto.id) || undefined,
+        "mpn": produto.slug || String(produto.id) || undefined,
         "category": produto.categories?.name || undefined,
         "brand": {
             "@type": "Brand",
@@ -731,34 +734,66 @@ function atualizarJsonLdProduto(produto, canonicalUrl, imageUrl, preco, stock) {
             "url": canonicalUrl,
             "priceCurrency": "BRL",
             "price": Number(preco || 0).toFixed(2),
+            "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             "availability": stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            "itemCondition": "https://schema.org/NewCondition",
             "seller": {
                 "@type": "Organization",
-                "name": "JSL Embalagens"
+                "name": "JSL Embalagens",
+                "url": "https://www.jslembalagens.com.br"
             }
         }
     }
 
     tag.textContent = JSON.stringify(data)
+
+    // ---- Breadcrumb JSON-LD dinâmico ----
+    let bcTag = document.getElementById('breadcrumbJsonLd')
+    if (!bcTag) {
+        bcTag = document.createElement('script')
+        bcTag.type = 'application/ld+json'
+        bcTag.id = 'breadcrumbJsonLd'
+        document.head.appendChild(bcTag)
+    }
+    const nomeProduto = produto.name || 'Produto'
+    const nomeCategoria = produto.categories?.name || 'Embalagens'
+    bcTag.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.jslembalagens.com.br/" },
+            { "@type": "ListItem", "position": 2, "name": "Produtos", "item": "https://www.jslembalagens.com.br/produtos" },
+            { "@type": "ListItem", "position": 3, "name": nomeCategoria, "item": `https://www.jslembalagens.com.br/produtos?categoria=${encodeURIComponent(nomeCategoria)}` },
+            { "@type": "ListItem", "position": 4, "name": nomeProduto, "item": canonicalUrl }
+        ]
+    })
 }
 
 function atualizarSeoProduto(produto) {
     const nome = produto.name || produto.nome || 'Produto'
     const categoria = produto.categories?.name || 'Embalagens'
-    const descricaoBase = produto.description || produto.descricao || `${nome} disponível na JSL Embalagens. Solicite orçamento e confira especificações, variantes e condições de compra.`
-    const descricao = descricaoBase.slice(0, 155)
+    const descricaoBase = produto.description || produto.descricao ||
+        `${nome} disponível na JSL Embalagens. Solicite orçamento e confira especificações, variantes e condições de compra.`
+    // SEO: description ideal entre 120–155 caracteres
+    const descricao = descricaoBase.length > 155 ? descricaoBase.slice(0, 152) + '...' : descricaoBase
     const imagePath = getImagemUrl(produto)
     const imagem = imagePath.startsWith('http')
         ? imagePath
         : `https://www.jslembalagens.com.br${imagePath.replace('..', '')}`
-    const canonicalUrl = `https://www.jslembalagens.com.br/produtos/${encodeURIComponent(produto.slug || produto.id || '')}`
+    // Slug limpo sem encode para URL canônica legível
+    const slug = produto.slug || String(produto.id || '')
+    const canonicalUrl = `https://www.jslembalagens.com.br/produtos/${slug}`
     const variants = produto.product_variants || []
     const preco = variants.length > 0 ? variants[0].price || 0 : 0
     const stock = variants.length > 0 ? (variants[0].stock ?? 0) : 0
 
+    // Title: Produto | Categoria | JSL Embalagens (max ~60 chars)
     document.title = `${nome} | ${categoria} | JSL Embalagens`
+
     atualizarMetaTag('description', descricao)
     atualizarMetaTag('robots', 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1')
+
+    // Open Graph
     atualizarMetaTag('og:locale', 'pt_BR', 'property')
     atualizarMetaTag('og:type', 'product', 'property')
     atualizarMetaTag('og:title', `${nome} | JSL Embalagens`, 'property')
@@ -766,12 +801,22 @@ function atualizarSeoProduto(produto) {
     atualizarMetaTag('og:url', canonicalUrl, 'property')
     atualizarMetaTag('og:site_name', 'JSL Embalagens', 'property')
     atualizarMetaTag('og:image', imagem, 'property')
+    atualizarMetaTag('og:image:alt', `${nome} — JSL Embalagens`, 'property')
+
+    // Twitter
     atualizarMetaTag('twitter:card', 'summary_large_image')
     atualizarMetaTag('twitter:title', `${nome} | JSL Embalagens`)
     atualizarMetaTag('twitter:description', descricao)
     atualizarMetaTag('twitter:image', imagem)
+    atualizarMetaTag('twitter:image:alt', `${nome} — JSL Embalagens`)
+
+    // Canonical e JSON-LD
     atualizarCanonical(canonicalUrl)
     atualizarJsonLdProduto(produto, canonicalUrl, imagem, preco, stock)
+
+    // Atualizar breadcrumb visível no DOM
+    const bcNome = document.getElementById('breadcrumbNome')
+    if (bcNome) bcNome.textContent = nome
 }
 
 
