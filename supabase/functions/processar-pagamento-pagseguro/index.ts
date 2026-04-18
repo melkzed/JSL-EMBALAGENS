@@ -32,7 +32,11 @@ function getCorsHeaders(req) {
 
 // Produção: https://api.pagseguro.com
 // Sandbox:  https://sandbox.api.pagseguro.com
-const PAGBANK_API_URL = 'https://api.pagseguro.com'
+const PAGBANK_ENV = (Deno.env.get('PAGBANK_ENV') || 'production').toLowerCase()
+const PAGBANK_API_URL = Deno.env.get('PAGBANK_API_URL')
+    || (PAGBANK_ENV === 'sandbox'
+        ? 'https://sandbox.api.pagseguro.com'
+        : 'https://api.pagseguro.com')
 const SITE_URL = 'https://jslembalagens.com.br'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -79,20 +83,20 @@ async function persistirPagamento(supabase, pedidoId, gatewayId, status, gateway
     if (payErr) console.error('[PagBank] Erro ao atualizar payments:', payErr)
 
     if (status === 'approved') {
-        await supabase
+        const { error: orderErr } = await supabase
             .from('orders')
             .update({ status: 'paid', updated_at: new Date().toISOString() })
             .eq('id', pedidoId)
-            .catch(() => {})
+        if (orderErr) console.error('[PagBank] Erro ao atualizar orders:', orderErr)
 
-        await supabase
+        const { error: historyErr } = await supabase
             .from('order_status_history')
             .insert({
                 order_id: pedidoId,
                 status: 'paid',
                 notes: `Pagamento aprovado via PagBank (ID: ${gatewayId})`,
             })
-            .catch(() => {})
+        if (historyErr) console.error('[PagBank] Erro ao inserir order_status_history:', historyErr)
     }
 }
 
@@ -126,6 +130,122 @@ function getMensagem(status) {
         'cancelled': 'Pagamento cancelado.',
     }
     return m[status] || 'Pagamento em análise.'
+}
+
+function normalizarTelefone(telefone) {
+    const telLimpo = String(telefone || '').replace(/\D/g, '')
+    if (telLimpo.length < 10) return null
+
+    return {
+        country: '55',
+        area: telLimpo.substring(0, 2),
+        number: telLimpo.substring(2),
+        type: 'MOBILE',
+    }
+}
+
+function formatarItensPagBank(itens = [], pedidoId = '') {
+    return itens
+        .map((item, idx) => {
+            const unitAmount = Math.round(parseFloat(item?.preco || item?.price || item?.unit_price || 0) * 100)
+            const quantity = Math.max(1, parseInt(item?.quantidade || item?.quantity, 10) || 1)
+
+            if (!Number.isFinite(unitAmount) || unitAmount <= 0) return null
+
+            return {
+                reference_id: String(
+                    item?.reference_id
+                    || item?.sku
+                    || item?.product_variant_id
+                    || `${pedidoId}-${idx + 1}`
+                ).substring(0, 64),
+                name: String(
+                    item?.nome
+                    || item?.name
+                    || item?.product_name
+                    || 'Produto'
+                ).substring(0, 120),
+                quantity,
+                unit_amount: unitAmount,
+            }
+        })
+        .filter(Boolean)
+}
+
+function formatarEnderecoPagBank(orderData) {
+    if (!orderData?.shipping_street || !orderData?.shipping_number || !orderData?.shipping_city || !orderData?.shipping_state || !orderData?.shipping_zip_code) {
+        return null
+    }
+
+    const postalCode = String(orderData.shipping_zip_code).replace(/\D/g, '')
+    if (postalCode.length !== 8) return null
+
+    return {
+        street: String(orderData.shipping_street).substring(0, 160),
+        number: String(orderData.shipping_number).substring(0, 20),
+        ...(orderData.shipping_complement ? { complement: String(orderData.shipping_complement).substring(0, 40) } : {}),
+        locality: String(orderData.shipping_neighborhood || orderData.shipping_city).substring(0, 60),
+        city: String(orderData.shipping_city).substring(0, 90),
+        region_code: String(orderData.shipping_state).substring(0, 2).toUpperCase(),
+        country: 'BRA',
+        postal_code: postalCode,
+    }
+}
+
+function extrairMensagemErroPagBank(data, fallbackMessage) {
+    const errorMessages = data?.error_messages?.map(e => traduzirErro(e.code, e.description)).filter(Boolean)
+    if (errorMessages?.length) return errorMessages
+
+    if (Array.isArray(data?.errors) && data.errors.length) {
+        return data.errors.map(err => String(err))
+    }
+
+    if (data?.message) return [String(data.message)]
+    return [fallbackMessage]
+}
+
+async function obterPedidoCompleto(supabase, pedidoId) {
+    if (!supabase || !pedidoId) return null
+
+    const { data, error } = await supabase
+        .from('orders')
+        .select(`
+            *,
+            order_items (*)
+        `)
+        .eq('id', pedidoId)
+        .maybeSingle()
+
+    if (error) {
+        console.error('[PagBank] Erro ao buscar pedido:', error)
+        return null
+    }
+
+    return data || null
+}
+
+function resolverAmbientePagBank(requestedEnv) {
+    const env = String(requestedEnv || PAGBANK_ENV || 'production').toLowerCase()
+    return env === 'sandbox' ? 'sandbox' : 'production'
+}
+
+function resolverApiUrlPagBank(env) {
+    const explicitUrl = env === 'sandbox'
+        ? Deno.env.get('PAGBANK_API_URL_SANDBOX')
+        : Deno.env.get('PAGBANK_API_URL')
+
+    if (explicitUrl) return explicitUrl
+    return env === 'sandbox'
+        ? 'https://sandbox.api.pagseguro.com'
+        : 'https://api.pagseguro.com'
+}
+
+function resolverTokenPagBank(env) {
+    if (env === 'sandbox') {
+        return Deno.env.get('PAGSEGURO_TOKEN_SANDBOX') || Deno.env.get('PAGSEGURO_TOKEN')
+    }
+
+    return Deno.env.get('PAGSEGURO_TOKEN')
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -191,23 +311,27 @@ serve(async (req) => {
     //  ROTAS INTERNAS (chamadas via supabase.functions.invoke)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     try {
-        const PAGBANK_TOKEN = Deno.env.get('PAGSEGURO_TOKEN')
-        if (!PAGBANK_TOKEN) {
-            return new Response(
-                JSON.stringify({
-                    success: false,
-                    errorCode: 'PAGBANK_TOKEN_MISSING',
-                    errors: ['PAGSEGURO_TOKEN não configurado nos Secrets da Edge Function.'],
-                }),
-                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
-
         let body = {}
         try { body = await req.json() } catch {
             return new Response(
                 JSON.stringify({ success: false, errors: ['Requisição inválida.'] }),
                 { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        const pagbankEnv = resolverAmbientePagBank(body.environment)
+        const pagbankApiUrl = resolverApiUrlPagBank(pagbankEnv)
+        const PAGBANK_TOKEN = resolverTokenPagBank(pagbankEnv)
+        if (!PAGBANK_TOKEN) {
+            return new Response(
+                JSON.stringify({
+                    success: false,
+                    errorCode: 'PAGBANK_TOKEN_MISSING',
+                    errors: [pagbankEnv === 'sandbox'
+                        ? 'PAGSEGURO_TOKEN_SANDBOX não configurado nos Secrets da Edge Function.'
+                        : 'PAGSEGURO_TOKEN não configurado nos Secrets da Edge Function.'],
+                }),
+                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
 
@@ -222,7 +346,7 @@ serve(async (req) => {
 
             if (!publicKey) {
                 // Tenta buscar chave existente
-                const getRes = await fetch(`${PAGBANK_API_URL}/public-keys/card`, {
+                const getRes = await fetch(`${pagbankApiUrl}/public-keys/card`, {
                     headers: { 'Authorization': `Bearer ${PAGBANK_TOKEN}` }
                 })
                 if (getRes.ok) {
@@ -232,7 +356,7 @@ serve(async (req) => {
 
                 // Se não encontrou, cria
                 if (!publicKey) {
-                    const postRes = await fetch(`${PAGBANK_API_URL}/public-keys`, {
+                    const postRes = await fetch(`${pagbankApiUrl}/public-keys`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${PAGBANK_TOKEN}`,
@@ -246,7 +370,7 @@ serve(async (req) => {
                         publicKey = postData.public_key || null
                     } else if (postRes.status === 409) {
                         // Já existe — buscar novamente
-                        const retryRes = await fetch(`${PAGBANK_API_URL}/public-keys/card`, {
+                        const retryRes = await fetch(`${pagbankApiUrl}/public-keys/card`, {
                             headers: { 'Authorization': `Bearer ${PAGBANK_TOKEN}` }
                         })
                         const retryData = await retryRes.json().catch(() => ({}))
@@ -276,7 +400,7 @@ serve(async (req) => {
 
         // ── Criar sessão 3DS ─────────────────────────────────────────────────────
         if (body.action === 'create-3ds-session') {
-            const sessRes = await fetch(`${PAGBANK_API_URL}/checkout-sdk/sessions`, {
+            const sessRes = await fetch(`${pagbankApiUrl}/checkout-sdk/sessions`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${PAGBANK_TOKEN}`, 'Content-Type': 'application/json' },
             })
@@ -353,20 +477,8 @@ serve(async (req) => {
             // Deve ser a URL do SEU SITE (não do checkout do PagBank)
             const returnUrl = redirectUrl || `${SITE_URL}/checkout-retorno.html?pedido=${encodeURIComponent(pedidoId)}`
 
-            const itensFormatados = itens.map((item, idx) => ({
-                reference_id: `${pedidoId}-${idx + 1}`,
-                name: String(item?.nome || item?.name || 'Produto').substring(0, 120),
-                quantity: Math.max(1, parseInt(item?.quantidade || item?.quantity, 10) || 1),
-                unit_amount: Math.max(1, Math.round(parseFloat(item?.preco || item?.price || 0) * 100)),
-            }))
-
-            const telLimpo = (telefone || '').replace(/\D/g, '')
-            const customerPhone = telLimpo.length >= 10 ? {
-                country: '+55',
-                area: telLimpo.substring(0, 2),
-                number: telLimpo.substring(2),
-                type: 'MOBILE',
-            } : undefined
+            const itensFormatados = formatarItensPagBank(itens, pedidoId)
+            const customerPhone = normalizarTelefone(telefone) || undefined
 
             const payload = {
                 reference_id: pedidoId,
@@ -392,7 +504,7 @@ serve(async (req) => {
 
             console.log('[PagBank] Criando checkout:', pedidoId)
 
-            const res = await fetch(`${PAGBANK_API_URL}/checkouts`, {
+            const res = await fetch(`${pagbankApiUrl}/checkouts`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -426,11 +538,12 @@ serve(async (req) => {
 
             // Salva checkoutId no banco para rastreamento
             if (supabase && data.id) {
-                await supabase.from('payments').update({
+                const { error: checkoutSaveErr } = await supabase.from('payments').update({
                     gateway: 'pagbank',
                     gateway_transaction_id: data.id,
                     updated_at: new Date().toISOString(),
-                }).eq('order_id', pedidoId).catch(() => {})
+                }).eq('order_id', pedidoId)
+                if (checkoutSaveErr) console.error('[PagBank] Erro ao salvar checkoutId:', checkoutSaveErr)
             }
 
             return new Response(
@@ -444,64 +557,97 @@ serve(async (req) => {
         // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
         const isCredito = tipo !== 'debit_card'
         const numParcelas = isCredito ? (parseInt(parcelas) || 1) : 1
+        const pedidoSalvo = await obterPedidoCompleto(supabase, pedidoId)
+        const itensOrder = formatarItensPagBank(
+            Array.isArray(itens) && itens.length > 0 ? itens : (pedidoSalvo?.order_items || []),
+            pedidoId
+        )
 
-        const chargePayload = {
-            reference_id: pedidoId,
-            description: `Pedido JSL #${pedidoId.substring(0, 8).toUpperCase()}`,
-            amount: { value: valorCentavos, currency: 'BRL' },
-            payment_method: {
-                type: isCredito ? 'CREDIT_CARD' : 'DEBIT_CARD',
-                installments: numParcelas,
-                capture: true,
-                card: {
-                    encrypted: encryptedCard,
-                    holder: {
-                        name: (nomeCliente || 'CLIENTE').substring(0, 80),
-                        tax_id: cpfLimpo,
-                    },
+        if (itensOrder.length === 0) {
+            return new Response(
+                JSON.stringify({ success: false, errors: ['Itens do pedido são obrigatórios para pagamento com cartão.'] }),
+                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        const customerPhone = normalizarTelefone(telefone) || undefined
+        const shippingAddress = formatarEnderecoPagBank(pedidoSalvo)
+        const paymentMethod = {
+            type: isCredito ? 'CREDIT_CARD' : 'DEBIT_CARD',
+            installments: numParcelas,
+            capture: true,
+            card: {
+                encrypted: encryptedCard,
+                store: false,
+                holder: {
+                    name: (nomeCliente || pedidoSalvo?.shipping_recipient || 'CLIENTE').substring(0, 80),
+                    tax_id: cpfLimpo,
                 },
             },
-            notification_urls: [WEBHOOK_URL],
         }
 
         if (!isCredito && authenticationId) {
-            chargePayload.payment_method.authentication_method = { type: 'THREEDS', id: authenticationId }
+            paymentMethod.authentication_method = { type: 'THREEDS', id: authenticationId }
         }
 
-        console.log('[PagBank] Criando charge:', pedidoId, tipo, valorCentavos)
+        const orderPayload = {
+            reference_id: pedidoId,
+            customer: {
+                name: (nomeCliente || pedidoSalvo?.shipping_recipient || 'CLIENTE').substring(0, 80),
+                email: email || 'cliente@jslembalagens.com.br',
+                tax_id: cpfLimpo,
+                ...(customerPhone ? { phones: [customerPhone] } : {}),
+            },
+            items: itensOrder,
+            ...(shippingAddress ? { shipping: { address: shippingAddress } } : {}),
+            notification_urls: [WEBHOOK_URL],
+            charges: [
+                {
+                    reference_id: `${pedidoId}-1`.substring(0, 64),
+                    description: `Pedido JSL #${pedidoId.substring(0, 8).toUpperCase()}`,
+                    amount: { value: valorCentavos, currency: 'BRL' },
+                    payment_method: paymentMethod,
+                }
+            ],
+        }
 
-        const chargeRes = await fetch(`${PAGBANK_API_URL}/charges`, {
+        console.log('[PagBank] Criando order com cartão:', pedidoId, tipo, valorCentavos)
+
+        const orderRes = await fetch(`${pagbankApiUrl}/orders`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${PAGBANK_TOKEN}`,
-                'x-idempotency-key': `chg_${pedidoId}`,
+                'x-idempotency-key': `ord_${pedidoId}`,
             },
-            body: JSON.stringify(chargePayload),
+            body: JSON.stringify(orderPayload),
         })
 
-        const chargeData = await chargeRes.json().catch(() => ({}))
-        console.log('[PagBank] Resposta charge:', chargeRes.status, JSON.stringify(chargeData).substring(0, 500))
+        const orderData = await orderRes.json().catch(() => ({}))
+        console.log('[PagBank] Resposta order:', orderRes.status, JSON.stringify(orderData).substring(0, 500))
 
-        if (!chargeRes.ok || chargeData.error_messages) {
-            const erros = chargeData.error_messages?.map(e => traduzirErro(e.code, e.description))
-                || ['Erro ao processar pagamento.']
-            const code = (chargeRes.status === 401 || chargeRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_CHARGE_ERROR'
+        if (!orderRes.ok || orderData.error_messages) {
+            const erros = extrairMensagemErroPagBank(orderData, 'Erro ao processar pagamento.')
+            const code = (orderRes.status === 401 || orderRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_ORDER_ERROR'
             return new Response(
                 JSON.stringify({ success: false, errorCode: code, errors: erros }),
-                { status: chargeRes.status || 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                { status: orderRes.status || 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
 
-        const status = STATUS_MAP[chargeData.status] || 'pending'
-        await persistirPagamento(supabase, pedidoId, chargeData.id, status, chargeData)
+        const charge = Array.isArray(orderData?.charges) ? orderData.charges[0] : null
+        const status = STATUS_MAP[charge?.status || orderData?.status] || 'pending'
+        const gatewayId = charge?.id || orderData?.id || pedidoId
+
+        await persistirPagamento(supabase, pedidoId, gatewayId, status, orderData)
 
         return new Response(
             JSON.stringify({
                 success: status === 'approved' || status === 'processing',
                 status,
                 gateway: 'pagbank',
-                gatewayId: chargeData.id,
+                gatewayId,
+                orderId: orderData?.id || null,
                 message: getMensagem(status),
             }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

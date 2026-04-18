@@ -1,5 +1,6 @@
 ﻿import { supabase } from './supabaseClient.js'
 import { formatarPreco } from './utils.js'
+import { invokeFunctionPublic } from './supabaseClient.js'
 
 export const CONFIG_PAGAMENTO = {
 
@@ -800,8 +801,7 @@ export async function criarCheckoutPagBank(pedidoId, valor, itensCarrinho, dados
         preco: parseFloat(item.product_variants?.price || 0)
     }))
 
-    const { data, error } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
-        body: {
+    const { data, error } = await invokeFunctionPublic('processar-pagamento-pagseguro', {
             pedidoId,
             valor,
             itens,
@@ -810,7 +810,6 @@ export async function criarCheckoutPagBank(pedidoId, valor, itensCarrinho, dados
             cpf: dadosCliente.cpf,
             telefone: dadosCliente.telefone || '',
             redirectUrl: getCheckoutRetornoUrl(pedidoId)
-        }
     })
 
     if (error || !data?.success) {
@@ -828,9 +827,7 @@ export async function criarCheckoutPagBank(pedidoId, valor, itensCarrinho, dados
 async function autenticar3DS(cardData, valor, email) {
     try {
 
-        const { data: sessionData, error: sessionError } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
-            body: { action: 'create-3ds-session' }
-        })
+        const { data: sessionData, error: sessionError } = await invokeFunctionPublic('processar-pagamento-pagseguro', { action: 'create-3ds-session' })
 
         if (sessionError || !sessionData?.session) {
             console.error('[3DS] Erro ao criar sessao:', sessionError)
@@ -906,8 +903,7 @@ async function processarViaPagSeguro({
     authenticationId
 }) {
     try {
-        const { data, error } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
-            body: {
+        const { data, error } = await invokeFunctionPublic('processar-pagamento-pagseguro', {
                 pedidoId,
                 valor,
                 parcelas: cardData.installments || 1,
@@ -918,7 +914,6 @@ async function processarViaPagSeguro({
                 email: userEmail,
                 telefone: '',
                 authenticationId
-            }
         })
 
         if (error) {
@@ -1030,13 +1025,7 @@ async function obterPublicKeyPagSeguro() {
         return window.PAGSEGURO_PUBLIC_KEY
     }
 
-    const { data: { session } } = await supabase.auth.getSession()
-    console.log('[Debug] Sessão ativa:', session)
-    console.log('[Debug] Token:', session?.access_token)
-
-    const { data, error } = await supabase.functions.invoke('processar-pagamento-pagseguro', {
-        body: { action: 'get-public-key' }
-    })
+    const { data, error } = await invokeFunctionPublic('processar-pagamento-pagseguro', { action: 'get-public-key' })
 
     if (error || !data?.publicKey) {
         console.error('[PagSeguro] Erro ao obter public key:', error)

@@ -1,0 +1,238 @@
+:root {
+    --sandbox-bg: linear-gradient(135deg, #f7f1e8 0%, #fefcf8 45%, #eef7f5 100%);
+    --sandbox-card: rgba(255, 255, 255, 0.88);
+    --sandbox-border: rgba(16, 86, 82, 0.12);
+    --sandbox-text: #143330;
+    --sandbox-muted: #5f7571;
+    --sandbox-accent: #0d7c90;
+    --sandbox-accent-dark: #095d6c;
+    --sandbox-ok: #197a5a;
+    --sandbox-warn: #a15f10;
+    --sandbox-error: #aa2f3d;
+}
+
+body {
+    margin: 0;
+    background: var(--sandbox-bg);
+    color: var(--sandbox-text);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.sandbox-page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 40px 20px 64px;
+}
+
+.sandbox-hero {
+    margin-bottom: 28px;
+}
+
+.sandbox-badge {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(13, 124, 144, 0.12);
+    color: var(--sandbox-accent-dark);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+}
+
+.sandbox-hero h1 {
+    margin: 14px 0 10px;
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    line-height: 1.05;
+}
+
+.sandbox-hero p {
+    max-width: 760px;
+    color: var(--sandbox-muted);
+    font-size: 1.02rem;
+}
+
+.sandbox-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.85fr);
+    gap: 22px;
+}
+
+.sandbox-card {
+    background: var(--sandbox-card);
+    border: 1px solid var(--sandbox-border);
+    border-radius: 24px;
+    box-shadow: 0 18px 46px rgba(18, 52, 49, 0.08);
+    backdrop-filter: blur(10px);
+    padding: 24px;
+}
+
+.sandbox-card-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.sandbox-card-header p {
+    margin: 8px 0 0;
+    color: var(--sandbox-muted);
+}
+
+.sandbox-form {
+    margin-top: 20px;
+}
+
+.sandbox-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.sandbox-form-group.small {
+    min-width: 120px;
+}
+
+.sandbox-form-group label {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.sandbox-form-group input,
+.sandbox-form-group select {
+    width: 100%;
+    min-height: 50px;
+    border: 1px solid rgba(20, 51, 48, 0.16);
+    border-radius: 14px;
+    padding: 0 14px;
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--sandbox-text);
+    font-size: 1rem;
+}
+
+.sandbox-inline {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.sandbox-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.sandbox-btn {
+    border: 0;
+    border-radius: 14px;
+    min-height: 50px;
+    padding: 0 18px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+}
+
+.sandbox-btn:hover {
+    transform: translateY(-1px);
+}
+
+.sandbox-btn:disabled {
+    cursor: wait;
+    opacity: 0.72;
+    transform: none;
+}
+
+.sandbox-btn-primary {
+    background: var(--sandbox-accent);
+    color: #fff;
+}
+
+.sandbox-btn-secondary {
+    background: rgba(13, 124, 144, 0.1);
+    color: var(--sandbox-accent-dark);
+}
+
+.sandbox-card-side {
+    align-self: start;
+}
+
+.sandbox-checklist {
+    margin: 16px 0 0;
+    padding-left: 18px;
+    color: var(--sandbox-muted);
+    line-height: 1.6;
+}
+
+.top-gap {
+    margin-top: 28px;
+}
+
+.sandbox-status {
+    margin-top: 14px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-weight: 700;
+}
+
+.sandbox-status.is-idle {
+    background: rgba(13, 124, 144, 0.08);
+    color: var(--sandbox-accent-dark);
+}
+
+.sandbox-status.is-running {
+    background: rgba(161, 95, 16, 0.1);
+    color: var(--sandbox-warn);
+}
+
+.sandbox-status.is-success {
+    background: rgba(25, 122, 90, 0.1);
+    color: var(--sandbox-ok);
+}
+
+.sandbox-status.is-error {
+    background: rgba(170, 47, 61, 0.1);
+    color: var(--sandbox-error);
+}
+
+.sandbox-result {
+    margin: 14px 0 0;
+    min-height: 320px;
+    max-height: 520px;
+    overflow: auto;
+    border-radius: 18px;
+    padding: 16px;
+    background: #132422;
+    color: #d7f6ee;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+@media (max-width: 920px) {
+    .sandbox-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 680px) {
+    .sandbox-page {
+        padding: 28px 14px 48px;
+    }
+
+    .sandbox-card {
+        padding: 18px;
+        border-radius: 20px;
+    }
+
+    .sandbox-inline {
+        grid-template-columns: 1fr;
+    }
+
+    .sandbox-actions {
+        flex-direction: column;
+    }
+
+    .sandbox-btn {
+        width: 100%;
+    }
+}

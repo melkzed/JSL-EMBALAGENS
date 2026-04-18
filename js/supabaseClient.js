@@ -21,3 +21,32 @@ function waitForSupabase(timeout = 5000) {
 await waitForSupabase()
 
 export const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+export const supabaseAnonKey = supabaseKey
+
+export function getPublicFunctionHeaders() {
+    return {
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${supabaseAnonKey}`,
+    }
+}
+
+// Chama uma Edge Function usando fetch direto (sem o SDK do Supabase),
+// evitando que o JWT da sessão do usuário sobrescreva o Authorization header
+// e cause erro 403 em funções com verify_jwt=false.
+export async function invokeFunctionPublic(functionName, body) {
+    const url = `${supabaseUrl}/functions/v1/${functionName}`
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseAnonKey,
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify(body),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok && res.status >= 500) {
+        throw new Error(data?.errors?.[0] || `Erro interno (HTTP ${res.status})`)
+    }
+    return { data, error: null }
+}

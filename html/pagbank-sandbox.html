@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+    <meta name="robots" content="noindex,nofollow">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://assets.pagseguro.com.br https://static.cloudflareinsights.com;
+        script-src-elem 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://assets.pagseguro.com.br https://static.cloudflareinsights.com;
+        style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+        font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br https://sdk.pagseguro.com;
+        frame-src https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br https://sdk.pagseguro.com https://*.cardinalcommerce.com;
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+    ">
+    <title>Teste Sandbox PagBank - JSL</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/pagbank-sandbox.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <main class="sandbox-page">
+        <section class="sandbox-hero">
+            <span class="sandbox-badge">Sandbox isolado</span>
+            <h1>Teste de cartao PagBank</h1>
+            <p>Essa pagina envia o pagamento para a mesma Edge Function do projeto, mas sempre com <code>environment: "sandbox"</code>.</p>
+        </section>
+
+        <section class="sandbox-grid">
+            <article class="sandbox-card">
+                <div class="sandbox-card-header">
+                    <h2><i class="fa-solid fa-vial-circle-check"></i> Dados do teste</h2>
+                    <p>Escolha um cartao oficial de homologacao e ajuste os dados do comprador.</p>
+                </div>
+
+                <form id="sandboxForm" class="sandbox-form">
+                    <div class="sandbox-form-group">
+                        <label for="testCardSelect">Cartao de teste</label>
+                        <select id="testCardSelect"></select>
+                    </div>
+
+                    <div class="sandbox-inline">
+                        <div class="sandbox-form-group">
+                            <label for="cardNumber">Numero</label>
+                            <input id="cardNumber" type="text" inputmode="numeric" autocomplete="cc-number" required>
+                        </div>
+                        <div class="sandbox-form-group small">
+                            <label for="cardCVV">CVV</label>
+                            <input id="cardCVV" type="text" inputmode="numeric" autocomplete="cc-csc" required>
+                        </div>
+                        <div class="sandbox-form-group small">
+                            <label for="cardExpiry">Expiracao</label>
+                            <input id="cardExpiry" type="text" inputmode="numeric" placeholder="12/2030" required>
+                        </div>
+                    </div>
+
+                    <div class="sandbox-inline">
+                        <div class="sandbox-form-group">
+                            <label for="holderName">Nome no cartao</label>
+                            <input id="holderName" type="text" required>
+                        </div>
+                        <div class="sandbox-form-group">
+                            <label for="buyerName">Nome do comprador</label>
+                            <input id="buyerName" type="text" required>
+                        </div>
+                    </div>
+
+                    <div class="sandbox-inline">
+                        <div class="sandbox-form-group">
+                            <label for="buyerEmail">Email do comprador</label>
+                            <input id="buyerEmail" type="email" required>
+                        </div>
+                        <div class="sandbox-form-group">
+                            <label for="buyerCPF">CPF</label>
+                            <input id="buyerCPF" type="text" inputmode="numeric" required>
+                        </div>
+                    </div>
+
+                    <div class="sandbox-inline">
+                        <div class="sandbox-form-group">
+                            <label for="buyerPhone">Telefone</label>
+                            <input id="buyerPhone" type="text" inputmode="numeric" required>
+                        </div>
+                        <div class="sandbox-form-group small">
+                            <label for="orderValue">Valor</label>
+                            <input id="orderValue" type="number" step="0.01" min="1" value="10.50" required>
+                        </div>
+                        <div class="sandbox-form-group small">
+                            <label for="installments">Parcelas</label>
+                            <input id="installments" type="number" min="1" max="12" value="1" required>
+                        </div>
+                    </div>
+
+                    <div class="sandbox-form-group">
+                        <label for="itemName">Descricao do item</label>
+                        <input id="itemName" type="text" value="Teste Cartao Sandbox" required>
+                    </div>
+
+                    <div class="sandbox-actions">
+                        <button type="button" id="btnSmokeTest" class="sandbox-btn sandbox-btn-secondary">
+                            <i class="fa-solid fa-satellite-dish"></i> Smoke test
+                        </button>
+                        <button type="submit" id="btnRunSandbox" class="sandbox-btn sandbox-btn-primary">
+                            <i class="fa-solid fa-credit-card"></i> Rodar teste sandbox
+                        </button>
+                    </div>
+                </form>
+            </article>
+
+            <aside class="sandbox-card sandbox-card-side">
+                <div class="sandbox-card-header">
+                    <h2><i class="fa-solid fa-list-check"></i> Regras importantes</h2>
+                </div>
+                <ul class="sandbox-checklist">
+                    <li>Usa apenas o token de sandbox configurado na Supabase.</li>
+                    <li>O email do comprador precisa ser diferente do email da conta sandbox do lojista.</li>
+                    <li>O checkout principal da loja nao e alterado por esta pagina.</li>
+                    <li>O resultado bruto da Edge Function aparece abaixo para facilitar a homologacao.</li>
+                </ul>
+
+                <div class="sandbox-card-header top-gap">
+                    <h2><i class="fa-solid fa-terminal"></i> Resultado</h2>
+                </div>
+                <div id="sandboxStatus" class="sandbox-status is-idle">Aguardando execucao.</div>
+                <pre id="sandboxResult" class="sandbox-result">{}</pre>
+            </aside>
+        </section>
+    </main>
+
+    <script type="module" src="../js/pagbank-sandbox.js"></script>
+</body>
+
+</html>
