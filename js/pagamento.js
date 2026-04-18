@@ -1,6 +1,31 @@
 import { supabase } from './supabaseClient.js'
 import { formatarPreco } from './utils.js'
-import { invokeFunctionPublic } from './supabaseClient.js'
+
+const SUPABASE_FUNCTIONS_URL = 'https://otwmjdiqjhumqvyztnbl.supabase.co/functions/v1'
+const SUPABASE_PUBLIC_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90d21qZGlxamh1bXF2eXp0bmJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTU3NTUsImV4cCI6MjA5MDA3MTc1NX0.1syGgZJNqoax0z-E5dWcTtm5g47xDUdFa3U7lttxZz4'
+
+async function invokeFunctionPublic(functionName, body) {
+    const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/${functionName}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            apikey: SUPABASE_PUBLIC_ANON_KEY,
+            Authorization: `Bearer ${SUPABASE_PUBLIC_ANON_KEY}`,
+        },
+        body: JSON.stringify(body || {}),
+    })
+
+    const data = await response.json().catch(() => ({}))
+
+    if (!response.ok) {
+        return {
+            data,
+            error: new Error(data?.errors?.[0] || data?.message || `Erro HTTP ${response.status}`),
+        }
+    }
+
+    return { data, error: null }
+}
 
 export const CONFIG_PAGAMENTO = {
 
