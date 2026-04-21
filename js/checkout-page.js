@@ -9,7 +9,7 @@ import {
     processarPagamentoCartao,
     atualizarSelectParcelas,
     CONFIG_PAGAMENTO
-} from "./pagamento.js"
+} from "./pagamento.js?v=20260418c"
 import {
     calcularFrete,
     renderizarOpcoesFrete,

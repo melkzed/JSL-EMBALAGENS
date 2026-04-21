@@ -144,6 +144,15 @@ function normalizarTelefone(telefone) {
     }
 }
 
+function normalizarEmailPagBank(email, pedidoId = '') {
+    const candidate = String(email || '').trim().toLowerCase()
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate)
+    if (isValid && candidate.length <= 60) return candidate
+
+    const safeId = String(pedidoId || Date.now()).replace(/[^a-zA-Z0-9]/g, '').slice(-24) || 'pedido'
+    return `pedido-${safeId}@jslembalagens.com.br`
+}
+
 function formatarItensPagBank(itens = [], pedidoId = '') {
     return itens
         .map((item, idx) => {
@@ -488,7 +497,7 @@ serve(async (req) => {
                 reference_id: pedidoId,
                 customer: {
                     name: (nomeCliente || 'CLIENTE').substring(0, 80),
-                    email: email || `cliente@jslembalagens.com.br`,
+                    email: normalizarEmailPagBank(email, pedidoId),
                     tax_id: cpfLimpo,
                     ...(customerPhone ? { phones: [customerPhone] } : {}),
                 },
@@ -576,6 +585,7 @@ serve(async (req) => {
 
         const customerPhone = normalizarTelefone(telefone) || undefined
         const shippingAddress = formatarEnderecoPagBank(pedidoSalvo)
+        const holderName = (nomeCliente || pedidoSalvo?.shipping_recipient || 'CLIENTE').substring(0, 30)
         const paymentMethod = {
             type: isCredito ? 'CREDIT_CARD' : 'DEBIT_CARD',
             installments: numParcelas,
@@ -583,10 +593,10 @@ serve(async (req) => {
             card: {
                 encrypted: encryptedCard,
                 store: false,
-                holder: {
-                    name: (nomeCliente || pedidoSalvo?.shipping_recipient || 'CLIENTE').substring(0, 80),
-                    tax_id: cpfLimpo,
-                },
+            },
+            holder: {
+                name: holderName,
+                tax_id: cpfLimpo,
             },
         }
 
@@ -598,7 +608,7 @@ serve(async (req) => {
             reference_id: pedidoId,
             customer: {
                 name: (nomeCliente || pedidoSalvo?.shipping_recipient || 'CLIENTE').substring(0, 80),
-                email: email || 'cliente@jslembalagens.com.br',
+                email: normalizarEmailPagBank(email, pedidoId),
                 tax_id: cpfLimpo,
                 ...(customerPhone ? { phones: [customerPhone] } : {}),
             },
@@ -634,7 +644,12 @@ serve(async (req) => {
             const erros = extrairMensagemErroPagBank(orderData, 'Erro ao processar pagamento.')
             const code = (orderRes.status === 401 || orderRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_ORDER_ERROR'
             return new Response(
-                JSON.stringify({ success: false, errorCode: code, errors: erros }),
+                JSON.stringify({
+                    success: false,
+                    errorCode: code,
+                    errors: erros,
+                    ...(pagbankEnv === 'sandbox' ? { gatewayDebug: orderData } : {}),
+                }),
                 { status: getClientSafeErrorStatus(orderRes.status || 400), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }

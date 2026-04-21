@@ -25,11 +25,11 @@ async function invokeFunctionPublic(functionName, body) {
 }
 
 const TEST_CARDS = [
-    { label: 'Visa', number: '4539620659922097', cvv: '123', expiry: '12/2030' },
-    { label: 'Mastercard', number: '5240082975622454', cvv: '123', expiry: '12/2030' },
-    { label: 'American Express', number: '345817690311361', cvv: '123', expiry: '12/2030' },
-    { label: 'Elo', number: '4514161122113757', cvv: '123', expiry: '12/2030' },
-    { label: 'Hiper', number: '6062828598919021', cvv: '123', expiry: '12/2030' },
+    { label: 'Visa', number: '4539620659922097', cvv: '123', expiry: '12/2026' },
+    { label: 'Mastercard', number: '5240082975622454', cvv: '123', expiry: '12/2026' },
+    { label: 'American Express', number: '345817690311361', cvv: '1234', expiry: '12/2026' },
+    { label: 'Elo', number: '4514161122113757', cvv: '123', expiry: '12/2026' },
+    { label: 'Hiper', number: '6062828598919021', cvv: '123', expiry: '12/2026' },
 ]
 
 const cardSelect = document.getElementById('testCardSelect')
