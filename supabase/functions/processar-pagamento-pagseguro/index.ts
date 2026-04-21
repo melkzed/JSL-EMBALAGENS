@@ -117,6 +117,7 @@ function traduzirErro(code, descricao) {
         '20004': 'Pagamento recusado — saldo insuficiente.',
         '20005': 'Pagamento recusado — cartão não aceito.',
         '20006': 'Pagamento recusado — suspeita de fraude.',
+        'ACCESS_DENIED': 'Conta PagBank sem liberacao para esta operacao. Use o checkout hospedado ou solicite whitelist ao PagBank.',
     }
     return t[code] || descricao || 'Erro ao processar pagamento.'
 }
@@ -642,7 +643,10 @@ serve(async (req) => {
 
         if (!orderRes.ok || orderData.error_messages) {
             const erros = extrairMensagemErroPagBank(orderData, 'Erro ao processar pagamento.')
-            const code = (orderRes.status === 401 || orderRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_ORDER_ERROR'
+            const hasAccessDenied = orderData?.error_messages?.some(e => e?.code === 'ACCESS_DENIED')
+            const code = hasAccessDenied
+                ? 'PAGBANK_ACCESS_DENIED'
+                : ((orderRes.status === 401 || orderRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_ORDER_ERROR')
             return new Response(
                 JSON.stringify({
                     success: false,

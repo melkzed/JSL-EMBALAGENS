@@ -5,10 +5,7 @@ import { animarCheckBounce } from "./animacoes.js"
 import { escapeHtml, formatarPreco, mostrarToast } from "./utils.js"
 import {
     renderizarPixQRCode,
-    renderizarFormCartao,
-    processarPagamentoCartao,
-    atualizarSelectParcelas,
-    CONFIG_PAGAMENTO
+    criarCheckoutPagBank,
 } from "./pagamento.js?v=20260418c"
 import {
     calcularFrete,
@@ -505,11 +502,6 @@ async function calcularFreteParaEndereco(end) {
         if (btn) btn.disabled = false
 
         if (document.getElementById('resumoFinal')) montarRevisao()
-        const metodo = document.querySelector('input[name="metodoPagamento"]:checked')?.value
-        if (metodo === 'credit_card') {
-            const total = calcularTotalCarrinho()
-            atualizarSelectParcelas(total)
-        }
     })
 }
 
@@ -988,25 +980,25 @@ async function confirmarPedido() {
             }
         }
 
-        // ── Pagamento via PagBank (cartão crédito/débito) ──
+        // ── Pagamento via PagBank hospedado (cartão crédito/débito) ──
         if (metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') {
-            console.log('[Checkout] Processando pagamento com cartao...')
-            const resultado = await processarPagamentoCartao({
-                pedidoId: pedido.id,
-                valor: totalPedido,
-                tipo: metodoPagamento,
-                userEmail: user.email
+            console.log('[Checkout] Criando checkout hospedado PagBank para cartao...')
+            const resultado = await criarCheckoutPagBank(pedido.id, totalPedido, itensCarrinho, {
+                nome: profile?.full_name || user.user_metadata?.full_name || end.recipient || user.email?.split('@')[0] || 'CLIENTE',
+                email: user.email,
+                cpf: profile.cpf,
+                telefone: profile?.phone || '',
             })
 
             if (!resultado.success) {
-                mostrarToast(resultado.errors?.[0] || 'Erro ao processar pagamento. Tente novamente.', 'erro')
+                mostrarToast(resultado.errors?.[0] || 'Erro ao criar checkout PagBank. Tente novamente.', 'erro')
                 btn.disabled = false
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar pedido'
                 return
             }
 
             await limparCarrinho()
-            mostrarResultadoCartao(pedido, itensParaInserir, metodoPagamento, resultado)
+            window.location.href = resultado.checkoutUrl
             return
         }
 
@@ -1280,10 +1272,6 @@ function initEventListeners() {
                 if (btnRevisao) btnRevisao.disabled = false
                 if (document.getElementById('resumoFinal')) montarRevisao()
                 const metodo = document.querySelector('input[name="metodoPagamento"]:checked')?.value
-                if (metodo === 'credit_card') {
-                    const total = calcularTotalCarrinho()
-                    atualizarSelectParcelas(total)
-                }
             } else {
                 if (entregaWrapper) entregaWrapper.style.display = ''
                 if (retiradaLoja) retiradaLoja.style.display = 'none'
@@ -1323,15 +1311,16 @@ function initEventListeners() {
             const cardContainer = document.getElementById('cardFormContainer')
             const metodo = radio.value
 
-            // Cartao usa formulario local e processamento direto via API /orders
+            // Cartao usa checkout hospedado PagBank. Nao coletamos dados do cartao no site.
             if (cardContainer) {
                 if (metodo === 'credit_card' || metodo === 'debit_card') {
                     cardContainer.style.display = ''
-                    renderizarFormCartao(cardContainer, metodo)
-                    if (metodo === 'credit_card') {
-                        const total = calcularTotalCarrinho()
-                        atualizarSelectParcelas(total)
-                    }
+                    cardContainer.innerHTML = `
+                        <div class="checkout-info-grupo">
+                            <h4><i class="fa-solid fa-shield-halved"></i> Pagamento seguro PagBank</h4>
+                            <p>Ao confirmar o pedido, voce sera redirecionado para concluir o pagamento no ambiente seguro do PagBank.</p>
+                        </div>
+                    `
                 } else {
                     cardContainer.style.display = 'none'
                     cardContainer.innerHTML = ''
