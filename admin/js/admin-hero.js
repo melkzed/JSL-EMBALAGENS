@@ -34,25 +34,39 @@ function atualizarPreviewHero(url) {
 export async function abrirModalHeroHome() {
     document.getElementById('heroHomeImagemUrl').value = ''
     document.getElementById('inputHeroHomeImagem').value = ''
+    openModal('modalHeroHome')
+    atualizarPreviewHero('')
 
     const config = await carregarConfigHero()
     const imageUrl = config?.image_url || ''
     document.getElementById('heroHomeImagemUrl').value = imageUrl
     atualizarPreviewHero(imageUrl)
-    openModal('modalHeroHome')
 }
 
 export function initHeroHomeAdmin() {
-    document.getElementById('btnEditarHeroHome').addEventListener('click', abrirModalHeroHome)
+    const btnEditar = document.getElementById('btnEditarHeroHome')
+    const inputUrl = document.getElementById('heroHomeImagemUrl')
+    const inputFile = document.getElementById('inputHeroHomeImagem')
+    const btnRemover = document.getElementById('btnRemoverHeroHome')
+    const form = document.getElementById('formHeroHome')
 
-    document.getElementById('heroHomeImagemUrl').addEventListener('input', (e) => {
+    if (!btnEditar || !inputUrl || !inputFile || !btnRemover || !form) {
+        console.warn('Controles da imagem inicial nao encontrados no painel.')
+        return
+    }
+
+    window.adminAbrirHeroHome = abrirModalHeroHome
+    btnEditar.dataset.heroBound = 'true'
+    btnEditar.addEventListener('click', abrirModalHeroHome)
+
+    inputUrl.addEventListener('input', (e) => {
         atualizarPreviewHero(e.target.value.trim())
     })
 
-    document.getElementById('inputHeroHomeImagem').addEventListener('change', (e) => {
+    inputFile.addEventListener('change', (e) => {
         const file = e.target.files[0]
         if (!file) {
-            atualizarPreviewHero(document.getElementById('heroHomeImagemUrl').value.trim())
+            atualizarPreviewHero(inputUrl.value.trim())
             return
         }
 
@@ -61,16 +75,20 @@ export function initHeroHomeAdmin() {
         reader.readAsDataURL(file)
     })
 
-    document.getElementById('btnRemoverHeroHome').addEventListener('click', async () => {
-        document.getElementById('heroHomeImagemUrl').value = ''
-        document.getElementById('inputHeroHomeImagem').value = ''
+    btnRemover.addEventListener('click', async () => {
+        inputUrl.value = ''
+        inputFile.value = ''
         atualizarPreviewHero('')
-        await salvarConfigHero('')
-        toast('Imagem inicial voltou para o padrao.')
-        closeModal('modalHeroHome')
+        try {
+            await salvarConfigHero('')
+            toast('Imagem inicial voltou para o padrao.')
+            closeModal('modalHeroHome')
+        } catch (err) {
+            console.error('Erro ao remover imagem inicial:', err)
+        }
     })
 
-    document.getElementById('formHeroHome').addEventListener('submit', salvarHeroHome)
+    form.addEventListener('submit', salvarHeroHome)
 }
 
 async function salvarHeroHome(e) {
@@ -101,6 +119,9 @@ async function salvarHeroHome(e) {
         await salvarConfigHero(imageUrl)
         toast('Imagem inicial atualizada!')
         closeModal('modalHeroHome')
+    } catch (err) {
+        console.error('Erro ao salvar imagem inicial:', err)
+        toast('Erro ao salvar imagem inicial: ' + (err.message || err), 'erro')
     } finally {
         btnSalvar.disabled = false
         btnSalvar.innerHTML = btnTextoOriginal

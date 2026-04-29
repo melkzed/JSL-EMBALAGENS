@@ -83,6 +83,21 @@ export async function carregarProdutos() {
     }).join('')
 }
 
+function parseNumeroDecimal(valor) {
+    if (valor === null || valor === undefined) return NaN
+    const raw = String(valor).trim()
+    const normalizado = raw.includes(',')
+        ? raw.replace(/\./g, '').replace(',', '.')
+        : raw
+    return parseFloat(normalizado)
+}
+
+function parseNumeroInteiro(valor) {
+    if (valor === null || valor === undefined || String(valor).trim() === '') return 0
+    const normalizado = String(valor).trim().replace(/\D/g, '')
+    return parseInt(normalizado, 10) || 0
+}
+
 export async function abrirModalProduto(produtoId = null) {
     await carregarCategoriasCacheESelect()
 
@@ -241,8 +256,8 @@ async function _salvarProdutoInterno() {
     }
     let temPrecoValido = false
     for (const row of rows) {
-        const p = parseFloat(row.querySelector('.v-price').value)
-        if (p && p >= 0.01) { temPrecoValido = true; break }
+        const p = parseNumeroDecimal(row.querySelector('.v-price').value)
+        if (!Number.isNaN(p) && p >= 0.01) { temPrecoValido = true; break }
     }
     if (!temPrecoValido) {
         toast('Pelo menos uma variante deve ter um preço válido (mínimo R$ 0,01).', 'erro')
@@ -272,13 +287,14 @@ async function _salvarProdutoInterno() {
     const variantesIds = []
     for (const row of rows) {
         const vId = row.querySelector('.v-id').value
-        const priceVal = parseFloat(row.querySelector('.v-price').value)
-        if (!priceVal || priceVal < 0.01) {
+        const priceVal = parseNumeroDecimal(row.querySelector('.v-price').value)
+        if (Number.isNaN(priceVal) || priceVal < 0.01) {
             toast('O preço de cada variante deve ser no mínimo R$ 0,01', 'erro')
             return
         }
-        const compareVal = parseFloat(row.querySelector('.v-compare').value)
-        if (compareVal && compareVal < 0.01) {
+        const compareRaw = row.querySelector('.v-compare').value.trim()
+        const compareVal = compareRaw ? parseNumeroDecimal(compareRaw) : null
+        if (compareVal !== null && (Number.isNaN(compareVal) || compareVal < 0.01)) {
             toast('O preço anterior deve ser no mínimo R$ 0,01 ou vazio', 'erro')
             return
         }
@@ -288,15 +304,43 @@ async function _salvarProdutoInterno() {
             sku: row.querySelector('.v-sku').value.trim() || null,
             price: priceVal,
             compare_at_price: compareVal || null,
-            stock: parseInt(row.querySelector('.v-stock').value) || 0
+            stock: parseNumeroInteiro(row.querySelector('.v-stock').value)
         }
 
         if (vId) {
-            await supabase.from('product_variants').update(vData).eq('id', vId)
+            const { data, error } = await supabase.rpc('admin_upsert_product_variant', {
+                p_id: vId,
+                p_product_id: finalId,
+                p_size_label: vData.size_label,
+                p_sku: vData.sku,
+                p_price: vData.price,
+                p_compare_at_price: vData.compare_at_price,
+                p_stock: vData.stock
+            })
+            if (error) {
+                toast('Erro ao atualizar preco/estoque: ' + error.message, 'erro')
+                return
+            }
+            if (!data) {
+                toast('Nao foi possivel confirmar a atualizacao da variante.', 'erro')
+                return
+            }
             variantesIds.push(vId)
         } else {
-            const { data } = await supabase.from('product_variants').insert(vData).select('id').single()
-            if (data) variantesIds.push(data.id)
+            const { data, error } = await supabase.rpc('admin_upsert_product_variant', {
+                p_id: null,
+                p_product_id: finalId,
+                p_size_label: vData.size_label,
+                p_sku: vData.sku,
+                p_price: vData.price,
+                p_compare_at_price: vData.compare_at_price,
+                p_stock: vData.stock
+            })
+            if (error) {
+                toast('Erro ao criar variante: ' + error.message, 'erro')
+                return
+            }
+            if (data) variantesIds.push(data)
         }
     }
 
@@ -309,7 +353,11 @@ async function _salvarProdutoInterno() {
 
         for (const ex of (existentes || [])) {
             if (!variantesIds.includes(ex.id)) {
-                await supabase.from('product_variants').delete().eq('id', ex.id)
+                const { error } = await supabase.rpc('admin_delete_product_variant', { p_id: ex.id })
+                if (error) {
+                    toast('Erro ao remover variante antiga: ' + error.message, 'erro')
+                    return
+                }
             }
         }
     }

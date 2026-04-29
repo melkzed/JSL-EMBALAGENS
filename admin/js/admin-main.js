@@ -17,6 +17,8 @@ import { initHeroHomeAdmin } from './admin-hero.js'
 
 
 function initEventListeners() {
+    initHeroHomeAdmin()
+
     
     document.getElementById('btnNovoProduto').addEventListener('click', () => abrirModalProduto())
     document.getElementById('formProduto').addEventListener('submit', salvarProduto)
@@ -81,7 +83,6 @@ function initEventListeners() {
 
     
     document.getElementById('dashPeriodo').addEventListener('change', carregarPedidosPorPeriodo)
-    initHeroHomeAdmin()
 
     
     document.getElementById('btnAddCategoriaSpec').addEventListener('click', () => addCategoriaSpecRow())
