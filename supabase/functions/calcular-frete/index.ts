@@ -121,7 +121,7 @@ serve(async (req: Request) => {
         }
 
         
-        const prazoPreparacao = 7
+        const prazoPreparacao = 2
 
         
         const opcoes = resultado

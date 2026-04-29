@@ -8,25 +8,23 @@
     <meta name="robots" content="noindex,nofollow">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://assets.pagseguro.com.br https://static.cloudflareinsights.com;
-        script-src-elem 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://assets.pagseguro.com.br https://static.cloudflareinsights.com;
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com;
+        script-src-elem 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com;
         style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
         font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
-        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
-        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br https://sdk.pagseguro.com https://static.cloudflareinsights.com https://cloudflareinsights.com;
-        frame-src https://api.pagseguro.com https://sandbox.api.pagseguro.com https://assets.pagseguro.com.br https://sdk.pagseguro.com https://*.cardinalcommerce.com;
+        img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co https://http2.mlstatic.com;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net https://api.mercadopago.com https://www.mercadopago.com.br https://static.cloudflareinsights.com https://cloudflareinsights.com;
+        frame-src https://www.mercadopago.com.br;
         object-src 'none';
         base-uri 'self';
-        form-action 'self';
+        form-action 'self' https://www.mercadopago.com.br;
     ">
     <title>Finalizar Pedido - JSL</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/checkout.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     
-    <script src="https://assets.pagseguro.com.br/checkout-sdk-js/rc/dist/browser/pagseguro.min.js"></script>
-<script src="../js/config.js?v=20260418c"></script>
+<script src="../js/config.js?v=20260429"></script>
 </head>
 
 <body>
@@ -321,8 +319,8 @@
 
     <!-- IMPORTANTE: Supabase deve carregar ANTES dos módulos ES (sem defer) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="../js/main.js?v=20260418c"></script>
-    <script type="module" src="../js/checkout-page.js?v=20260418c"></script>
+    <script type="module" src="../js/main.js?v=20260429"></script>
+    <script type="module" src="../js/checkout-page.js?v=20260429"></script>
 
 </body>
 

@@ -3,10 +3,7 @@ import { getUser, getProfile, verificarSessao, abrirAuthModal } from "./auth.js"
 import { carregarItensCarrinho, limparCarrinho } from "./cart.js"
 import { animarCheckBounce } from "./animacoes.js"
 import { escapeHtml, formatarPreco, mostrarToast } from "./utils.js"
-import {
-    renderizarPixQRCode,
-    criarCheckoutPagBank,
-} from "./pagamento.js?v=20260418c"
+import { criarCheckoutMercadoPago } from "./pagamento.js?v=20260429"
 import {
     calcularFrete,
     renderizarOpcoesFrete,
@@ -214,100 +211,86 @@ async function retomarPagamento(orderId) {
     if (cardArea) cardArea.style.display = 'none'
     if (sucessoArea) sucessoArea.style.display = 'none'
 
-    if (metodo === 'pix') {
-        if (pixArea) {
-            pixArea.style.display = ''
-            pixArea.innerHTML = ''
-            renderizarPixQRCode(pixArea, totalPedido, numero, pedido.id)
-
-            const infoExtra = document.createElement('div')
-            infoExtra.className = 'pix-pedido-info'
-            infoExtra.innerHTML = `
-                <div class="checkout-info-grupo" style="margin-top: 1.5rem;">
-                    <h4><i class="fa-solid fa-box"></i> Pedido ${escapeHtml(numero)}</h4>
-                    <p>${itensResumo.length} ${itensResumo.length === 1 ? 'item' : 'itens'} - Total: <strong>R$ ${formatarPreco(totalPedido)}</strong></p>
-                </div>
-                <div class="checkout-info-grupo">
-                    <h4><i class="fa-solid fa-truck"></i> Entrega</h4>
-                    <p>${escapeHtml(endPedido.street)}, ${escapeHtml(endPedido.number)} - ${escapeHtml(endPedido.neighborhood)}</p>
-                    <p>${escapeHtml(endPedido.city)}/${escapeHtml(endPedido.state)} - CEP: ${escapeHtml(endPedido.zip_code)}</p>
-                </div>
-                <div class="checkout-sucesso-acoes" style="margin-top:1.5rem;">
-                    <a href="./perfil.html?tab=pedidos" class="checkout-btn-primary">
-                        <i class="fa-solid fa-box"></i> Ver meus pedidos
-                    </a>
-                    <a href="./produtos.html" class="checkout-btn-outline">
-                        <i class="fa-solid fa-arrow-left"></i> Continuar comprando
-                    </a>
-                </div>
-            `
-            pixArea.appendChild(infoExtra)
+    if (metodo === 'pix' || metodo === 'credit_card' || metodo === 'debit_card') {
+        const profile = getProfile()
+        if (!profile?.cpf) {
+            mostrarToast('Cadastre seu CPF no perfil para continuar o pagamento.', 'erro')
+            window.location.href = './perfil.html?tab=dados'
+            return
         }
-    } else if (metodo === 'credit_card' || metodo === 'debit_card') {
+
         if (cardArea) {
             cardArea.style.display = ''
             cardArea.innerHTML = `
                 <div class="card-result processing">
                     <div class="card-result-icon">
-                        <i class="fa-solid fa-credit-card"></i>
+                        <i class="fa-solid fa-spinner fa-spin"></i>
                     </div>
-                    <h2>Pagamento pendente</h2>
+                    <h2>Gerando link de pagamento</h2>
                     <p class="checkout-pedido-numero">Pedido ${escapeHtml(numero)}</p>
-                    <p class="card-result-msg">
-                        O pagamento deste pedido ainda está pendente. 
-                        Entre em contato pelo WhatsApp para concluir.
-                    </p>
-                    <div class="checkout-sucesso-info">
-                        <div class="checkout-info-grupo">
-                            <h4><i class="fa-solid fa-box"></i> Resumo</h4>
-                            <p>${itensResumo.length} ${itensResumo.length === 1 ? 'item' : 'itens'} - Total: <strong>R$ ${formatarPreco(totalPedido)}</strong></p>
-                        </div>
-                        <div class="checkout-info-grupo">
-                            <h4><i class="fa-solid fa-truck"></i> Entrega</h4>
-                            <p>${escapeHtml(endPedido.street)}, ${escapeHtml(endPedido.number)} - ${escapeHtml(endPedido.neighborhood)}</p>
-                            <p>${escapeHtml(endPedido.city)}/${escapeHtml(endPedido.state)} - CEP: ${escapeHtml(endPedido.zip_code)}</p>
-                        </div>
-                    </div>
-                    <div class="checkout-sucesso-acoes">
-                        <a href="https://wa.me/5583996389725?text=${encodeURIComponent('Olá! Preciso concluir o pagamento do pedido ' + numero + ' no valor de R$ ' + formatarPreco(totalPedido))}" 
-                           target="_blank" rel="noopener noreferrer" class="checkout-btn-whatsapp">
-                            <i class="fa-brands fa-whatsapp"></i> Falar com suporte
-                        </a>
-                        <a href="./perfil.html?tab=pedidos" class="checkout-btn-outline">
-                            <i class="fa-solid fa-box"></i> Ver meus pedidos
-                        </a>
-                    </div>
                 </div>
             `
         }
-    } else {
-        if (sucessoArea) {
-            sucessoArea.style.display = ''
-            const iconeSucesso = document.querySelector('.checkout-sucesso-icon')
-            if (iconeSucesso) {
-                iconeSucesso.innerHTML = '<i class="fa-solid fa-clock"></i>'
-                iconeSucesso.style.color = '#f59e0b'
-            }
-            document.getElementById('pedidoNumero').textContent = `Pedido ${numero}`
-            document.querySelector('.checkout-pedido-msg').textContent = 'Seu pedido está aguardando confirmação de pagamento.'
 
-            const msg = `Olá! Gostaria de concluir o pagamento do pedido ${numero} no valor de R$ ${formatarPreco(totalPedido)}`
-            document.getElementById('pedidoInfo').innerHTML = `
-                <div class="checkout-info-grupo">
-                    <h4><i class="fa-solid fa-box"></i> Resumo</h4>
-                    <p>${itensResumo.length} ${itensResumo.length === 1 ? 'item' : 'itens'} - Total: <strong>R$ ${formatarPreco(totalPedido)}</strong></p>
-                </div>
-                <div class="checkout-info-grupo">
-                    <h4><i class="fa-solid fa-truck"></i> Entrega</h4>
-                    <p>${escapeHtml(endPedido.street)}, ${escapeHtml(endPedido.number)} - ${escapeHtml(endPedido.neighborhood)}</p>
-                    <p>${escapeHtml(endPedido.city)}/${escapeHtml(endPedido.state)} - CEP: ${escapeHtml(endPedido.zip_code)}</p>
-                </div>
-                <a href="https://wa.me/5583996389725?text=${encodeURIComponent(msg)}" 
-                   target="_blank" rel="noopener noreferrer" class="checkout-btn-whatsapp">
-                    <i class="fa-brands fa-whatsapp"></i> Enviar pedido pelo WhatsApp
-                </a>
-            `
+        const resultado = await criarCheckoutMercadoPago(pedido.id)
+
+        if (!resultado.success) {
+            const msgErro = resultado.errors?.[0] || 'Erro ao criar link de pagamento Mercado Pago.'
+            if (cardArea) {
+                cardArea.style.display = ''
+                cardArea.innerHTML = `
+                    <div class="card-result refused" style="text-align:center;padding:2rem 1rem;">
+                        <div style="color:#ef4444;font-size:2.5rem;margin-bottom:1rem;">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        </div>
+                        <h2 style="color:#ef4444;margin-bottom:0.75rem;">Erro ao gerar link de pagamento</h2>
+                        <p style="color:#374151;margin-bottom:1.5rem;max-width:480px;margin-left:auto;margin-right:auto;">${escapeHtml(msgErro)}</p>
+                        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
+                            <button onclick="window.location.reload()" class="checkout-btn-primary">
+                                <i class="fa-solid fa-rotate-right"></i> Tentar novamente
+                            </button>
+                            <a href="./perfil.html?tab=pedidos" class="checkout-btn-outline">
+                                Ver meus pedidos
+                            </a>
+                        </div>
+                    </div>
+                `
+            } else {
+                mostrarToast(msgErro, 'erro')
+            }
+            return
         }
+
+        window.location.href = resultado.checkoutUrl
+        return
+    }
+
+    if (sucessoArea) {
+        sucessoArea.style.display = ''
+        const iconeSucesso = document.querySelector('.checkout-sucesso-icon')
+        if (iconeSucesso) {
+            iconeSucesso.innerHTML = '<i class="fa-solid fa-clock"></i>'
+            iconeSucesso.style.color = '#f59e0b'
+        }
+        document.getElementById('pedidoNumero').textContent = `Pedido ${numero}`
+        document.querySelector('.checkout-pedido-msg').textContent = 'Seu pedido está aguardando confirmação de pagamento.'
+
+        const msg = `Olá! Gostaria de concluir o pagamento do pedido ${numero} no valor de R$ ${formatarPreco(totalPedido)}`
+        document.getElementById('pedidoInfo').innerHTML = `
+            <div class="checkout-info-grupo">
+                <h4><i class="fa-solid fa-box"></i> Resumo</h4>
+                <p>${itensResumo.length} ${itensResumo.length === 1 ? 'item' : 'itens'} - Total: <strong>R$ ${formatarPreco(totalPedido)}</strong></p>
+            </div>
+            <div class="checkout-info-grupo">
+                <h4><i class="fa-solid fa-truck"></i> Entrega</h4>
+                <p>${escapeHtml(endPedido.street)}, ${escapeHtml(endPedido.number)} - ${escapeHtml(endPedido.neighborhood)}</p>
+                <p>${escapeHtml(endPedido.city)}/${escapeHtml(endPedido.state)} - CEP: ${escapeHtml(endPedido.zip_code)}</p>
+            </div>
+            <a href="https://wa.me/5583996389725?text=${encodeURIComponent(msg)}"
+               target="_blank" rel="noopener noreferrer" class="checkout-btn-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i> Enviar pedido pelo WhatsApp
+            </a>
+        `
     }
 }
 
@@ -845,7 +828,6 @@ async function confirmarPedido() {
 
         let metodoParaBanco = metodoPagamento
         if (metodoPagamento === 'whatsapp') metodoParaBanco = 'transfer'
-        if (metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') metodoParaBanco = 'credit_card'
 
         // ── Criar pedido ──
         console.log('[Checkout] Criando pedido...')
@@ -980,18 +962,15 @@ async function confirmarPedido() {
             }
         }
 
-        // ── Pagamento via PagBank hospedado (cartão crédito/débito) ──
-        if (metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') {
-            console.log('[Checkout] Criando checkout hospedado PagBank para cartao...')
-            const resultado = await criarCheckoutPagBank(pedido.id, totalPedido, itensCarrinho, {
-                nome: profile?.full_name || user.user_metadata?.full_name || end.recipient || user.email?.split('@')[0] || 'CLIENTE',
-                email: user.email,
-                cpf: profile.cpf,
-                telefone: profile?.phone || '',
-            })
+        // ── Pagamento via Mercado Pago ──
+        if (metodoPagamento === 'pix' || metodoPagamento === 'credit_card' || metodoPagamento === 'debit_card') {
+            console.log('[Checkout] Criando link de pagamento Mercado Pago...')
+            const resultado = await criarCheckoutMercadoPago(pedido.id)
 
             if (!resultado.success) {
-                mostrarToast(resultado.errors?.[0] || 'Erro ao criar checkout PagBank. Tente novamente.', 'erro')
+                const msgErro = resultado.errors?.[0] || 'Erro ao criar checkout Mercado Pago. Tente novamente.'
+                console.error('[Checkout] Erro Mercado Pago:', resultado.errorCode, resultado.errors)
+                mostrarToast(msgErro, 'erro')
                 btn.disabled = false
                 btn.innerHTML = '<i class="fa-solid fa-check"></i> Confirmar pedido'
                 return
@@ -1002,15 +981,11 @@ async function confirmarPedido() {
             return
         }
 
-        // ── PIX ou WhatsApp ──
+        // ── WhatsApp ──
         console.log('[Checkout] Limpando carrinho...')
         await limparCarrinho()
 
-        if (metodoPagamento === 'pix') {
-            mostrarPagamentoPix(pedido, itensParaInserir, totalPedido)
-        } else {
-            mostrarConfirmacao(pedido, itensParaInserir, metodoPagamento)
-        }
+        mostrarConfirmacao(pedido, itensParaInserir, metodoPagamento)
 
     } catch (err) {
         console.error('[Checkout] Exceção:', err)
@@ -1080,40 +1055,6 @@ function mostrarConfirmacao(pedido, itens, metodo) {
 
 
 
-function mostrarPagamentoPix(pedido, itens, valor) {
-    irParaStep(3)
-
-    const cardArea = document.getElementById('cardPaymentResult')
-    const sucessoArea = document.getElementById('checkoutSucesso')
-    if (cardArea) cardArea.style.display = 'none'
-    if (sucessoArea) sucessoArea.style.display = 'none'
-
-    const pixArea = document.getElementById('pixPaymentArea')
-    pixArea.style.display = ''
-
-    const numero = pedido.order_number || pedido.id.slice(0, 8).toUpperCase()
-
-    renderizarPixQRCode(pixArea, valor, numero, pedido.id)
-
-    const infoExtra = document.createElement('div')
-    infoExtra.className = 'pix-pedido-info'
-    infoExtra.innerHTML = `
-        <div class="checkout-info-grupo" style="margin-top: 1.5rem;">
-            <h4><i class="fa-solid fa-box"></i> Pedido ${escapeHtml(numero)}</h4>
-            <p>${itens.length} ${itens.length === 1 ? 'item' : 'itens'} - Total: <strong>R$ ${formatarPreco(valor)}</strong></p>
-        </div>
-        <div class="checkout-sucesso-acoes" style="margin-top:1.5rem;">
-            <a href="./perfil.html?tab=pedidos" class="checkout-btn-primary">
-                <i class="fa-solid fa-box"></i> Ver meus pedidos
-            </a>
-            <a href="./produtos.html" class="checkout-btn-outline">
-                <i class="fa-solid fa-arrow-left"></i> Continuar comprando
-            </a>
-        </div>
-    `
-    pixArea.appendChild(infoExtra)
-}
-
 function mostrarResultadoCartao(pedido, itens, metodo, resultado) {
     irParaStep(3)
 
@@ -1138,7 +1079,7 @@ function mostrarResultadoCartao(pedido, itens, metodo, resultado) {
         status === 'approved'
             ? 'Seu pagamento foi confirmado com sucesso.'
             : (status === 'processing'
-                ? 'Recebemos sua solicitacao e o PagBank esta analisando o pagamento.'
+                ? 'Recebemos sua solicitacao e o Mercado Pago esta analisando o pagamento.'
                 : 'Nao foi possivel concluir o pagamento.')
     )
 
@@ -1311,14 +1252,14 @@ function initEventListeners() {
             const cardContainer = document.getElementById('cardFormContainer')
             const metodo = radio.value
 
-            // Cartao usa checkout hospedado PagBank. Nao coletamos dados do cartao no site.
+            // Cartao usa checkout hospedado Mercado Pago. Nao coletamos dados do cartao no site.
             if (cardContainer) {
                 if (metodo === 'credit_card' || metodo === 'debit_card') {
                     cardContainer.style.display = ''
                     cardContainer.innerHTML = `
                         <div class="checkout-info-grupo">
-                            <h4><i class="fa-solid fa-shield-halved"></i> Pagamento seguro PagBank</h4>
-                            <p>Ao confirmar o pedido, voce sera redirecionado para concluir o pagamento no ambiente seguro do PagBank.</p>
+                            <h4><i class="fa-solid fa-shield-halved"></i> Pagamento seguro Mercado Pago</h4>
+                            <p>Ao confirmar o pedido, voce sera redirecionado para concluir o pagamento no ambiente seguro do Mercado Pago.</p>
                         </div>
                     `
                 } else {

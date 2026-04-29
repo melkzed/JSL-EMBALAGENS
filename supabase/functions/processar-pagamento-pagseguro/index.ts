@@ -14,6 +14,8 @@ const ALLOWED_ORIGINS = [
     'http://127.0.0.1:5500',
     'http://localhost:5501',
     'http://127.0.0.1:5501',
+    'http://localhost:8099',
+    'http://127.0.0.1:8099',
 ]
 
 function getCorsHeaders(req) {
@@ -30,14 +32,8 @@ function getCorsHeaders(req) {
 //  CONSTANTES
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// Produção: https://api.pagseguro.com
-// Sandbox:  https://sandbox.api.pagseguro.com
 const PAGBANK_ENV = (Deno.env.get('PAGBANK_ENV') || 'production').toLowerCase()
-const PAGBANK_API_URL = Deno.env.get('PAGBANK_API_URL')
-    || (PAGBANK_ENV === 'sandbox'
-        ? 'https://sandbox.api.pagseguro.com'
-        : 'https://api.pagseguro.com')
-const SITE_URL = 'https://jslembalagens.com.br'
+const SITE_URL = 'https://www.jslembalagens.com.br'
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  HELPERS
@@ -63,9 +59,17 @@ const STATUS_MAP = {
 async function persistirPagamento(supabase, pedidoId, gatewayId, status, gatewayResponse) {
     if (!supabase || !pedidoId) return
 
+    const { data: pagamentoAtual } = await supabase
+        .from('payments')
+        .select('gateway_transaction_id')
+        .eq('order_id', pedidoId)
+        .maybeSingle()
+
+    const gatewayAtual = pagamentoAtual?.gateway_transaction_id || ''
+    const manterCheckoutId = String(gatewayAtual).startsWith('CHEC_') && !String(gatewayId || '').startsWith('CHEC_')
     const updateData = {
         gateway: 'pagbank',
-        gateway_transaction_id: gatewayId,
+        gateway_transaction_id: manterCheckoutId ? gatewayAtual : gatewayId,
         gateway_response: gatewayResponse,
         status,
         updated_at: new Date().toISOString(),
@@ -83,6 +87,14 @@ async function persistirPagamento(supabase, pedidoId, gatewayId, status, gateway
     if (payErr) console.error('[PagBank] Erro ao atualizar payments:', payErr)
 
     if (status === 'approved') {
+        const { data: pedidoAtual } = await supabase
+            .from('orders')
+            .select('status')
+            .eq('id', pedidoId)
+            .maybeSingle()
+
+        if (pedidoAtual?.status === 'paid') return
+
         const { error: orderErr } = await supabase
             .from('orders')
             .update({ status: 'paid', updated_at: new Date().toISOString() })
@@ -117,26 +129,13 @@ function traduzirErro(code, descricao) {
         '20004': 'Pagamento recusado — saldo insuficiente.',
         '20005': 'Pagamento recusado — cartão não aceito.',
         '20006': 'Pagamento recusado — suspeita de fraude.',
-        'ACCESS_DENIED': 'Conta PagBank sem liberacao para esta operacao. Use o checkout hospedado ou solicite whitelist ao PagBank.',
     }
     return t[code] || descricao || 'Erro ao processar pagamento.'
-}
-
-function getMensagem(status) {
-    const m = {
-        'approved': 'Pagamento aprovado com sucesso!',
-        'processing': 'Pagamento em análise. Você será notificado em breve.',
-        'pending': 'Pagamento pendente de confirmação.',
-        'refused': 'Pagamento recusado. Verifique os dados do cartão.',
-        'cancelled': 'Pagamento cancelado.',
-    }
-    return m[status] || 'Pagamento em análise.'
 }
 
 function normalizarTelefone(telefone) {
     const telLimpo = String(telefone || '').replace(/\D/g, '')
     if (telLimpo.length < 10) return null
-
     return {
         country: '55',
         area: telLimpo.substring(0, 2),
@@ -149,7 +148,6 @@ function normalizarEmailPagBank(email, pedidoId = '') {
     const candidate = String(email || '').trim().toLowerCase()
     const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate)
     if (isValid && candidate.length <= 60) return candidate
-
     const safeId = String(pedidoId || Date.now()).replace(/[^a-zA-Z0-9]/g, '').slice(-24) || 'pedido'
     return `pedido-${safeId}@jslembalagens.com.br`
 }
@@ -159,9 +157,7 @@ function formatarItensPagBank(itens = [], pedidoId = '') {
         .map((item, idx) => {
             const unitAmount = Math.round(parseFloat(item?.preco || item?.price || item?.unit_price || 0) * 100)
             const quantity = Math.max(1, parseInt(item?.quantidade || item?.quantity, 10) || 1)
-
             if (!Number.isFinite(unitAmount) || unitAmount <= 0) return null
-
             return {
                 reference_id: String(
                     item?.reference_id
@@ -174,7 +170,7 @@ function formatarItensPagBank(itens = [], pedidoId = '') {
                     || item?.name
                     || item?.product_name
                     || 'Produto'
-                ).substring(0, 120),
+                ).substring(0, 100),
                 quantity,
                 unit_amount: unitAmount,
             }
@@ -182,35 +178,112 @@ function formatarItensPagBank(itens = [], pedidoId = '') {
         .filter(Boolean)
 }
 
-function formatarEnderecoPagBank(orderData) {
-    if (!orderData?.shipping_street || !orderData?.shipping_number || !orderData?.shipping_city || !orderData?.shipping_state || !orderData?.shipping_zip_code) {
-        return null
-    }
+function valorCentavos(valor, fallback = 0) {
+    if (valor === null || valor === undefined || valor === '') return fallback
+    const num = Number(valor)
+    if (!Number.isFinite(num)) return fallback
+    return Math.max(0, Math.round(num * 100))
+}
 
-    const postalCode = String(orderData.shipping_zip_code).replace(/\D/g, '')
-    if (postalCode.length !== 8) return null
+function normalizarEnderecoPagBank(endereco = {}) {
+    const postalCode = String(endereco.postal_code || endereco.zip_code || endereco.cep || '').replace(/\D/g, '')
+    const street = String(endereco.street || endereco.rua || '').trim()
+    const number = String(endereco.number || endereco.numero || '').trim()
+    const locality = String(endereco.locality || endereco.neighborhood || endereco.bairro || '').trim()
+    const city = String(endereco.city || endereco.cidade || '').trim()
+    const regionCode = String(endereco.region_code || endereco.state || endereco.estado || '').trim().toUpperCase()
+
+    if (!street || !number || !locality || !city || !regionCode || postalCode.length !== 8) return null
 
     return {
-        street: String(orderData.shipping_street).substring(0, 160),
-        number: String(orderData.shipping_number).substring(0, 20),
-        ...(orderData.shipping_complement ? { complement: String(orderData.shipping_complement).substring(0, 40) } : {}),
-        locality: String(orderData.shipping_neighborhood || orderData.shipping_city).substring(0, 60),
-        city: String(orderData.shipping_city).substring(0, 90),
-        region_code: String(orderData.shipping_state).substring(0, 2).toUpperCase(),
+        street: street.substring(0, 160),
+        number: number.substring(0, 20),
+        ...(endereco.complement ? { complement: String(endereco.complement).substring(0, 40) } : {}),
+        locality: locality.substring(0, 60),
+        city: city.substring(0, 90),
+        region_code: regionCode.substring(0, 2),
         country: 'BRA',
         postal_code: postalCode,
     }
 }
 
-function extrairMensagemErroPagBank(data, fallbackMessage) {
-    const errorMessages = data?.error_messages?.map(e => traduzirErro(e.code, e.description)).filter(Boolean)
-    if (errorMessages?.length) return errorMessages
+function normalizarShippingPagBank(shipping = null) {
+    if (!shipping || typeof shipping !== 'object') return null
 
+    const amount = Number.isFinite(Number(shipping.amount_cents))
+        ? Math.max(0, Math.round(Number(shipping.amount_cents)))
+        : valorCentavos(shipping.amount ?? shipping.valor ?? shipping.cost ?? shipping.preco, 0)
+    const type = amount > 0 ? 'FIXED' : 'FREE'
+    const address = normalizarEnderecoPagBank(shipping.address || shipping.endereco || shipping)
+
+    return {
+        type,
+        ...(type === 'FIXED' ? { amount } : {}),
+        ...(address ? { address, address_modifiable: false } : {}),
+    }
+}
+
+function coletarChargesPagBank(payload = {}) {
+    const charges = []
+    if (Array.isArray(payload.charges)) charges.push(...payload.charges)
+    if (Array.isArray(payload.payments)) charges.push(...payload.payments)
+    if (Array.isArray(payload.orders)) {
+        for (const order of payload.orders) {
+            if (Array.isArray(order?.charges)) charges.push(...order.charges)
+        }
+    }
+    if (String(payload.id || '').startsWith('CHAR_')) charges.push(payload)
+    return charges
+}
+
+function resolverStatusConsultaCheckout(payload = {}) {
+    const charges = coletarChargesPagBank(payload)
+    const statuses = charges.map(charge => String(charge?.status || '').toUpperCase()).filter(Boolean)
+
+    if (statuses.some(status => ['PAID', 'AUTHORIZED', 'AVAILABLE'].includes(status))) return 'approved'
+    if (statuses.some(status => status === 'IN_ANALYSIS')) return 'processing'
+    if (statuses.some(status => status === 'WAITING')) return 'pending'
+    if (statuses.some(status => status === 'DECLINED')) return 'refused'
+    if (statuses.some(status => status === 'CANCELED')) return 'cancelled'
+
+    const checkoutStatus = String(payload.status || '').toUpperCase()
+    if (checkoutStatus === 'EXPIRED' || checkoutStatus === 'INACTIVE') return 'cancelled'
+    return 'pending'
+}
+
+function resolverGatewayIdConsultaCheckout(payload = {}, checkoutId = '') {
+    const charges = coletarChargesPagBank(payload)
+    const pago = charges.find(charge => ['PAID', 'AUTHORIZED', 'AVAILABLE'].includes(String(charge?.status || '').toUpperCase()))
+    return pago?.id || charges[0]?.id || payload.id || checkoutId
+}
+
+function extrairCheckoutIdSalvo(pagamento = {}) {
+    const direto = String(pagamento?.gateway_transaction_id || '')
+    if (direto.startsWith('CHEC_')) return direto
+
+    const response = pagamento?.gateway_response || {}
+    const candidatos = [
+        response.id,
+        response.checkout_id,
+        response.checkoutId,
+    ].map(value => String(value || ''))
+
+    return candidatos.find(value => value.startsWith('CHEC_')) || ''
+}
+
+function extrairMensagemErroPagBank(data, fallbackMessage) {
+    if (Array.isArray(data?.error_messages) && data.error_messages.length) {
+        return data.error_messages.map(e => traduzirErro(e.code, e.description)).filter(Boolean)
+    }
     if (Array.isArray(data?.errors) && data.errors.length) {
         return data.errors.map(err => String(err))
     }
-
-    if (data?.message) return [String(data.message)]
+    if (data?.message && typeof data.message === 'string') {
+        return [data.message]
+    }
+    if (data?.error && typeof data.error === 'string') {
+        return [data.error]
+    }
     return [fallbackMessage]
 }
 
@@ -218,24 +291,21 @@ function getClientSafeErrorStatus(status) {
     return status >= 500 ? status : 200
 }
 
-async function obterPedidoCompleto(supabase, pedidoId) {
-    if (!supabase || !pedidoId) return null
-
-    const { data, error } = await supabase
-        .from('orders')
-        .select(`
-            *,
-            order_items (*)
-        `)
-        .eq('id', pedidoId)
-        .maybeSingle()
-
-    if (error) {
-        console.error('[PagBank] Erro ao buscar pedido:', error)
-        return null
+function resolverMetodosPagamentoCheckout(metodoPagamento) {
+    const metodo = String(metodoPagamento || '').toLowerCase()
+    const map = {
+        credit_card: 'CREDIT_CARD',
+        debit_card: 'DEBIT_CARD',
+        pix: 'PIX',
+        boleto: 'BOLETO',
     }
-
-    return data || null
+    if (map[metodo]) return [{ type: map[metodo] }]
+    return [
+        { type: 'CREDIT_CARD' },
+        { type: 'DEBIT_CARD' },
+        { type: 'PIX' },
+        { type: 'BOLETO' },
+    ]
 }
 
 function resolverAmbientePagBank(requestedEnv) {
@@ -247,19 +317,361 @@ function resolverApiUrlPagBank(env) {
     const explicitUrl = env === 'sandbox'
         ? Deno.env.get('PAGBANK_API_URL_SANDBOX')
         : Deno.env.get('PAGBANK_API_URL')
-
     if (explicitUrl) return explicitUrl
     return env === 'sandbox'
         ? 'https://sandbox.api.pagseguro.com'
         : 'https://api.pagseguro.com'
 }
 
+function resolverSdkUrlPagBank(env) {
+    const explicitUrl = env === 'sandbox'
+        ? Deno.env.get('PAGBANK_SDK_URL_SANDBOX')
+        : Deno.env.get('PAGBANK_SDK_URL')
+    if (explicitUrl) return explicitUrl
+    return env === 'sandbox'
+        ? 'https://sandbox.sdk.pagseguro.com'
+        : 'https://sdk.pagseguro.com'
+}
+
 function resolverTokenPagBank(env) {
     if (env === 'sandbox') {
         return Deno.env.get('PAGSEGURO_TOKEN_SANDBOX') || Deno.env.get('PAGSEGURO_TOKEN')
     }
-
     return Deno.env.get('PAGSEGURO_TOKEN')
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  ACTION: get-public-key
+//  Obtém a chave pública do PagBank para criptografar
+//  dados do cartão no frontend (necessária para homologação INF-01)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function handleGetPublicKey({ pagbankApiUrl, pagbankToken }) {
+    console.log('[PagBank] Obtendo chave pública. URL:', pagbankApiUrl)
+
+    let res, data
+    try {
+        res = await fetch(`${pagbankApiUrl}/public-keys/card`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${pagbankToken}`,
+                'Content-Type': 'application/json',
+            },
+        })
+        data = await res.json().catch(() => ({}))
+    } catch (err) {
+        console.error('[PagBank] Erro de rede ao obter chave pública:', err)
+        return {
+            success: false,
+            status: 502,
+            errors: ['Não foi possível conectar ao PagBank para obter chave pública.'],
+        }
+    }
+
+    console.log('[PagBank] get-public-key HTTP:', res.status, '| Resposta:', JSON.stringify(data).substring(0, 300))
+
+    if (!res.ok) {
+        const erros = extrairMensagemErroPagBank(data, 'Não foi possível obter a chave pública.')
+        return { success: false, status: getClientSafeErrorStatus(res.status), errors: erros }
+    }
+
+    return {
+        success: true,
+        status: 200,
+        publicKey: data.public_key || data.publicKey || null,
+        createdAt: data.created_at || null,
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  ACTION: create-3ds-session
+//  Cria sessão de autenticação 3DS
+//  (necessária para homologação INF-02)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function handleCreate3dsSession({ pagbankSdkUrl, pagbankToken }) {
+    console.log('[PagBank] Criando sessao 3DS. URL:', pagbankSdkUrl)
+
+    let res, data
+    try {
+        res = await fetch(`${pagbankSdkUrl}/checkout-sdk/sessions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${pagbankToken}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
+        })
+        data = await res.json().catch(() => ({}))
+    } catch (err) {
+        console.error('[PagBank] Erro de rede ao criar sessão 3DS:', err)
+        return {
+            success: false,
+            status: 502,
+            errors: ['Não foi possível conectar ao PagBank para criar sessão 3DS.'],
+        }
+    }
+
+    console.log('[PagBank] create-3ds-session HTTP:', res.status, '| Resposta:', JSON.stringify(data).substring(0, 300))
+
+    if (!res.ok) {
+        const erros = extrairMensagemErroPagBank(data, 'Não foi possível criar sessão 3DS.')
+        return { success: false, status: getClientSafeErrorStatus(res.status), errors: erros }
+    }
+
+    return {
+        success: true,
+        status: 200,
+        session: data.session || data.session_id || data.id || null,
+        sessionId: data.session_id || data.session || data.id || null,
+        expiresAt: data.expires_at || null,
+    }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  CRIAR CHECKOUT HOSPEDADO PAGBANK
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+async function sha256Hex(value) {
+    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))
+    return Array.from(new Uint8Array(hash))
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('')
+}
+
+function compararSeguro(a = '', b = '') {
+    if (a.length !== b.length) return false
+    let diff = 0
+    for (let i = 0; i < a.length; i++) {
+        diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+    }
+    return diff === 0
+}
+
+function getTokensWebhookPagBank() {
+    return [...new Set([
+        Deno.env.get('PAGSEGURO_TOKEN'),
+        Deno.env.get('PAGSEGURO_TOKEN_SANDBOX'),
+    ].filter(Boolean))]
+}
+
+async function validarAssinaturaWebhookPagBank(req, rawBody) {
+    const assinaturaRecebida = String(req.headers.get('x-authenticity-token') || '').trim().toLowerCase()
+    if (!assinaturaRecebida) return false
+
+    const tokens = getTokensWebhookPagBank()
+    if (tokens.length === 0) return false
+
+    for (const token of tokens) {
+        const assinaturaCalculada = await sha256Hex(`${token}-${rawBody}`)
+        if (compararSeguro(assinaturaCalculada, assinaturaRecebida)) return true
+    }
+
+    return false
+}
+
+async function handleConsultarCheckout({ pagbankApiUrl, pagbankToken, supabase, pedidoId, checkoutId }) {
+    let checkoutIdFinal = String(checkoutId || '')
+    let pagamentoLocal = null
+
+    if (!checkoutIdFinal && supabase && pedidoId) {
+        const { data } = await supabase
+            .from('payments')
+            .select('status, gateway_transaction_id, gateway_response')
+            .eq('order_id', pedidoId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+        pagamentoLocal = data || null
+        checkoutIdFinal = extrairCheckoutIdSalvo(pagamentoLocal)
+    }
+
+    if (!checkoutIdFinal) {
+        if (pagamentoLocal?.status && pagamentoLocal.status !== 'pending') {
+            return {
+                success: true,
+                status: 200,
+                paymentStatus: pagamentoLocal.status,
+                source: 'local',
+            }
+        }
+
+        return {
+            success: false,
+            status: 404,
+            errorCode: 'PAGBANK_CHECKOUT_NOT_FOUND',
+            errors: ['Checkout PagBank nao encontrado para este pedido.'],
+        }
+    }
+
+    let res, data
+    try {
+        res = await fetch(`${pagbankApiUrl}/checkouts/${encodeURIComponent(checkoutIdFinal)}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${pagbankToken}`,
+                'Content-Type': 'application/json',
+            },
+        })
+        data = await res.json().catch(() => ({}))
+    } catch (err) {
+        console.error('[PagBank] Erro ao consultar checkout:', err)
+        return {
+            success: false,
+            status: 502,
+            errorCode: 'PAGBANK_NETWORK_ERROR',
+            errors: ['Nao foi possivel consultar o checkout no PagBank.'],
+        }
+    }
+
+    if (!res.ok) {
+        return {
+            success: false,
+            status: getClientSafeErrorStatus(res.status || 400),
+            errorCode: 'PAGBANK_CHECKOUT_QUERY_ERROR',
+            errors: extrairMensagemErroPagBank(data, 'Nao foi possivel consultar o checkout.'),
+            gatewayResponse: data,
+        }
+    }
+
+    const paymentStatus = resolverStatusConsultaCheckout(data)
+    const gatewayId = resolverGatewayIdConsultaCheckout(data, checkoutIdFinal)
+    await persistirPagamento(supabase, pedidoId || data.reference_id, gatewayId, paymentStatus, data)
+
+    return {
+        success: true,
+        status: 200,
+        checkoutId: checkoutIdFinal,
+        checkoutStatus: data.status || null,
+        paymentStatus,
+        gatewayId,
+    }
+}
+
+async function criarCheckoutHospedadoPagBank({
+    pagbankApiUrl,
+    pagbankToken,
+    supabase,
+    pedidoId,
+    itens,
+    nomeCliente,
+    email,
+    cpfLimpo,
+    telefone,
+    redirectUrl,
+    webhookUrl,
+    metodoPagamento,
+    shipping,
+    valor,
+}) {
+    if (!Array.isArray(itens) || itens.length === 0) {
+        return { success: false, status: 400, errors: ['Itens do pedido são obrigatórios.'] }
+    }
+
+    const itensFormatados = formatarItensPagBank(itens, pedidoId)
+    if (itensFormatados.length === 0) {
+        return { success: false, status: 400, errors: ['Nenhum item válido encontrado no pedido.'] }
+    }
+
+    const returnUrl = redirectUrl || `${SITE_URL}/checkout-retorno.html?pedido=${encodeURIComponent(pedidoId)}`
+    const customerPhone = normalizarTelefone(telefone) || undefined
+    const shippingPagBank = normalizarShippingPagBank(shipping)
+    const itensTotal = itensFormatados.reduce((total, item) => total + (item.unit_amount * item.quantity), 0)
+    const shippingAmount = shippingPagBank?.amount || 0
+    const totalPedido = valorCentavos(valor, itensTotal + shippingAmount)
+    const additionalAmount = Math.max(0, totalPedido - itensTotal - shippingAmount)
+    const payload = {
+        reference_id: pedidoId,
+        customer: {
+            name: (nomeCliente || 'CLIENTE').substring(0, 80),
+            email: normalizarEmailPagBank(email, pedidoId),
+            tax_id: cpfLimpo,
+            ...(customerPhone ? { phones: [customerPhone] } : {}),
+        },
+        items: itensFormatados,
+        ...(shippingPagBank ? { shipping: shippingPagBank } : {}),
+        ...(additionalAmount > 0 ? { additional_amount: additionalAmount } : {}),
+        payment_methods: resolverMetodosPagamentoCheckout(metodoPagamento),
+        redirect_url: returnUrl,
+        return_url: returnUrl,
+        notification_urls: [webhookUrl],
+        payment_notification_urls: [webhookUrl],
+        soft_descriptor: 'JSL EMBALAGENS',
+    }
+
+    console.log('[PagBank] Criando checkout hospedado para pedido:', pedidoId)
+
+    let res, data
+    try {
+        res = await fetch(`${pagbankApiUrl}/checkouts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${pagbankToken}`,
+                'x-idempotency-key': `chk_${pedidoId}`,
+            },
+            body: JSON.stringify(payload),
+        })
+        data = await res.json().catch(() => ({}))
+    } catch (fetchErr) {
+        console.error('[PagBank] Erro de rede ao chamar PagBank:', fetchErr)
+        return {
+            success: false,
+            status: 502,
+            errorCode: 'PAGBANK_NETWORK_ERROR',
+            errors: ['Não foi possível conectar ao PagBank. Tente novamente.'],
+        }
+    }
+
+    console.log('[PagBank] HTTP status:', res.status)
+    console.log('[PagBank] Resposta completa:', JSON.stringify(data).substring(0, 800))
+
+    if (!res.ok) {
+        const erros = extrairMensagemErroPagBank(data, 'Não foi possível criar o checkout.')
+        let code = 'PAGBANK_CHECKOUT_ERROR'
+        if (res.status === 401 || res.status === 403) code = 'PAGBANK_TOKEN_INVALID'
+        const isAllowlist = erros.some(e =>
+            String(e).toLowerCase().includes('allowlist') ||
+            String(e).toLowerCase().includes('whitelist')
+        )
+        if (isAllowlist) {
+            code = 'PAGBANK_ALLOWLIST'
+            console.error('[PagBank] ALLOWLIST ERROR')
+        }
+        return {
+            success: false,
+            status: getClientSafeErrorStatus(res.status || 400),
+            errorCode: code,
+            errors: erros,
+            gatewayResponse: data,
+        }
+    }
+
+    const checkoutUrl = data?.links?.find(l => l?.rel === 'PAY')?.href || null
+    if (!checkoutUrl) {
+        return {
+            success: false,
+            status: 502,
+            errorCode: 'PAGBANK_NO_LINK',
+            errors: ['Link de checkout não retornado pelo PagBank.'],
+            gatewayResponse: data,
+        }
+    }
+
+    if (supabase && data.id) {
+        await supabase.from('payments').update({
+            gateway: 'pagbank',
+            gateway_transaction_id: data.id,
+            gateway_response: data,
+            updated_at: new Date().toISOString(),
+        }).eq('order_id', pedidoId)
+    }
+
+    return {
+        success: true,
+        status: 200,
+        checkoutUrl,
+        checkoutId: data.id,
+        gatewayResponse: data,
+    }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -274,46 +686,38 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders })
     }
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    //  WEBHOOK DO PAGBANK
-    //  O PagBank faz POST aqui quando o status do pagamento muda.
-    //  Esta URL é configurada no campo notification_urls ao criar o checkout.
-    //  IMPORTANTE: sempre responder 200 para o PagBank não retentar.
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // WEBHOOK
     if (url.searchParams.get('webhook') === 'true') {
         try {
-            const payload = await req.json().catch(() => null)
+            const rawBody = await req.text().catch(() => '')
+            if (!rawBody) return new Response('OK', { status: 200 })
+
+            const assinaturaValida = await validarAssinaturaWebhookPagBank(req, rawBody)
+            if (!assinaturaValida) {
+                console.warn('[PagBank Webhook] Assinatura invalida ou ausente. Evento descartado.')
+                return new Response('OK', { status: 200 })
+            }
+
+            const payload = JSON.parse(rawBody)
             if (!payload) return new Response('OK', { status: 200 })
-
-            console.log('[PagBank Webhook] Payload:', JSON.stringify(payload).substring(0, 600))
-
+            console.log('[PagBank Webhook] Recebido:', JSON.stringify(payload).substring(0, 600))
             const supabase = getSupabaseAdmin()
-
-            // Webhook de Checkout (mudança de status do link)
             if (payload.id?.startsWith('CHEC_') && Array.isArray(payload.charges)) {
                 for (const charge of payload.charges) {
-                    const status = STATUS_MAP[charge.status] || 'pending'
-                    await persistirPagamento(supabase, payload.reference_id, charge.id, status, charge)
+                    await persistirPagamento(supabase, payload.reference_id, charge.id, STATUS_MAP[charge.status] || 'pending', charge)
                 }
                 return new Response('OK', { status: 200 })
             }
-
-            // Webhook de Order (com charges embutidos)
             if ((payload.id?.startsWith('ORDE_') || payload.charges) && payload.reference_id) {
                 for (const charge of (payload.charges || [])) {
-                    const status = STATUS_MAP[charge.status] || 'pending'
-                    await persistirPagamento(supabase, payload.reference_id, charge.id, status, charge)
+                    await persistirPagamento(supabase, payload.reference_id, charge.id, STATUS_MAP[charge.status] || 'pending', charge)
                 }
                 return new Response('OK', { status: 200 })
             }
-
-            // Webhook de Charge isolado
             if (payload.id?.startsWith('CHAR_') && payload.reference_id) {
-                const status = STATUS_MAP[payload.status] || 'pending'
-                await persistirPagamento(supabase, payload.reference_id, payload.id, status, payload)
+                await persistirPagamento(supabase, payload.reference_id, payload.id, STATUS_MAP[payload.status] || 'pending', payload)
                 return new Response('OK', { status: 200 })
             }
-
             return new Response('OK', { status: 200 })
         } catch (err) {
             console.error('[PagBank Webhook] Erro:', err)
@@ -321,9 +725,23 @@ serve(async (req) => {
         }
     }
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    //  ROTAS INTERNAS (chamadas via supabase.functions.invoke)
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // DIAGNÓSTICO
+    if (req.method === 'GET' && url.searchParams.get('diagnostico') === 'true') {
+        const envAtual = resolverAmbientePagBank(url.searchParams.get('environment'))
+        const token = resolverTokenPagBank(envAtual)
+        return new Response(
+            JSON.stringify({
+                pagbank_env: envAtual,
+                token_configurado: !!token,
+                token_preview: token ? `${token.substring(0, 8)}...${token.slice(-4)}` : 'NÃO CONFIGURADO',
+                api_url: resolverApiUrlPagBank(envAtual),
+                supabase_url: Deno.env.get('SUPABASE_URL') || 'NÃO CONFIGURADO',
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+    }
+
+    // ROTAS POST
     try {
         let body = {}
         try { body = await req.json() } catch {
@@ -335,114 +753,76 @@ serve(async (req) => {
 
         const pagbankEnv = resolverAmbientePagBank(body.environment)
         const pagbankApiUrl = resolverApiUrlPagBank(pagbankEnv)
+        const pagbankSdkUrl = resolverSdkUrlPagBank(pagbankEnv)
         const PAGBANK_TOKEN = resolverTokenPagBank(pagbankEnv)
+
         if (!PAGBANK_TOKEN) {
             return new Response(
                 JSON.stringify({
                     success: false,
                     errorCode: 'PAGBANK_TOKEN_MISSING',
                     errors: [pagbankEnv === 'sandbox'
-                        ? 'PAGSEGURO_TOKEN_SANDBOX não configurado nos Secrets da Edge Function.'
-                        : 'PAGSEGURO_TOKEN não configurado nos Secrets da Edge Function.'],
+                        ? 'Token sandbox não configurado. Configure PAGSEGURO_TOKEN_SANDBOX nos Secrets do Supabase.'
+                        : 'Token de produção não configurado. Configure PAGSEGURO_TOKEN nos Secrets do Supabase.'],
                 }),
                 { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             )
         }
 
+        // ── ACTION: get-public-key (INF-01 homologação)
+        if (body.action === 'get-public-key') {
+            const result = await handleGetPublicKey({ pagbankApiUrl, pagbankToken: PAGBANK_TOKEN })
+            return new Response(
+                JSON.stringify(result.success
+                    ? { success: true, publicKey: result.publicKey, createdAt: result.createdAt }
+                    : { success: false, errors: result.errors }),
+                { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // ── ACTION: create-3ds-session (INF-02 homologação)
+        if (body.action === 'create-3ds-session') {
+            const result = await handleCreate3dsSession({ pagbankSdkUrl, pagbankToken: PAGBANK_TOKEN })
+            return new Response(
+                JSON.stringify(result.success
+                    ? { success: true, session: result.session, sessionId: result.sessionId, expiresAt: result.expiresAt }
+                    : { success: false, errors: result.errors }),
+                { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // ACTION: consult-checkout
+        if (body.action === 'consult-checkout') {
+            const supabase = getSupabaseAdmin()
+            const result = await handleConsultarCheckout({
+                pagbankApiUrl,
+                pagbankToken: PAGBANK_TOKEN,
+                supabase,
+                pedidoId: body.pedidoId,
+                checkoutId: body.checkoutId,
+            })
+
+            return new Response(
+                JSON.stringify(result.success
+                    ? {
+                        success: true,
+                        status: result.paymentStatus,
+                        checkoutStatus: result.checkoutStatus,
+                        checkoutId: result.checkoutId,
+                        gatewayId: result.gatewayId,
+                        source: result.source || 'pagbank',
+                    }
+                    : { success: false, errorCode: result.errorCode, errors: result.errors }),
+                { status: result.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+        }
+
+        // CRIAR CHECKOUT (credito / debito / pix)
         const supabase = getSupabaseAdmin()
         const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
         const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/processar-pagamento-pagseguro?webhook=true`
 
-        // ── Obter chave pública ──────────────────────────────────────────────────
-        if (body.action === 'get-public-key') {
-            // Tenta variável de ambiente primeiro
-            let publicKey = Deno.env.get('PAGSEGURO_PUBLIC_KEY') || null
-
-            if (!publicKey) {
-                // Tenta buscar chave existente
-                const getRes = await fetch(`${pagbankApiUrl}/public-keys/card`, {
-                    headers: { 'Authorization': `Bearer ${PAGBANK_TOKEN}` }
-                })
-                if (getRes.ok) {
-                    const d = await getRes.json().catch(() => ({}))
-                    publicKey = d.public_key || null
-                }
-
-                // Se não encontrou, cria
-                if (!publicKey) {
-                    const postRes = await fetch(`${pagbankApiUrl}/public-keys`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${PAGBANK_TOKEN}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ type: 'card' })
-                    })
-                    const postData = await postRes.json().catch(() => ({}))
-
-                    if (postRes.ok) {
-                        publicKey = postData.public_key || null
-                    } else if (postRes.status === 409) {
-                        // Já existe — buscar novamente
-                        const retryRes = await fetch(`${pagbankApiUrl}/public-keys/card`, {
-                            headers: { 'Authorization': `Bearer ${PAGBANK_TOKEN}` }
-                        })
-                        const retryData = await retryRes.json().catch(() => ({}))
-                        publicKey = retryData.public_key || null
-                    } else {
-                        const code = (postRes.status === 401 || postRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_KEY_ERROR'
-                        return new Response(
-                            JSON.stringify({ success: false, errorCode: code, errors: ['Não foi possível obter a chave pública.'] }),
-                            { status: getClientSafeErrorStatus(postRes.status), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                        )
-                    }
-                }
-            }
-
-            if (!publicKey) {
-                return new Response(
-                    JSON.stringify({ success: false, errorCode: 'PAGBANK_KEY_MISSING', errors: ['Chave pública não disponível.'] }),
-                    { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                )
-            }
-
-            return new Response(
-                JSON.stringify({ success: true, publicKey }),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
-
-        // ── Criar sessão 3DS ─────────────────────────────────────────────────────
-        if (body.action === 'create-3ds-session') {
-            const sessRes = await fetch(`${pagbankApiUrl}/checkout-sdk/sessions`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${PAGBANK_TOKEN}`, 'Content-Type': 'application/json' },
-            })
-
-            if (!sessRes.ok) {
-                return new Response(
-                    JSON.stringify({ success: false, errors: ['Não foi possível iniciar autenticação 3D Secure.'] }),
-                    { status: getClientSafeErrorStatus(sessRes.status), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                )
-            }
-
-            const sessData = await sessRes.json().catch(() => ({}))
-            if (!sessData?.session) {
-                return new Response(
-                    JSON.stringify({ success: false, errors: ['Sessão 3D Secure inválida.'] }),
-                    { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                )
-            }
-
-            return new Response(
-                JSON.stringify({ success: true, session: sessData.session }),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
-
-        // ── Validações comuns ────────────────────────────────────────────────────
-        const { pedidoId, valor, itens, nomeCliente, email, cpf, telefone, redirectUrl,
-                encryptedCard, parcelas, tipo, authenticationId } = body
+        const { pedidoId, valor, itens, nomeCliente, email, cpf, telefone, redirectUrl, metodoPagamento, shipping } = body
 
         if (!pedidoId) {
             return new Response(
@@ -468,216 +848,34 @@ serve(async (req) => {
             )
         }
 
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  CHECKOUT HOSPEDADO (sem cartão = link de pagamento)
-        //
-        //  Fluxo:
-        //  1. Backend cria o checkout via API do PagBank
-        //  2. PagBank retorna um link (rel=PAY)
-        //  3. Frontend redireciona o cliente para esse link
-        //  4. Cliente paga no ambiente do PagBank
-        //  5. PagBank redireciona o cliente de volta via redirect_url
-        //  6. PagBank notifica o backend via notification_urls (webhook)
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        if (!encryptedCard) {
-            if (!Array.isArray(itens) || itens.length === 0) {
-                return new Response(
-                    JSON.stringify({ success: false, errors: ['Itens do pedido são obrigatórios.'] }),
-                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                )
-            }
+        console.log(`[PagBank] Processando pedido ${pedidoId} | Ambiente: ${pagbankEnv} | Método: ${metodoPagamento || 'todos'}`)
 
-            // URL de retorno: onde o cliente vai após pagar
-            // Deve ser a URL do SEU SITE (não do checkout do PagBank)
-            const returnUrl = redirectUrl || `${SITE_URL}/checkout-retorno.html?pedido=${encodeURIComponent(pedidoId)}`
-
-            const itensFormatados = formatarItensPagBank(itens, pedidoId)
-            const customerPhone = normalizarTelefone(telefone) || undefined
-
-            const payload = {
-                reference_id: pedidoId,
-                customer: {
-                    name: (nomeCliente || 'CLIENTE').substring(0, 80),
-                    email: normalizarEmailPagBank(email, pedidoId),
-                    tax_id: cpfLimpo,
-                    ...(customerPhone ? { phones: [customerPhone] } : {}),
-                },
-                items: itensFormatados,
-                payment_methods: [
-                    { type: 'CREDIT_CARD' },
-                    { type: 'DEBIT_CARD' },
-                    { type: 'PIX' },
-                    { type: 'BOLETO' },
-                ],
-                // ↓ URL do SEU SITE para onde o cliente volta após pagar
-                redirect_url: returnUrl,
-                // ↓ URL da EDGE FUNCTION que recebe notificações do PagBank
-                notification_urls: [WEBHOOK_URL],
-                soft_descriptor: 'JSL EMBALAGENS',
-            }
-
-            console.log('[PagBank] Criando checkout:', pedidoId)
-
-            const res = await fetch(`${pagbankApiUrl}/checkouts`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${PAGBANK_TOKEN}`,
-                    'x-idempotency-key': `chk_${pedidoId}`,
-                },
-                body: JSON.stringify(payload),
-            })
-
-            const data = await res.json().catch(() => ({}))
-            console.log('[PagBank] Resposta checkout:', res.status, JSON.stringify(data).substring(0, 400))
-
-            if (!res.ok) {
-                const erros = data?.error_messages?.map(e => traduzirErro(e.code, e.description))
-                    || ['Não foi possível criar o checkout.']
-                const code = (res.status === 401 || res.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_CHECKOUT_ERROR'
-                return new Response(
-                    JSON.stringify({ success: false, errorCode: code, errors: erros }),
-                    { status: getClientSafeErrorStatus(res.status || 400), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                )
-            }
-
-            // O link de pagamento está em links[].rel === 'PAY'
-            const checkoutUrl = data?.links?.find(l => l?.rel === 'PAY')?.href || null
-            if (!checkoutUrl) {
-                return new Response(
-                    JSON.stringify({ success: false, errors: ['Link de checkout não retornado pelo PagBank.'] }),
-                    { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-                )
-            }
-
-            // Salva checkoutId no banco para rastreamento
-            if (supabase && data.id) {
-                const { error: checkoutSaveErr } = await supabase.from('payments').update({
-                    gateway: 'pagbank',
-                    gateway_transaction_id: data.id,
-                    updated_at: new Date().toISOString(),
-                }).eq('order_id', pedidoId)
-                if (checkoutSaveErr) console.error('[PagBank] Erro ao salvar checkoutId:', checkoutSaveErr)
-            }
-
-            return new Response(
-                JSON.stringify({ success: true, checkoutUrl, checkoutId: data.id }),
-                { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
-
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        //  COBRANÇA DIRETA COM CARTÃO CRIPTOGRAFADO
-        // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        const isCredito = tipo !== 'debit_card'
-        const numParcelas = isCredito ? (parseInt(parcelas) || 1) : 1
-        const pedidoSalvo = await obterPedidoCompleto(supabase, pedidoId)
-        const itensOrder = formatarItensPagBank(
-            Array.isArray(itens) && itens.length > 0 ? itens : (pedidoSalvo?.order_items || []),
-            pedidoId
-        )
-
-        if (itensOrder.length === 0) {
-            return new Response(
-                JSON.stringify({ success: false, errors: ['Itens do pedido são obrigatórios para pagamento com cartão.'] }),
-                { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
-
-        const customerPhone = normalizarTelefone(telefone) || undefined
-        const shippingAddress = formatarEnderecoPagBank(pedidoSalvo)
-        const holderName = (nomeCliente || pedidoSalvo?.shipping_recipient || 'CLIENTE').substring(0, 30)
-        const paymentMethod = {
-            type: isCredito ? 'CREDIT_CARD' : 'DEBIT_CARD',
-            installments: numParcelas,
-            capture: true,
-            card: {
-                encrypted: encryptedCard,
-                store: false,
-            },
-            holder: {
-                name: holderName,
-                tax_id: cpfLimpo,
-            },
-        }
-
-        if (!isCredito && authenticationId) {
-            paymentMethod.authentication_method = { type: 'THREEDS', id: authenticationId }
-        }
-
-        const orderPayload = {
-            reference_id: pedidoId,
-            customer: {
-                name: (nomeCliente || pedidoSalvo?.shipping_recipient || 'CLIENTE').substring(0, 80),
-                email: normalizarEmailPagBank(email, pedidoId),
-                tax_id: cpfLimpo,
-                ...(customerPhone ? { phones: [customerPhone] } : {}),
-            },
-            items: itensOrder,
-            ...(shippingAddress ? { shipping: { address: shippingAddress } } : {}),
-            notification_urls: [WEBHOOK_URL],
-            charges: [
-                {
-                    reference_id: `${pedidoId}-1`.substring(0, 64),
-                    description: `Pedido JSL #${pedidoId.substring(0, 8).toUpperCase()}`,
-                    amount: { value: valorCentavos, currency: 'BRL' },
-                    payment_method: paymentMethod,
-                }
-            ],
-        }
-
-        console.log('[PagBank] Criando order com cartão:', pedidoId, tipo, valorCentavos)
-
-        const orderRes = await fetch(`${pagbankApiUrl}/orders`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${PAGBANK_TOKEN}`,
-                'x-idempotency-key': `ord_${pedidoId}`,
-            },
-            body: JSON.stringify(orderPayload),
+        const checkout = await criarCheckoutHospedadoPagBank({
+            pagbankApiUrl,
+            pagbankToken: PAGBANK_TOKEN,
+            supabase,
+            pedidoId,
+            itens,
+            nomeCliente,
+            email,
+            cpfLimpo,
+            telefone,
+            redirectUrl,
+            webhookUrl: WEBHOOK_URL,
+            metodoPagamento,
+            shipping,
+            valor,
         })
 
-        const orderData = await orderRes.json().catch(() => ({}))
-        console.log('[PagBank] Resposta order:', orderRes.status, JSON.stringify(orderData).substring(0, 500))
-
-        if (!orderRes.ok || orderData.error_messages) {
-            const erros = extrairMensagemErroPagBank(orderData, 'Erro ao processar pagamento.')
-            const hasAccessDenied = orderData?.error_messages?.some(e => e?.code === 'ACCESS_DENIED')
-            const code = hasAccessDenied
-                ? 'PAGBANK_ACCESS_DENIED'
-                : ((orderRes.status === 401 || orderRes.status === 403) ? 'PAGBANK_TOKEN_INVALID' : 'PAGBANK_ORDER_ERROR')
-            return new Response(
-                JSON.stringify({
-                    success: false,
-                    errorCode: code,
-                    errors: erros,
-                    ...(pagbankEnv === 'sandbox' ? { gatewayDebug: orderData } : {}),
-                }),
-                { status: getClientSafeErrorStatus(orderRes.status || 400), headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            )
-        }
-
-        const charge = Array.isArray(orderData?.charges) ? orderData.charges[0] : null
-        const status = STATUS_MAP[charge?.status || orderData?.status] || 'pending'
-        const gatewayId = charge?.id || orderData?.id || pedidoId
-
-        await persistirPagamento(supabase, pedidoId, gatewayId, status, orderData)
-
         return new Response(
-            JSON.stringify({
-                success: status === 'approved' || status === 'processing',
-                status,
-                gateway: 'pagbank',
-                gatewayId,
-                orderId: orderData?.id || null,
-                message: getMensagem(status),
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify(checkout.success
+                ? { success: true, checkoutUrl: checkout.checkoutUrl, checkoutId: checkout.checkoutId }
+                : { success: false, errorCode: checkout.errorCode, errors: checkout.errors }),
+            { status: checkout.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
 
     } catch (err) {
-        console.error('[PagBank] Erro interno:', err)
+        console.error('[PagBank] Erro interno não tratado:', err)
         return new Response(
             JSON.stringify({ success: false, errors: ['Erro interno ao processar pagamento.'] }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

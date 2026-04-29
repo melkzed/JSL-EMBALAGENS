@@ -2,27 +2,99 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Retorno do Pagamento - JSL Embalagens</title>
-    <script>
-        const params = new URLSearchParams(window.location.search)
-        const pedidoId = params.get('pedido')
-        const host = window.location.hostname
-        const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/')
-        const isFriendlyHost =
-            ['www.jslembalagens.com.br', 'jslembalagens.com.br'].includes(host) &&
-            !path.includes('/html/') &&
-            !path.endsWith('.html')
-        if (pedidoId) {
-            const pedidoSeguro = encodeURIComponent(pedidoId)
-            window.location.href = isFriendlyHost
-                ? `/perfil?tab=pedidos&pedido=${pedidoSeguro}`
-                : `./html/perfil.html?tab=pedidos&pedido=${pedidoSeguro}`
-        } else {
-            window.location.href = isFriendlyHost ? '/' : './index.html'
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmando pagamento - JSL Embalagens</title>
+    <link rel="icon" type="image/svg+xml" href="./img/favicon.svg">
+    <link rel="stylesheet" href="./css/global.css">
+    <style>
+        :root {
+            --blue: #1a56db;
+            --green: #25D366;
+            --gray: #6b7280;
         }
-    </script>
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #f3f4f6;
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            margin: 0;
+            padding: 1rem;
+        }
+
+        .retorno-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            padding: 2.5rem 2rem;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .retorno-icon {
+            width: 58px;
+            height: 58px;
+            border: 4px solid #e5e7eb;
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            margin: 0 auto 1.25rem;
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .retorno-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0 0 0.5rem;
+            color: #111827;
+        }
+
+        .retorno-msg {
+            font-size: 0.95rem;
+            color: var(--gray);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        .retorno-progress {
+            background: #e5e7eb;
+            border-radius: 999px;
+            height: 4px;
+            margin: 1.25rem 0 0;
+            overflow: hidden;
+        }
+
+        .retorno-progress-bar {
+            height: 100%;
+            background: var(--green);
+            border-radius: 999px;
+            animation: progress 1.2s ease-out infinite alternate;
+        }
+
+        @keyframes progress {
+            from { width: 25%; }
+            to { width: 100%; }
+        }
+    </style>
 </head>
 <body>
-    <p>Processando retorno...</p>
+    <main class="retorno-card">
+        <div class="retorno-icon" aria-hidden="true"></div>
+        <h1 class="retorno-title">Confirmando pagamento...</h1>
+        <p class="retorno-msg" id="checkoutRetornoStatus">
+            Aguarde enquanto verificamos o retorno do Mercado Pago.
+        </p>
+        <div class="retorno-progress" aria-hidden="true">
+            <div class="retorno-progress-bar"></div>
+        </div>
+    </main>
+
+    <script src="./js/checkout-retorno.js?v=20260429" defer></script>
 </body>
 </html>
