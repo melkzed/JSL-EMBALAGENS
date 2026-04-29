@@ -20,33 +20,36 @@ RewriteRule ^ /%1 [R=301,L]
 # ----- HOME -----
 RewriteRule ^$ /index.html [L]
 
+# ----- CHECKOUT RETORNO (deve vir antes das rotas genéricas) -----
+RewriteRule ^checkout-retorno/?$ /checkout-retorno.html [QSA,L]
+
 # ----- PRODUTOS (catálogo) -----
-RewriteRule ^produtos/?$ /html/produtos.html [L]
+RewriteRule ^produtos/?$ /html/produtos.html [QSA,L]
 
 # ----- PRODUTO individual por slug (caminho limpo) -----
 # jslembalagens.com.br/produtos/caixa-de-papelao
 RewriteRule ^produtos/([a-zA-Z0-9À-ÿ_-]+)/?$ /html/produto.html?produto=$1 [QSA,L]
 
 # ----- SOBRE -----
-RewriteRule ^sobre/?$ /html/sobre.html [L]
+RewriteRule ^sobre/?$ /html/sobre.html [QSA,L]
 
 # ----- CONTATO -----
-RewriteRule ^contato/?$ /html/contato.html [L]
+RewriteRule ^contato/?$ /html/contato.html [QSA,L]
 
 # ----- POLITICAS -----
-RewriteRule ^politicas/?$ /html/politicas.html [L]
+RewriteRule ^politicas/?$ /html/politicas.html [QSA,L]
 
 # ----- CARRINHO -----
-RewriteRule ^carrinho/?$ /html/carrinho.html [L]
+RewriteRule ^carrinho/?$ /html/carrinho.html [QSA,L]
 
 # ----- CHECKOUT -----
-RewriteRule ^checkout/?$ /html/checkout.html [L]
+RewriteRule ^checkout/?$ /html/checkout.html [QSA,L]
 
 # ----- PERFIL -----
-RewriteRule ^perfil/?$ /html/perfil.html [L]
+RewriteRule ^perfil/?$ /html/perfil.html [QSA,L]
 
 # ----- CONFIRMAÇÃO EMAIL -----
-RewriteRule ^confirmar-email/?$ /html/confirmar-email.html [L]
+RewriteRule ^confirmar-email/?$ /html/confirmar-email.html [QSA,L]
 
 # ----- Proteger artefatos internos sem bloquear assets publicos -----
 RewriteRule ^(\.git|\.vscode|docs|documentos|pagbank-evidencias|pagbank-evidencias-[0-9]+|tmp|tools|supabase|migrations|node_modules)(/.*)?$ - [F,L]
@@ -75,6 +78,8 @@ RewriteRule ^(\.gitignore|\.upload-ignore\.txt|sitemap-generator\.js)$ - [F,L]
     ExpiresByType image/jpeg        "access plus 1 year"
     ExpiresByType image/png         "access plus 1 year"
     ExpiresByType image/webp        "access plus 1 year"
+    ExpiresByType image/x-icon      "access plus 1 year"
+    ExpiresByType image/vnd.microsoft.icon "access plus 1 year"
     ExpiresByType text/css          "access plus 0 seconds"
     ExpiresByType application/javascript "access plus 0 seconds"
     ExpiresByType text/html         "access plus 0 seconds"

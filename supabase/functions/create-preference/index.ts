@@ -104,7 +104,7 @@ serve(async (req) => {
     }
 
     const siteUrl = buildSiteUrl()
-    const returnUrl = `${siteUrl}/checkout-retorno.html?pedido=${encodeURIComponent(order_id)}`
+    const returnUrl = `${siteUrl}/checkout-retorno?pedido=${encodeURIComponent(order_id)}`
     const cpf = onlyDigits(profile?.cpf)
     const phone = onlyDigits(profile?.phone)
 
@@ -134,7 +134,7 @@ serve(async (req) => {
         failure: returnUrl,
         pending: returnUrl,
       },
-      auto_return: "approved",
+      auto_return: "all",
       notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mp-webhook`,
       statement_descriptor: "JSL EMBALAGENS",
       metadata: {
