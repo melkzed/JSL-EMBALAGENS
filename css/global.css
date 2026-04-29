@@ -147,3 +147,82 @@ font-size: 16px;
     background: #ef4444;
     color: #fff;
 }
+
+/* FAQ Section */
+.faq-seo {
+    max-width: 800px;
+    margin: 0 auto 3rem;
+    padding: 48px 80px 60px;
+    background: var(--bg-light);
+}
+
+.faq-seo h2 {
+    font-size: 1.75rem;
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-weight: 700;
+}
+
+.faq-seo details {
+    background: var(--bg-white);
+    border: 1px solid var(--border-lighter);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.faq-seo details:hover {
+    box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.faq-seo summary {
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 1rem;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.faq-seo summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq-seo summary::after {
+    content: '+';
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+    font-weight: 400;
+    transition: transform 0.2s ease;
+}
+
+.faq-seo details[open] summary::after {
+    transform: rotate(45deg);
+}
+
+.faq-seo details[open] summary {
+    border-bottom: 1px solid var(--border-lighter);
+}
+
+.faq-seo summary + p {
+    padding: 1rem 1.25rem;
+    color: var(--text-gray);
+    line-height: 1.6;
+    font-size: 0.95rem;
+    background: var(--bg-white);
+}
+
+.faq-seo summary + p a {
+    color: var(--primary-blue);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.faq-seo summary + p a:hover {
+    text-decoration: underline;
+}

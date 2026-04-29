@@ -10,15 +10,16 @@ export async function carregarCategorias() {
     if (error) {
         console.error('Erro ao carregar categorias:', error)
         toast('Erro ao carregar categorias: ' + error.message, 'erro')
-        tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Erro ao carregar categorias</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">Erro ao carregar categorias</td></tr>'
         return
     }
     if (!categorias || categorias.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Nenhuma categoria</td></tr>'
+        tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">Nenhuma categoria</td></tr>'
         return
     }
 
     tbody.innerHTML = categorias.map(c => `<tr>
+        <td>${renderCategoriaThumb(c.image_url)}</td>
         <td>${c.sort_order}</td>
         <td><strong>${esc(c.name)}</strong></td>
         <td><code>${esc(c.slug)}</code></td>
@@ -32,6 +33,12 @@ export async function carregarCategorias() {
     </tr>`).join('')
 }
 
+function renderCategoriaThumb(url) {
+    return url
+        ? `<img src="${esc(url)}" class="product-thumb" alt="">`
+        : '<div class="product-thumb" style="background:#eee;display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-image" style="color:#ccc"></i></div>'
+}
+
 export async function abrirModalCategoria(catId = null) {
     try {
     document.getElementById('categoriaId').value = ''
@@ -40,6 +47,9 @@ export async function abrirModalCategoria(catId = null) {
     document.getElementById('categoriaDescricao').value = ''
     document.getElementById('categoriaIcone').value = ''
     document.getElementById('categoriaIconePreview').innerHTML = ''
+    document.getElementById('categoriaImagemUrl').value = ''
+    document.getElementById('inputImagemCategoria').value = ''
+    atualizarPreviewImagemCategoria('')
     document.getElementById('categoriaOrdem').value = '0'
     document.getElementById('categoriaAtiva').value = 'true'
     document.getElementById('categoriaFeatured').value = 'false'
@@ -60,6 +70,8 @@ export async function abrirModalCategoria(catId = null) {
             document.getElementById('categoriaDescricao').value = cat.description || ''
             document.getElementById('categoriaIcone').value = cat.icon || ''
             document.getElementById('categoriaIconePreview').innerHTML = cat.icon ? `<i class="${cat.icon}"></i>` : ''
+            document.getElementById('categoriaImagemUrl').value = cat.image_url || ''
+            atualizarPreviewImagemCategoria(cat.image_url || '')
             document.getElementById('categoriaOrdem').value = cat.sort_order
             document.getElementById('categoriaAtiva').value = String(cat.active)
             document.getElementById('categoriaFeatured').value = String(!!cat.featured)
@@ -80,6 +92,21 @@ export async function abrirModalCategoria(catId = null) {
         console.error('Erro ao abrir modal de categoria:', err)
         toast('Erro ao abrir categoria: ' + err.message, 'erro')
     }
+}
+
+export function atualizarPreviewImagemCategoria(url) {
+    const preview = document.getElementById('categoriaImagemPreview')
+    const btnRemover = document.getElementById('btnRemoverImagemCategoria')
+    if (!preview || !btnRemover) return
+
+    if (!url) {
+        preview.innerHTML = '<div class="admin-category-image-empty"><i class="fa-solid fa-image"></i><span>Nenhuma imagem selecionada</span></div>'
+        btnRemover.style.display = 'none'
+        return
+    }
+
+    preview.innerHTML = `<img src="${esc(url)}" alt="Preview da categoria">`
+    btnRemover.style.display = 'inline-flex'
 }
 
 export function addCategoriaSpecRow(data = {}) {
@@ -106,11 +133,14 @@ export async function salvarCategoria(e) {
 
     try {
     const catId = document.getElementById('categoriaId').value || null
+    const imagemUpload = document.getElementById('inputImagemCategoria').files[0]
+    let imageUrl = document.getElementById('categoriaImagemUrl').value.trim() || null
     const dados = {
         name: document.getElementById('categoriaNome').value.trim(),
         slug: document.getElementById('categoriaSlug').value.trim() || slugify(document.getElementById('categoriaNome').value),
         description: document.getElementById('categoriaDescricao').value.trim() || null,
         icon: document.getElementById('categoriaIcone').value.trim() || null,
+        image_url: imageUrl,
         sort_order: parseInt(document.getElementById('categoriaOrdem').value) || 0,
         active: document.getElementById('categoriaAtiva').value === 'true',
         featured: document.getElementById('categoriaFeatured').value === 'true'
@@ -124,6 +154,22 @@ export async function salvarCategoria(e) {
         const { data, error } = await supabase.from('categories').insert(dados).select().single()
         if (error) { toast('Erro: ' + error.message, 'erro'); return }
         finalCatId = data.id
+    }
+
+    if (imagemUpload) {
+        const ext = imagemUpload.name.split('.').pop() || 'jpg'
+        const fileName = `categories/${finalCatId}/${Date.now()}.${ext}`
+        const { error: upErr } = await supabase.storage.from('products').upload(fileName, imagemUpload, { upsert: true })
+        if (upErr) {
+            toast('Categoria salva, mas houve erro ao enviar a imagem: ' + upErr.message, 'erro')
+        } else {
+            const { data: urlData } = supabase.storage.from('products').getPublicUrl(fileName)
+            imageUrl = urlData.publicUrl
+            const { error: imgErr } = await supabase.from('categories').update({ image_url: imageUrl }).eq('id', finalCatId)
+            if (imgErr) {
+                toast('Imagem enviada, mas houve erro ao vincular na categoria: ' + imgErr.message, 'erro')
+            }
+        }
     }
 
     

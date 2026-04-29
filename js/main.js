@@ -5,6 +5,7 @@ import { initWhatsapp } from "./whatsapp.js"
 import { carregarProdutos, renderizarCardsProdutos, carregarCategorias } from "./products.js"
 import { initCarrinhoSidebar, initBotoesAdicionarCarrinho, atualizarBadgeCarrinho } from "./cart.js"
 import { initAuthModal, verificarSessao, initAuthListener } from "./auth.js"
+import { supabase } from "./supabaseClient.js"
 
 
 
@@ -67,6 +68,24 @@ function getCurrentPageKey() {
     if (path === '/html/produto.html' || path === '/produto.html' || path.startsWith('/produtos/')) return 'produtos'
 
     return ''
+}
+
+async function initHeroHomeImage() {
+    const heroImg = document.querySelector('.hero-img')
+    if (!heroImg) return
+
+    try {
+        const { data } = supabase.storage.from('products').getPublicUrl('site/home-hero.json')
+        const res = await fetch(`${data.publicUrl}?t=${Date.now()}`, { cache: 'no-store' })
+        if (!res.ok) return
+
+        const config = await res.json()
+        if (config?.image_url) {
+            heroImg.src = config.image_url
+        }
+    } catch (err) {
+        console.warn('Imagem configurada do hero nao encontrada:', err)
+    }
 }
 
 
@@ -398,6 +417,7 @@ function initFiltros() {
 
 document.addEventListener("DOMContentLoaded", async () => {
     await carregarComponentes()
+    initHeroHomeImage()
 
     
     initMenu()

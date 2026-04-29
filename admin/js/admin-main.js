@@ -3,7 +3,7 @@ import { verificarAuth } from './admin-auth.js'
 import { initNavegacao } from './admin-nav.js'
 import { carregarDashboard, carregarPedidosPorPeriodo } from './admin-dashboard.js'
 import { carregarProdutos, abrirModalProduto, addVarianteRow, salvarProduto, excluirProduto, excluirImagem, carregarSpecsProduto } from './admin-produtos.js'
-import { carregarCategorias, abrirModalCategoria, addCategoriaSpecRow, salvarCategoria, excluirCategoria } from './admin-categorias.js'
+import { carregarCategorias, abrirModalCategoria, addCategoriaSpecRow, salvarCategoria, excluirCategoria, atualizarPreviewImagemCategoria } from './admin-categorias.js'
 import { carregarPedidos, verPedido, confirmarPagamento, cancelarPedido, mudarStatus } from './admin-pedidos.js'
 import { carregarUsuarios, verUsuario, verPedidoDeUsuario } from './admin-usuarios.js'
 import { carregarEstoque, registrarMovimentacao } from './admin-estoque.js'
@@ -13,6 +13,7 @@ import { carregarAvaliacoes, aprovarReview, abrirResponderReview, enviarResposta
 import { carregarFiscal } from './admin-fiscal.js'
 import { carregarAdmins, criarAdmin, desativarAdmin, ativarAdmin, mudarCargoAdmin } from './admin-administracao.js'
 import { gerarPreviewProduto } from './admin-preview.js'
+import { initHeroHomeAdmin } from './admin-hero.js'
 
 
 function initEventListeners() {
@@ -80,6 +81,7 @@ function initEventListeners() {
 
     
     document.getElementById('dashPeriodo').addEventListener('change', carregarPedidosPorPeriodo)
+    initHeroHomeAdmin()
 
     
     document.getElementById('btnAddCategoriaSpec').addEventListener('click', () => addCategoriaSpecRow())
@@ -88,6 +90,28 @@ function initEventListeners() {
     document.getElementById('categoriaIcone').addEventListener('input', (e) => {
         const val = e.target.value.trim()
         document.getElementById('categoriaIconePreview').innerHTML = val ? `<i class="${val}"></i>` : ''
+    })
+
+    document.getElementById('categoriaImagemUrl').addEventListener('input', (e) => {
+        atualizarPreviewImagemCategoria(e.target.value.trim())
+    })
+
+    document.getElementById('inputImagemCategoria').addEventListener('change', (e) => {
+        const file = e.target.files[0]
+        if (!file) {
+            atualizarPreviewImagemCategoria(document.getElementById('categoriaImagemUrl').value.trim())
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onload = (ev) => atualizarPreviewImagemCategoria(ev.target.result)
+        reader.readAsDataURL(file)
+    })
+
+    document.getElementById('btnRemoverImagemCategoria').addEventListener('click', () => {
+        document.getElementById('categoriaImagemUrl').value = ''
+        document.getElementById('inputImagemCategoria').value = ''
+        atualizarPreviewImagemCategoria('')
     })
 
     
