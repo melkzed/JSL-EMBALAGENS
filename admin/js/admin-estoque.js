@@ -104,7 +104,19 @@ export async function registrarMovimentacao(e) {
     const variante = state.variantesCache.find(v => v.id === varianteId)
     if (variante) {
         const novoEstoque = (variante.stock || 0) + quantity
-        await supabase.from('product_variants').update({ stock: novoEstoque }).eq('id', varianteId)
+        const { error: errStock } = await supabase.rpc('admin_upsert_product_variant', {
+            p_id: varianteId,
+            p_product_id: variante.product_id,
+            p_size_label: variante.size_label,
+            p_sku: variante.sku || null,
+            p_price: variante.price,
+            p_compare_at_price: variante.compare_at_price || null,
+            p_stock: novoEstoque
+        })
+        if (errStock) {
+            toast('Erro ao atualizar estoque: ' + errStock.message, 'erro')
+            return
+        }
     }
 
     toast('Movimentação registrada!')

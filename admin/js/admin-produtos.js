@@ -347,9 +347,7 @@ async function _salvarProdutoInterno() {
     
     if (produtoId) {
         const { data: existentes } = await supabase
-            .from('product_variants')
-            .select('id')
-            .eq('product_id', finalId)
+            .rpc('admin_list_variant_ids', { p_product_id: finalId })
 
         for (const ex of (existentes || [])) {
             if (!variantesIds.includes(ex.id)) {
