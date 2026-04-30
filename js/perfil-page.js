@@ -1441,4 +1441,3 @@ whenDomReady(async () => {
         window.location.href = '/'
     })
 })
-})
