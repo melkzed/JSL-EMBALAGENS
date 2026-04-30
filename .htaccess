@@ -1,114 +1,79 @@
-# ============================================================
-#  JSL EMBALAGENS — .htaccess SEO & URL Amigável
-# ============================================================
+# JSL EMBALAGENS
 
 Options -Indexes
 RewriteEngine On
 
-# ----- HTTPS obrigatório -----
+# HTTPS obrigatorio
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
-# ----- WWW canônico (sempre com www) -----
+# WWW canonico
 RewriteCond %{HTTP_HOST} ^jslembalagens\.com\.br$ [NC]
 RewriteRule ^ https://www.jslembalagens.com.br%{REQUEST_URI} [R=301,L]
 
-# ----- Remover .html das URLs -----
-RewriteCond %{THE_REQUEST} /([^.]+)\.html [NC]
-RewriteRule ^ /%1 [R=301,L]
+# Nao reescreve arquivos e pastas que existem de verdade
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
 
-# ----- HOME -----
-RewriteRule ^$ /index.html [L]
+# Rotas limpas
+RewriteRule ^checkout-retorno$ /checkout-retorno.html [L]
+RewriteRule ^produtos/([a-zA-Z0-9_-]+)$ /html/produto.html?produto=$1 [QSA,L]
+RewriteRule ^produtos$ /html/produtos.html [L]
+RewriteRule ^sobre$ /html/sobre.html [L]
+RewriteRule ^contato$ /html/contato.html [L]
+RewriteRule ^politicas$ /html/politicas.html [L]
+RewriteRule ^carrinho$ /html/carrinho.html [L]
+RewriteRule ^checkout$ /html/checkout.html [L]
+RewriteRule ^perfil$ /html/perfil.html [L]
+RewriteRule ^confirmar-email$ /html/confirmar-email.html [L]
 
-# ----- CHECKOUT RETORNO (deve vir antes das rotas genéricas) -----
-RewriteRule ^checkout-retorno/?$ /checkout-retorno.html [QSA,L]
+# Bloquear pastas internas
+RewriteRule ^(\.git|tmp|tools|supabase|node_modules)(/.*)?$ - [F,L]
 
-# ----- PRODUTOS (catálogo) -----
-RewriteRule ^produtos/?$ /html/produtos.html [QSA,L]
-
-# ----- PRODUTO individual por slug (caminho limpo) -----
-# jslembalagens.com.br/produtos/caixa-de-papelao
-RewriteRule ^produtos/([a-zA-Z0-9À-ÿ_-]+)/?$ /html/produto.html?produto=$1 [QSA,L]
-
-# ----- SOBRE -----
-RewriteRule ^sobre/?$ /html/sobre.html [QSA,L]
-
-# ----- CONTATO -----
-RewriteRule ^contato/?$ /html/contato.html [QSA,L]
-
-# ----- POLITICAS -----
-RewriteRule ^politicas/?$ /html/politicas.html [QSA,L]
-
-# ----- CARRINHO -----
-RewriteRule ^carrinho/?$ /html/carrinho.html [QSA,L]
-
-# ----- CHECKOUT -----
-RewriteRule ^checkout/?$ /html/checkout.html [QSA,L]
-
-# ----- PERFIL -----
-RewriteRule ^perfil/?$ /html/perfil.html [QSA,L]
-
-# ----- CONFIRMAÇÃO EMAIL -----
-RewriteRule ^confirmar-email/?$ /html/confirmar-email.html [QSA,L]
-
-# ----- Proteger artefatos internos sem bloquear assets publicos -----
-RewriteRule ^(\.git|\.vscode|docs|documentos|pagbank-evidencias|pagbank-evidencias-[0-9]+|tmp|tools|supabase|migrations|node_modules)(/.*)?$ - [F,L]
-RewriteRule ^(\.gitignore|\.upload-ignore\.txt|sitemap-generator\.js)$ - [F,L]
-
-# ----- Esconder arquivos sensíveis -----
-<FilesMatch "\.(env|json|md|txt|git|log|sql|bak|zip|tar)$">
+# Arquivos sensiveis
+<FilesMatch "\.(env|md|git|log|sql|bak|zip|tar)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
 
-# ----- Exceção: robots.txt e sitemap -----
 <Files "robots.txt">
     Order Allow,Deny
     Allow from all
 </Files>
+
 <Files "sitemap.xml">
     Order Allow,Deny
     Allow from all
 </Files>
 
-# ----- Cache para assets estáticos (performance = ranking) -----
+AddType image/x-icon .ico
+AddType image/svg+xml .svg
+
 <IfModule mod_expires.c>
     ExpiresActive On
-    ExpiresByType image/svg+xml     "access plus 1 year"
-    ExpiresByType image/jpeg        "access plus 1 year"
-    ExpiresByType image/png         "access plus 1 year"
-    ExpiresByType image/webp        "access plus 1 year"
-    ExpiresByType image/x-icon      "access plus 1 year"
-    ExpiresByType image/vnd.microsoft.icon "access plus 1 year"
-    ExpiresByType text/css          "access plus 0 seconds"
+    ExpiresByType image/jpeg             "access plus 1 year"
+    ExpiresByType image/png              "access plus 1 year"
+    ExpiresByType image/webp             "access plus 1 year"
+    ExpiresByType image/svg+xml         "access plus 1 year"
+    ExpiresByType image/x-icon          "access plus 1 year"
+    ExpiresByType text/css              "access plus 0 seconds"
     ExpiresByType application/javascript "access plus 0 seconds"
-    ExpiresByType text/html         "access plus 0 seconds"
 </IfModule>
 
-# ----- Compressão GZIP -----
 <IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript image/svg+xml
 </IfModule>
 
-# ----- Headers de segurança -----
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
-    Header always set X-Frame-Options "DENY"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
-    Header always set Permissions-Policy "geolocation=(), microphone=()"
 
     <FilesMatch "\.(html?)$">
         Header always set Cache-Control "no-cache, no-store, must-revalidate"
-        Header always set Pragma "no-cache"
-        Header always set Expires "0"
     </FilesMatch>
 
-    <FilesMatch "\.(css|js|mjs)$">
+    <FilesMatch "\.(css|js)$">
         Header always set Cache-Control "no-cache, no-store, must-revalidate"
-        Header always set Pragma "no-cache"
-        Header always set Expires "0"
     </FilesMatch>
 </IfModule>
-
-# ----- Página 404 personalizada -----
-ErrorDocument 404 /index.html

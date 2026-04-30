@@ -1,111 +1,150 @@
 import { supabase, toast, openModal, closeModal, esc } from './admin-state.js'
 
-const HERO_CONFIG_PATH = 'site/home-hero.json'
-const HERO_FALLBACK_IMAGE = '../img/imagemExemplo.jpg'
+const IMAGE_SETTINGS = {
+    heroHome: {
+        configPath: 'site/home-hero.json',
+        fallbackImage: '../img/imagemExemplo.jpg',
+        folder: 'site/hero',
+        modalId: 'modalHeroHome',
+        formId: 'formHeroHome',
+        openButtonId: 'btnEditarHeroHome',
+        urlInputId: 'heroHomeImagemUrl',
+        fileInputId: 'inputHeroHomeImagem',
+        previewId: 'heroHomeImagemPreview',
+        removeButtonId: 'btnRemoverHeroHome',
+        saveButtonId: 'btnSalvarHeroHome',
+        defaultToast: 'Imagem inicial voltou para o padrao.',
+        successToast: 'Imagem inicial atualizada!',
+        globalOpenName: 'adminAbrirHeroHome',
+        boundDataset: 'heroBound'
+    },
+    sobre: {
+        configPath: 'site/about-image.json',
+        fallbackImage: '../img/imagemExemplo.jpg',
+        folder: 'site/about',
+        modalId: 'modalSobreImagem',
+        formId: 'formSobreImagem',
+        openButtonId: 'btnEditarSobreImagem',
+        urlInputId: 'sobreImagemUrl',
+        fileInputId: 'inputSobreImagem',
+        previewId: 'sobreImagemPreview',
+        removeButtonId: 'btnRemoverSobreImagem',
+        saveButtonId: 'btnSalvarSobreImagem',
+        defaultToast: 'Imagem da pagina Sobre voltou para o padrao.',
+        successToast: 'Imagem da pagina Sobre atualizada!',
+        globalOpenName: 'adminAbrirSobreImagem',
+        boundDataset: 'imageBound'
+    }
+}
 
-function getHeroConfigUrl() {
-    const { data } = supabase.storage.from('products').getPublicUrl(HERO_CONFIG_PATH)
+function getConfigUrl(setting) {
+    const { data } = supabase.storage.from('products').getPublicUrl(setting.configPath)
     return data.publicUrl
 }
 
-async function carregarConfigHero() {
+async function carregarConfigImagem(setting) {
     try {
-        const res = await fetch(`${getHeroConfigUrl()}?t=${Date.now()}`, { cache: 'no-store' })
+        const res = await fetch(`${getConfigUrl(setting)}?t=${Date.now()}`, { cache: 'no-store' })
         if (!res.ok) return { image_url: '' }
         return await res.json()
     } catch (err) {
-        console.warn('Configuracao do hero nao encontrada:', err)
+        console.warn('Configuracao de imagem nao encontrada:', err)
         return { image_url: '' }
     }
 }
 
-function atualizarPreviewHero(url) {
-    const preview = document.getElementById('heroHomeImagemPreview')
+function atualizarPreviewImagem(setting, url) {
+    const preview = document.getElementById(setting.previewId)
     if (!preview) return
 
-    const src = url || HERO_FALLBACK_IMAGE
+    const src = url || setting.fallbackImage
     const label = url ? 'Imagem configurada' : 'Imagem padrao atual'
     preview.innerHTML = `
-        <img src="${esc(src)}" alt="Preview da imagem inicial">
+        <img src="${esc(src)}" alt="Preview da imagem">
         <small>${label}</small>
     `
 }
 
-export async function abrirModalHeroHome() {
-    document.getElementById('heroHomeImagemUrl').value = ''
-    document.getElementById('inputHeroHomeImagem').value = ''
-    openModal('modalHeroHome')
-    atualizarPreviewHero('')
+async function abrirModalImagem(setting) {
+    document.getElementById(setting.urlInputId).value = ''
+    document.getElementById(setting.fileInputId).value = ''
+    openModal(setting.modalId)
+    atualizarPreviewImagem(setting, '')
 
-    const config = await carregarConfigHero()
+    const config = await carregarConfigImagem(setting)
     const imageUrl = config?.image_url || ''
-    document.getElementById('heroHomeImagemUrl').value = imageUrl
-    atualizarPreviewHero(imageUrl)
+    document.getElementById(setting.urlInputId).value = imageUrl
+    atualizarPreviewImagem(setting, imageUrl)
 }
 
-export function initHeroHomeAdmin() {
-    const btnEditar = document.getElementById('btnEditarHeroHome')
-    const inputUrl = document.getElementById('heroHomeImagemUrl')
-    const inputFile = document.getElementById('inputHeroHomeImagem')
-    const btnRemover = document.getElementById('btnRemoverHeroHome')
-    const form = document.getElementById('formHeroHome')
+function initImagemAdmin(setting) {
+    const btnEditar = document.getElementById(setting.openButtonId)
+    const inputUrl = document.getElementById(setting.urlInputId)
+    const inputFile = document.getElementById(setting.fileInputId)
+    const btnRemover = document.getElementById(setting.removeButtonId)
+    const form = document.getElementById(setting.formId)
 
     if (!btnEditar || !inputUrl || !inputFile || !btnRemover || !form) {
-        console.warn('Controles da imagem inicial nao encontrados no painel.')
+        console.warn('Controles de imagem nao encontrados no painel:', setting.openButtonId)
         return
     }
 
-    window.adminAbrirHeroHome = abrirModalHeroHome
-    btnEditar.dataset.heroBound = 'true'
-    btnEditar.addEventListener('click', abrirModalHeroHome)
+    window[setting.globalOpenName] = () => abrirModalImagem(setting)
+    btnEditar.dataset[setting.boundDataset] = 'true'
+    btnEditar.addEventListener('click', () => abrirModalImagem(setting))
 
     inputUrl.addEventListener('input', (e) => {
-        atualizarPreviewHero(e.target.value.trim())
+        atualizarPreviewImagem(setting, e.target.value.trim())
     })
 
     inputFile.addEventListener('change', (e) => {
         const file = e.target.files[0]
         if (!file) {
-            atualizarPreviewHero(inputUrl.value.trim())
+            atualizarPreviewImagem(setting, inputUrl.value.trim())
             return
         }
 
         const reader = new FileReader()
-        reader.onload = (ev) => atualizarPreviewHero(ev.target.result)
+        reader.onload = (ev) => atualizarPreviewImagem(setting, ev.target.result)
         reader.readAsDataURL(file)
     })
 
     btnRemover.addEventListener('click', async () => {
         inputUrl.value = ''
         inputFile.value = ''
-        atualizarPreviewHero('')
+        atualizarPreviewImagem(setting, '')
         try {
-            await salvarConfigHero('')
-            toast('Imagem inicial voltou para o padrao.')
-            closeModal('modalHeroHome')
+            await salvarConfigImagem(setting, '')
+            toast(setting.defaultToast)
+            closeModal(setting.modalId)
         } catch (err) {
-            console.error('Erro ao remover imagem inicial:', err)
+            console.error('Erro ao remover imagem:', err)
         }
     })
 
-    form.addEventListener('submit', salvarHeroHome)
+    form.addEventListener('submit', (event) => salvarImagem(event, setting))
 }
 
-async function salvarHeroHome(e) {
+export function initHeroHomeAdmin() {
+    initImagemAdmin(IMAGE_SETTINGS.heroHome)
+    initImagemAdmin(IMAGE_SETTINGS.sobre)
+}
+
+async function salvarImagem(e, setting) {
     e.preventDefault()
 
-    const btnSalvar = document.getElementById('btnSalvarHeroHome')
+    const btnSalvar = document.getElementById(setting.saveButtonId)
     const btnTextoOriginal = btnSalvar.innerHTML
     btnSalvar.disabled = true
     btnSalvar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...'
 
     try {
-        const file = document.getElementById('inputHeroHomeImagem').files[0]
-        let imageUrl = document.getElementById('heroHomeImagemUrl').value.trim()
+        const file = document.getElementById(setting.fileInputId).files[0]
+        let imageUrl = document.getElementById(setting.urlInputId).value.trim()
 
         if (file) {
             const ext = file.name.split('.').pop() || 'jpg'
-            const fileName = `site/hero/${Date.now()}.${ext}`
+            const fileName = `${setting.folder}/${Date.now()}.${ext}`
             const { error: uploadError } = await supabase.storage.from('products').upload(fileName, file, { upsert: true })
             if (uploadError) {
                 toast('Erro ao enviar imagem: ' + uploadError.message, 'erro')
@@ -116,26 +155,26 @@ async function salvarHeroHome(e) {
             imageUrl = urlData.publicUrl
         }
 
-        await salvarConfigHero(imageUrl)
-        toast('Imagem inicial atualizada!')
-        closeModal('modalHeroHome')
+        await salvarConfigImagem(setting, imageUrl)
+        toast(setting.successToast)
+        closeModal(setting.modalId)
     } catch (err) {
-        console.error('Erro ao salvar imagem inicial:', err)
-        toast('Erro ao salvar imagem inicial: ' + (err.message || err), 'erro')
+        console.error('Erro ao salvar imagem:', err)
+        toast('Erro ao salvar imagem: ' + (err.message || err), 'erro')
     } finally {
         btnSalvar.disabled = false
         btnSalvar.innerHTML = btnTextoOriginal
     }
 }
 
-async function salvarConfigHero(imageUrl) {
+async function salvarConfigImagem(setting, imageUrl) {
     const config = {
         image_url: imageUrl || '',
         updated_at: new Date().toISOString()
     }
 
     const blob = new Blob([JSON.stringify(config)], { type: 'application/json' })
-    const { error } = await supabase.storage.from('products').upload(HERO_CONFIG_PATH, blob, {
+    const { error } = await supabase.storage.from('products').upload(setting.configPath, blob, {
         contentType: 'application/json',
         upsert: true
     })

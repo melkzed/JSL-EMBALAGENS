@@ -102,9 +102,14 @@
             <section class="admin-section active" id="secDashboard">
                 <div class="admin-section-header">
                     <h2><i class="fa-solid fa-gauge-high"></i> Dashboard</h2>
-                    <button class="admin-btn primary" id="btnEditarHeroHome">
-                        <i class="fa-solid fa-image"></i> Alterar imagem inicial
-                    </button>
+                    <div class="admin-header-actions">
+                        <button class="admin-btn primary" id="btnEditarHeroHome" onclick="if (!this.dataset.heroBound) window.adminAbrirHeroHome?.()">
+                            <i class="fa-solid fa-image"></i> Imagem principal
+                        </button>
+                        <button class="admin-btn secondary" id="btnEditarSobreImagem" onclick="if (!this.dataset.imageBound) window.adminAbrirSobreImagem?.()">
+                            <i class="fa-solid fa-building"></i> Imagem Sobre
+                        </button>
+                    </div>
                 </div>
 
                 <div class="admin-stats-grid">
@@ -175,6 +180,36 @@
                                 </button>
                                 <button type="button" class="admin-btn secondary" data-close="modalHeroHome">Cancelar</button>
                                 <button type="submit" class="admin-btn primary" id="btnSalvarHeroHome">
+                                    <i class="fa-solid fa-check"></i> Salvar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="admin-modal-overlay" id="modalSobreImagem" style="display:none">
+                    <div class="admin-modal">
+                        <div class="admin-modal-header">
+                            <h3>Imagem da pagina Sobre</h3>
+                            <button class="admin-modal-close" data-close="modalSobreImagem"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form id="formSobreImagem" class="admin-modal-body">
+                            <div class="admin-form-group">
+                                <label for="sobreImagemUrl">URL da imagem</label>
+                                <input type="url" id="sobreImagemUrl" class="admin-input" placeholder="https://...">
+                                <small style="color:#6b7280">Esta imagem aparece na secao Quem somos da pagina Sobre.</small>
+                            </div>
+                            <div class="admin-form-group">
+                                <label for="inputSobreImagem">Enviar nova imagem</label>
+                                <input type="file" id="inputSobreImagem" class="admin-input" accept="image/*">
+                                <div id="sobreImagemPreview" class="admin-hero-image-preview"></div>
+                            </div>
+                            <div class="admin-modal-footer">
+                                <button type="button" class="admin-btn secondary" id="btnRemoverSobreImagem">
+                                    <i class="fa-solid fa-rotate-left"></i> Usar imagem padrao
+                                </button>
+                                <button type="button" class="admin-btn secondary" data-close="modalSobreImagem">Cancelar</button>
+                                <button type="submit" class="admin-btn primary" id="btnSalvarSobreImagem">
                                     <i class="fa-solid fa-check"></i> Salvar
                                 </button>
                             </div>

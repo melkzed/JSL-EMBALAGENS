@@ -122,7 +122,7 @@ async function renderizarPaginaCarrinho() {
     
     const btnFinalizar = document.getElementById('btnFinalizarPedido')
     btnFinalizar?.addEventListener('click', () => {
-        window.location.href = './checkout.html'
+        window.location.href = '/checkout'
     })
 }
 

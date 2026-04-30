@@ -1427,6 +1427,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const confirmou = await confirmarAcao('Tem certeza que deseja sair da sua conta?')
         if (!confirmou) return
         await logout()
-        window.location.href = '../index.html'
+        window.location.href = '/'
     })
 })

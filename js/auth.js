@@ -595,8 +595,7 @@ export function initAuthModal() {
     document.getElementById('btnLogout').addEventListener('click', async () => {
         await logout()
         fecharModal()
-        const homeUrl = inHtml ? '../index.html' : './index.html'
-        window.location.href = homeUrl
+        window.location.href = '/'
     })
 
     

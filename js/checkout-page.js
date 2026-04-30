@@ -133,7 +133,7 @@ async function iniciarCheckout() {
 
     itensCarrinho = await carregarItensCarrinho()
     if (itensCarrinho.length === 0) {
-        window.location.href = './carrinho.html'
+        window.location.href = '/carrinho'
         return
     }
 
@@ -168,13 +168,13 @@ async function retomarPagamento(orderId) {
 
     if (error || !pedido) {
         mostrarToast('Pedido não encontrado.', 'erro')
-        window.location.href = './perfil.html?tab=pedidos'
+        window.location.href = '/perfil?tab=pedidos'
         return
     }
 
     if (pedido.status !== 'pending') {
         mostrarToast('Este pedido já foi processado.', 'erro')
-        window.location.href = './perfil.html?tab=pedidos'
+        window.location.href = '/perfil?tab=pedidos'
         return
     }
 
@@ -215,7 +215,7 @@ async function retomarPagamento(orderId) {
         const profile = getProfile()
         if (!profile?.cpf) {
             mostrarToast('Cadastre seu CPF no perfil para continuar o pagamento.', 'erro')
-            window.location.href = './perfil.html?tab=dados'
+            window.location.href = '/perfil?tab=dados'
             return
         }
 

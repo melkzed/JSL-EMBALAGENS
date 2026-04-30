@@ -88,6 +88,24 @@ async function initHeroHomeImage() {
     }
 }
 
+async function initSobrePageImage() {
+    const sobreImg = document.querySelector('.sobre-main-img')
+    if (!sobreImg) return
+
+    try {
+        const { data } = supabase.storage.from('products').getPublicUrl('site/about-image.json')
+        const res = await fetch(`${data.publicUrl}?t=${Date.now()}`, { cache: 'no-store' })
+        if (!res.ok) return
+
+        const config = await res.json()
+        if (config?.image_url) {
+            sobreImg.src = config.image_url
+        }
+    } catch (err) {
+        console.warn('Imagem configurada da pagina Sobre nao encontrada:', err)
+    }
+}
+
 
 async function carregarComponentes() {
     const basePath = getBasePath()
@@ -418,6 +436,7 @@ function initFiltros() {
 document.addEventListener("DOMContentLoaded", async () => {
     await carregarComponentes()
     initHeroHomeImage()
+    initSobrePageImage()
 
     
     initMenu()
