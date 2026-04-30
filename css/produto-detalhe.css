@@ -898,6 +898,219 @@
 }
 
 
+/* Seções de Avaliações e Semelhantes */
+.pd-avaliacoes-section,
+.pd-semelhantes-section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-lighter);
+}
+
+.pd-avaliacoes-section h2,
+.pd-semelhantes-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pd-avaliacoes-section h2 i,
+.pd-semelhantes-section h2 i {
+    color: var(--primary-blue);
+}
+
+.pd-semelhantes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1.5rem;
+}
+
+.pd-semelhantes-grid .produto-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-lighter);
+    border-radius: 12px;
+    padding: 1rem;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pd-semelhantes-grid .produto-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.pd-semelhantes-grid .produto-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.pd-semelhantes-grid .produto-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+}
+
+.pd-semelhantes-grid .produto-card .preco {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+}
+
+.pd-semelhantes-grid .produto-card .preco small {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-gray-lighter);
+}
+
+
+/* Formulário de Avaliação */
+.pd-form-avaliacao {
+    background: var(--bg-gray-light);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.pd-form-avaliacao h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+}
+
+.pd-estrelas-input {
+    display: flex;
+    gap: 0.35rem;
+    font-size: 1.5rem;
+    color: #d0d0d0;
+    cursor: pointer;
+    margin-bottom: 1rem;
+}
+
+.pd-estrelas-input i {
+    transition: color 0.2s;
+}
+
+.pd-estrelas-input i.ativa {
+    color: #f5a623;
+}
+
+.pd-estrelas-input i:hover,
+.pd-estrelas-input i:hover ~ i {
+    color: #f5a623;
+}
+
+.pd-form-avaliacao textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1.5px solid var(--border-gray);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    resize: vertical;
+    outline: none;
+    font-family: inherit;
+    min-height: 100px;
+    transition: border-color 0.2s;
+    margin-bottom: 1rem;
+    background: var(--bg-white);
+}
+
+.pd-form-avaliacao textarea:focus {
+    border-color: var(--primary-blue);
+}
+
+.pd-sem-avaliacoes {
+    color: var(--text-gray-lighter);
+    font-style: italic;
+    padding: 1rem;
+    text-align: center;
+}
+
+
+/* Estoque */
+.pd-estoque {
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.pd-estoque i {
+    font-size: 0.85rem;
+}
+
+.pd-estoque.em-estoque {
+    color: #16a34a;
+}
+
+.pd-estoque.estoque-baixo {
+    color: #f59e0b;
+}
+
+.pd-estoque.sem-estoque {
+    color: #dc2626;
+}
+
+
+/* Tabela de Especificações */
+.pd-tabela {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-lighter);
+}
+
+.pd-tabela-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-lighter);
+}
+
+.pd-tabela-row:last-child {
+    border-bottom: none;
+}
+
+.pd-tabela-label {
+    font-weight: 600;
+    color: var(--text-gray);
+}
+
+.pd-tabela-valor {
+    color: var(--text-dark);
+}
+
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .pd-topo {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .pd-img-principal {
+        min-height: 300px;
+    }
+    
+    .pd-img-principal img {
+        height: 280px;
+    }
+    
+    .pd-semelhantes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+
 
 .pd-notificacao-flutuante {
     position: fixed;

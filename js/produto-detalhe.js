@@ -50,9 +50,20 @@ function getProdutoHref(slugOrId) {
     return `./produto.html?produto=${slug}`
 }
 
+function getProdutoSlugFromPath() {
+    const path = decodeURIComponent(window.location.pathname).replace(/\\/g, '/').replace(/\/+$/, '')
+    const match = path.match(/^\/produtos\/(.+)$/)
+    return match ? match[1] : null
+}
+
 
 
 async function carregarProduto(id) {
+    if (!id) {
+        console.error("ID não fornecido para carregarProduto")
+        return null
+    }
+    
     const { data, error } = await supabase
         .from("products")
         .select(`
@@ -62,10 +73,16 @@ async function carregarProduto(id) {
             categories (*)
         `)
         .eq("id", id)
-        .single()
+        .eq("active", true)
+        .maybeSingle()
 
     if (error) {
         console.error("Erro ao buscar produto:", error)
+        return null
+    }
+
+    if (!data) {
+        console.warn("Produto não encontrado com ID:", id)
         return null
     }
 
@@ -94,6 +111,15 @@ async function carregarProduto(id) {
 }
 
 async function carregarProdutoPorSlug(slug) {
+    if (!slug) {
+        console.error("Slug não fornecido para carregarProdutoPorSlug")
+        return null
+    }
+    
+    // Decodificar o slug se estiver codificado
+    const slugDecoded = decodeURIComponent(slug)
+    
+    // maybeSingle() retorna null (sem erro) quando não encontra — evita PGRST116
     let { data, error } = await supabase
         .from("products")
         .select(`
@@ -102,10 +128,16 @@ async function carregarProdutoPorSlug(slug) {
             product_images (*),
             categories (*)
         `)
-        .eq("slug", slug)
-        .single()
+        .eq("slug", slugDecoded)
+        .eq("active", true)
+        .maybeSingle()
 
-    if (error || !data) {
+    if (error) {
+        console.warn("Erro ao buscar produto por slug:", error.message)
+    }
+
+    // Fallback: tentar buscar por ID se não encontrou por slug
+    if (!data) {
         const fallback = await supabase
             .from("products")
             .select(`
@@ -114,8 +146,9 @@ async function carregarProdutoPorSlug(slug) {
                 product_images (*),
                 categories (*)
             `)
-            .eq("id", slug)
-            .single()
+            .eq("id", slugDecoded)
+            .eq("active", true)
+            .maybeSingle()
 
         data = fallback.data
         error = fallback.error
@@ -1034,32 +1067,59 @@ function limparUploadImagens() {
     atualizarPreviewImagens()
 }
 
+// Guard para garantir que o DOM está pronto antes de executar
+// Resolve o problema de DOMContentLoaded disparando antes do módulo ES carregar
+function whenDomReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => callback(), { once: true })
+    } else {
+        callback()
+    }
+}
 
 
-document.addEventListener('DOMContentLoaded', async () => {
+
+whenDomReady(async () => {
     const params = new URLSearchParams(window.location.search)
-    const produtoId = params.get('id')
-    const produtoSlug = params.get('produto')
+    const produtoIdParam = params.get('id')
+    const produtoSlugParam = params.get('produto') || getProdutoSlugFromPath()
 
     const loading = document.getElementById('produtoLoading')
     const erro = document.getElementById('produtoErro')
     const detalhe = document.getElementById('produtoDetalhe')
 
-    if (!produtoId && !produtoSlug) {
+    if (!produtoIdParam && !produtoSlugParam) {
         if (loading) loading.style.display = 'none'
         if (erro) erro.style.display = 'flex'
         return
     }
 
-    const produto = produtoSlug
-        ? await carregarProdutoPorSlug(produtoSlug)
-        : await carregarProduto(produtoId)
+    // Buscar produto por slug ou ID
+    let produto = null
+    let produtoId = produtoIdParam
+    
+    if (produtoSlugParam) {
+        produto = await carregarProdutoPorSlug(produtoSlugParam)
+        // Se encontrado por slug, usar o ID do produto retornado
+        if (produto && produto.id) {
+            produtoId = produto.id
+        }
+    } else if (produtoIdParam) {
+        produto = await carregarProduto(produtoIdParam)
+    }
 
     if (!produto) {
         if (loading) loading.style.display = 'none'
         if (erro) erro.style.display = 'flex'
         return
     }
+
+    // Garantir que produtoId seja válido
+    if (!produtoId) {
+        produtoId = produto.id
+    }
+    
+    console.log('Produto carregado:', produto.name, 'ID:', produtoId)
 
     
     renderizarProduto(produto)

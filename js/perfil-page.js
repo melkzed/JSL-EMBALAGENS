@@ -1365,7 +1365,18 @@ function initTabs() {
 
 
 
-document.addEventListener('DOMContentLoaded', async () => {
+// Guard para garantir que o DOM está pronto antes de executar
+function whenDomReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => callback(), { once: true })
+    } else {
+        callback()
+    }
+}
+
+
+
+whenDomReady(async () => {
     
     await new Promise(resolve => setTimeout(resolve, 300))
 
@@ -1429,4 +1440,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         await logout()
         window.location.href = '/'
     })
+})
 })

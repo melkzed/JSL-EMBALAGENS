@@ -247,6 +247,12 @@ export async function salvarProduto(e) {
 async function _salvarProdutoInterno() {
     const produtoId = document.getElementById('produtoId').value || null
     const nomeRaw = document.getElementById('produtoNome').value.trim()
+    const slugNormalizado = slugify(document.getElementById('produtoSlug').value || nomeRaw)
+
+    if (!slugNormalizado) {
+        toast('Informe um nome ou slug valido para o produto.', 'erro')
+        return
+    }
 
     
     const rows = document.querySelectorAll('#variantesContainer .admin-variant-row')
@@ -266,7 +272,7 @@ async function _salvarProdutoInterno() {
 
     const dados = {
         name: toTitleCase(nomeRaw),
-        slug: document.getElementById('produtoSlug').value.trim() || slugify(document.getElementById('produtoNome').value),
+        slug: slugNormalizado,
         description: document.getElementById('produtoDescricao').value.trim(),
         category_id: document.getElementById('produtoCategoria').value || null,
         featured: document.getElementById('produtoFeatured').value === 'true',

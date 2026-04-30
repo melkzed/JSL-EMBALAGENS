@@ -37,7 +37,18 @@ const WHATSAPP_NUMERO = '5583996389725'
 
 
 
-document.addEventListener('DOMContentLoaded', async () => {
+// Guard para garantir que o DOM está pronto antes de executar
+function whenDomReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => callback(), { once: true })
+    } else {
+        callback()
+    }
+}
+
+
+
+whenDomReady(async () => {
     await new Promise(resolve => setTimeout(resolve, 400))
 
     const logado = await verificarSessao()

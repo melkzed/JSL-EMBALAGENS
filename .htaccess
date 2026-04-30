@@ -18,7 +18,7 @@ RewriteRule ^ - [L]
 
 # Rotas limpas
 RewriteRule ^checkout-retorno$ /checkout-retorno.html [L]
-RewriteRule ^produtos/([a-zA-Z0-9_-]+)$ /html/produto.html?produto=$1 [QSA,L]
+RewriteRule ^produtos/(.+)$ /html/produto.html?produto=$1 [B,QSA,L]
 RewriteRule ^produtos$ /html/produtos.html [L]
 RewriteRule ^sobre$ /html/sobre.html [L]
 RewriteRule ^contato$ /html/contato.html [L]

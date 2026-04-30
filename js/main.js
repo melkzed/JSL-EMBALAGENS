@@ -432,8 +432,18 @@ function initFiltros() {
     aplicarFiltros()
 }
 
+// Guard para garantir que o DOM está pronto antes de executar
+function whenDomReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => callback(), { once: true })
+    } else {
+        callback()
+    }
+}
 
-document.addEventListener("DOMContentLoaded", async () => {
+
+
+whenDomReady(async () => {
     await carregarComponentes()
     initHeroHomeImage()
     initSobrePageImage()

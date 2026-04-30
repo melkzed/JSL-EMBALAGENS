@@ -35,6 +35,10 @@ function initEventListeners() {
         }
     })
 
+    document.getElementById('produtoSlug').addEventListener('input', (e) => {
+        e.target.value = slugify(e.target.value)
+    })
+
     
     document.getElementById('btnNovaCategoria').addEventListener('click', () => abrirModalCategoria())
     document.getElementById('formCategoria').addEventListener('submit', salvarCategoria)

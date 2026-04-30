@@ -50,5 +50,14 @@
             }, 1200)
         }
 
-        document.addEventListener('DOMContentLoaded', processarConfirmacao)
+        // Guard para garantir que o DOM está pronto antes de executar
+        function whenDomReady(callback) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => callback(), { once: true })
+            } else {
+                callback()
+            }
+        }
+
+        whenDomReady(() => processarConfirmacao())
     

@@ -32,11 +32,12 @@
     <!-- ===================== CSP ===================== -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net;
+        script-src 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com;
+        script-src-elem 'self' 'sha256-vvt4KWwuNr51XfE5m+hzeNEGhiOfZzG97ccfqGsPwvE=' https://cdn.jsdelivr.net https://static.cloudflareinsights.com;
         style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
         font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com;
         img-src 'self' data: blob: https://otwmjdiqjhumqvyztnbl.supabase.co;
-        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net;
+        connect-src 'self' https://otwmjdiqjhumqvyztnbl.supabase.co https://viacep.com.br https://cdn.jsdelivr.net https://cloudflareinsights.com;
         frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';
     ">
 
@@ -104,8 +105,83 @@
                 <span class="pd-categoria" id="pdCategoria">Categoria</span>
                 <h1 id="pdNome">Nome do Produto</h1>
                 <p class="pd-descricao" id="pdDescricao">Descrição do produto.</p>
-                <!-- demais elementos renderizados pelo JS -->
+                
+                <!-- Preço -->
+                <div class="pd-preco" id="pdPreco">R$ 0,00</div>
+                
+                <!-- Estoque -->
+                <div class="pd-estoque" id="pdEstoque"></div>
+                
+                <!-- Variantes -->
+                <div class="pd-variantes" id="pdVariantes" style="display:none">
+                    <span class="pd-variantes-label">Tamanho/Opção:</span>
+                    <div class="pd-variantes-lista" id="pdVariantesLista"></div>
+                </div>
+                
+                <!-- Quantidade e Botão -->
+                <div class="pd-acao">
+                    <div class="quantidade">
+                        <button class="menos">-</button>
+                        <span class="numero">1</span>
+                        <button class="mais">+</button>
+                    </div>
+                    <button class="btn-adicionar-carrinho">
+                        <i class="fa-solid fa-cart-shopping"></i> Adicionar ao carrinho
+                    </button>
+                </div>
+                
+                <!-- Frete -->
+                <div class="pd-frete">
+                    <h3>Calcular Frete</h3>
+                    <div class="pd-frete-input">
+                        <input type="text" id="cepInput" placeholder="CEP (00000-000)" maxlength="9">
+                        <button id="btnCalcularFrete">Calcular</button>
+                    </div>
+                    <div id="freteResultado"></div>
+                </div>
+                
+                <!-- Especificações -->
+                <div class="pd-tabela" id="pdTabela"></div>
             </div>
+        </section>
+
+        <!-- Avaliações -->
+        <section class="pd-avaliacoes-section">
+            <h2><i class="fa-solid fa-star"></i> Avaliações</h2>
+            <div id="pdAvaliacoes"></div>
+            
+            <!-- Formulário de avaliação -->
+            <div class="pd-form-avaliacao">
+                <h3>Sua avaliação</h3>
+                <form id="formAvaliacao">
+                    <div class="pd-estrelas-input" id="estrelasInput">
+                        <i class="fa-regular fa-star" data-nota="1"></i>
+                        <i class="fa-regular fa-star" data-nota="2"></i>
+                        <i class="fa-regular fa-star" data-nota="3"></i>
+                        <i class="fa-regular fa-star" data-nota="4"></i>
+                        <i class="fa-regular fa-star" data-nota="5"></i>
+                    </div>
+                    <input type="hidden" id="notaInput" value="0">
+                    <textarea id="comentarioInput" placeholder="Conte sua experiência com este produto..." rows="4"></textarea>
+                    <div class="pd-upload-area" id="uploadArea">
+                        <div class="pd-upload-placeholder" id="uploadPlaceholder">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <span>Arraste imagens ou clique para adicionar</span>
+                        </div>
+                        <input type="file" id="imagensInput" accept="image/*" multiple style="display:none">
+                        <div class="pd-upload-preview" id="uploadPreview"></div>
+                    </div>
+                    <button type="submit" class="btn-enviar-avaliacao">
+                        <i class="fa-solid fa-paper-plane"></i> Enviar avaliação
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Produtos Semelhantes -->
+        <section class="pd-semelhantes-section">
+            <h2><i class="fa-solid fa-box-open"></i> Produtos Semelhantes</h2>
+            <div class="pd-semelhantes-grid" id="pdSemelhantes"></div>
         </section>
 
     </main>

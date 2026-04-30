@@ -126,10 +126,21 @@ async function renderizarPaginaCarrinho() {
     })
 }
 
+// Guard para garantir que o DOM está pronto antes de executar
+function whenDomReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => callback(), { once: true })
+    } else {
+        callback()
+    }
+}
 
-document.addEventListener('DOMContentLoaded', async () => {
+
+
+whenDomReady(async () => {
     
     setTimeout(() => {
         renderizarPaginaCarrinho()
     }, 500)
+})
 })
