@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
@@ -76,11 +76,13 @@
 <body>
     <div id="navbar-placeholder"></div>
 
+    <main id="conteudo" tabindex="-1">
+
     <!-- Breadcrumb visível -->
     <nav class="breadcrumb" aria-label="Breadcrumb" style="padding:0.75rem 1.5rem;font-size:0.85rem;">
         <a href="/">Home</a>
-        <i class="fa-solid fa-chevron-right" style="margin:0 0.4rem;font-size:0.7rem;"></i>
-        <span>Produtos</span>
+        <i class="fa-solid fa-chevron-right" style="margin:0 0.4rem;font-size:0.7rem;" aria-hidden="true"></i>
+        <span aria-current="page">Produtos</span>
     </nav>
 
     <section class="herop">
@@ -161,8 +163,10 @@
         <div class="produtos-grid"></div>
     </section>
 
-    <a class="whatsapp-float" href="https://wa.me/5583996389725" aria-label="Falar no WhatsApp">
-        <i class="fa-brands fa-whatsapp"></i>
+    </main>
+
+    <a class="whatsapp-float" href="https://wa.me/5583996389725" aria-label="Falar no WhatsApp (abre em nova aba)">
+        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
     </a>
 
     <div id="footer-placeholder"></div>

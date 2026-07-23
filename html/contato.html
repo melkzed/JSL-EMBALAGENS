@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
@@ -69,6 +69,8 @@
 
     <div id="navbar-placeholder"></div>
 
+    <main id="conteudo" tabindex="-1">
+
     <section class="herop">
         <h1>Contato</h1>
         <p>Fale conosco e solicite um orçamento personalizado</p>
@@ -129,27 +131,27 @@
                     <div class="ct-grid">
                         <div>
                             <label for="contatoNome">Nome</label>
-                            <input type="text" id="contatoNome" placeholder="Seu nome">
+                            <input type="text" id="contatoNome" name="nome" placeholder="Seu nome" autocomplete="name">
                         </div>
 
                         <div>
                             <label for="contatoTelefone">Telefone</label>
-                            <input type="text" id="contatoTelefone" placeholder="(00) 00000-0000">
+                            <input type="tel" id="contatoTelefone" name="telefone" placeholder="(00) 00000-0000" autocomplete="tel" inputmode="tel">
                         </div>
                     </div>
 
                     <div>
                         <label for="contatoEmail">E-mail</label>
-                        <input type="email" id="contatoEmail" placeholder="seu@email.com">
+                        <input type="email" id="contatoEmail" name="email" placeholder="seu@email.com" autocomplete="email" inputmode="email">
                     </div>
 
                     <div>
                         <label for="contatoMensagem">Mensagem</label>
-                        <textarea id="contatoMensagem" placeholder="Descreva o que precisa..."></textarea>
+                        <textarea id="contatoMensagem" name="mensagem" placeholder="Descreva o que precisa..."></textarea>
                     </div>
 
                     <button type="submit" class="ct-btn">
-                        <i class="fa fa-paper-plane"></i>
+                        <i class="fa fa-paper-plane" aria-hidden="true"></i>
                         Enviar pelo WhatsApp
                     </button>
 
@@ -158,6 +160,8 @@
 
         </div>
     </section>
+
+    </main>
 
     <div id="footer-placeholder"></div>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>

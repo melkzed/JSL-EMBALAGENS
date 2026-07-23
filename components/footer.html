@@ -4,14 +4,14 @@
         <p>Fale agora com nossa equipe e solicite um orçamento personalizado. Atendemos pedidos de qualquer volume.</p>
         <div class="cta-buttons">
             <a class="btn-whatsapp" href="https://wa.me/5583996389725" target="_blank" rel="noopener noreferrer">
-                <i class="fa-brands fa-whatsapp"></i> Falar no WhatsApp
+                <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Falar no WhatsApp
             </a>
             <a class="btn-outline" href="#contato">
                 Solicitar orçamento →
             </a>
         </div>
         <button class="footer-btn-suporte" id="btnSuporteFooter">
-            <i class="fa-solid fa-headset"></i> Precisa de ajuda?
+            <i class="fa-solid fa-headset" aria-hidden="true"></i> Precisa de ajuda?
         </button>
     </div>
 </section>
@@ -42,19 +42,19 @@
         <div class="footer-col">
             <h4>CONTATO</h4>
             <ul class="footer-contato">
-                <li><i class="fa-solid fa-phone"></i> (83) 99638-9725</li>
-                <li><i class="fa-brands fa-whatsapp"></i> (83) 99638-9725</li>
-                <li><i class="fa-regular fa-envelope"></i> contato@jslsolucoesemembalagens.com</li>
-                <li><i class="fa-regular fa-building"></i> R. Francisco Guimarães, Centro, Itaporanga - PB</li>
-                <li><i class="fa-regular fa-id-card"></i> CNPJ: 44.900.167/0001-84</li>
+                <li><i class="fa-solid fa-phone" aria-hidden="true"></i> <a href="tel:+5583996389725">(83) 99638-9725</a></li>
+                <li><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> <a href="https://wa.me/5583996389725" target="_blank" rel="noopener noreferrer">(83) 99638-9725</a></li>
+                <li><i class="fa-regular fa-envelope" aria-hidden="true"></i> <a href="mailto:contato@jslsolucoesemembalagens.com">contato@jslsolucoesemembalagens.com</a></li>
+                <li><i class="fa-regular fa-building" aria-hidden="true"></i> R. Francisco Guimarães, Centro, Itaporanga - PB</li>
+                <li><i class="fa-regular fa-id-card" aria-hidden="true"></i> CNPJ: 44.900.167/0001-84</li>
             </ul>
         </div>
 
         <div class="footer-col footer-social-col">
             <h4>REDES SOCIAIS</h4>
             <div class="footer-social-icons">
-                <a href="https://instagram.com/jsl.representacoes" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                <a href="https://wa.me/5583996389725" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                <a href="https://instagram.com/jsl.representacoes" target="_blank" rel="noopener noreferrer" aria-label="Instagram (abre em nova aba)"><i class="fa-brands fa-instagram" aria-hidden="true"></i></a>
+                <a href="https://wa.me/5583996389725" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp (abre em nova aba)"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a>
             </div>
         </div>
     </div>
@@ -65,10 +65,10 @@
 </footer>
 
 <div class="suporte-modal-overlay" id="suporteModal" style="display:none">
-    <div class="suporte-modal">
+    <div class="suporte-modal" role="dialog" aria-modal="true" aria-labelledby="suporteModalTitulo">
         <div class="suporte-modal-header">
-            <h3><i class="fa-solid fa-headset"></i> Suporte JSL</h3>
-            <button class="suporte-modal-fechar" id="btnFecharSuporte"><i class="fa-solid fa-xmark"></i></button>
+            <h3 id="suporteModalTitulo"><i class="fa-solid fa-headset" aria-hidden="true"></i> Suporte JSL</h3>
+            <button class="suporte-modal-fechar" id="btnFecharSuporte" aria-label="Fechar suporte"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
         <div class="suporte-modal-body">
             <p>Selecione o tipo de dificuldade e descreva seu problema. Você será redirecionado para nosso WhatsApp.</p>
@@ -77,22 +77,22 @@
                 <p class="suporte-label-text">Qual área você precisa de ajuda?</p>
                 <div class="suporte-opcoes" id="suporteOpcoes" role="group" aria-label="Qual área você precisa de ajuda?">
                     <button type="button" class="suporte-opcao" data-valor="Navegação no site">
-                        <i class="fa-solid fa-globe"></i> Navegação no site
+                        <i class="fa-solid fa-globe" aria-hidden="true"></i> Navegação no site
                     </button>
                     <button type="button" class="suporte-opcao" data-valor="Dúvida sobre produto">
-                        <i class="fa-solid fa-box"></i> Dúvida sobre produto
+                        <i class="fa-solid fa-box" aria-hidden="true"></i> Dúvida sobre produto
                     </button>
                     <button type="button" class="suporte-opcao" data-valor="Problema no pagamento">
-                        <i class="fa-solid fa-credit-card"></i> Problema no pagamento
+                        <i class="fa-solid fa-credit-card" aria-hidden="true"></i> Problema no pagamento
                     </button>
                     <button type="button" class="suporte-opcao" data-valor="Rastreio de entrega">
-                        <i class="fa-solid fa-truck"></i> Rastreio de entrega
+                        <i class="fa-solid fa-truck" aria-hidden="true"></i> Rastreio de entrega
                     </button>
                     <button type="button" class="suporte-opcao" data-valor="Troca ou devolução">
-                        <i class="fa-solid fa-rotate-left"></i> Troca ou devolução
+                        <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Troca ou devolução
                     </button>
                     <button type="button" class="suporte-opcao" data-valor="Outro assunto">
-                        <i class="fa-solid fa-ellipsis"></i> Outro assunto
+                        <i class="fa-solid fa-ellipsis" aria-hidden="true"></i> Outro assunto
                     </button>
                 </div>
             </div>
@@ -103,7 +103,7 @@
             </div>
 
             <button class="suporte-btn-enviar" id="btnEnviarSuporte" disabled>
-                <i class="fa-brands fa-whatsapp"></i> Enviar via WhatsApp
+                <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> Enviar via WhatsApp
             </button>
         </div>
     </div>

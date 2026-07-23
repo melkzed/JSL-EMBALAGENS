@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
@@ -68,6 +68,8 @@
 <body>
     <div id="navbar-placeholder"></div>
 
+    <span id="conteudo" tabindex="-1" class="sr-only">Conteúdo principal</span>
+
     <div class="produto-loading" id="produtoLoading">
         <div class="spinner"></div>
         <p>Carregando produto...</p>
@@ -87,10 +89,10 @@
         <!-- Breadcrumb visível -->
         <nav class="breadcrumb" id="breadcrumb" aria-label="Breadcrumb">
             <a href="/">Home</a>
-            <i class="fa-solid fa-chevron-right"></i>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
             <a href="/produtos">Produtos</a>
-            <i class="fa-solid fa-chevron-right"></i>
-            <span id="breadcrumbNome">-</span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            <span id="breadcrumbNome" aria-current="page">-</span>
         </nav>
 
         <section class="pd-topo">
@@ -186,8 +188,8 @@
 
     </main>
 
-    <a class="whatsapp-float" href="https://wa.me/5583996389725" aria-label="Falar no WhatsApp sobre este produto">
-        <i class="fa-brands fa-whatsapp"></i>
+    <a class="whatsapp-float" href="https://wa.me/5583996389725" aria-label="Falar no WhatsApp sobre este produto (abre em nova aba)">
+        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
     </a>
 
     <div id="footer-placeholder"></div>

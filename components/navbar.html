@@ -1,10 +1,12 @@
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
 <header class="navbar">
     <div class="navbar-inner">
-        <a href="#" data-page="index" class="logo">
+        <a href="#" data-page="index" class="logo" aria-label="JSL Soluções em Embalagens — página inicial">
             <img src="" data-logo="jsl_logo.svg" alt="JSL Soluções em Embalagens" class="logo-img">
         </a>
 
-        <nav class="menu" id="navMenu">
+        <nav class="menu" id="navMenu" aria-label="Navegação principal">
             <a href="#" data-page="index">Home</a>
             <a href="#" data-page="produtos">Produtos</a>
             <a href="#" data-page="sobre">Sobre</a>
@@ -12,23 +14,23 @@
         </nav>
 
         <div class="actions">
-            <div class="cart">
-                <i class="fa-solid fa-cart-shopping"></i>
-                <span class="badge" style="display:none">0</span>
+            <div class="cart" role="button" tabindex="0" aria-label="Abrir carrinho de compras">
+                <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                <span class="badge" style="display:none" aria-hidden="true">0</span>
             </div>
 
-            <div class="admin-link" id="adminLink" style="display:none" title="Painel Admin">
-                <i class="fa-solid fa-shield-halved"></i>
+            <div class="admin-link" id="adminLink" role="button" tabindex="0" style="display:none" title="Painel Admin" aria-label="Abrir painel administrativo">
+                <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
             </div>
 
-            <div class="profile" data-logado="false" title="Entrar / Cadastrar">
-                <i class="fa-solid fa-user" style="font-size: 14px;"></i>
+            <div class="profile" data-logado="false" role="button" tabindex="0" title="Entrar / Cadastrar" aria-label="Entrar ou cadastrar">
+                <i class="fa-solid fa-user" style="font-size: 14px;" aria-hidden="true"></i>
             </div>
 
-            <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
-                <span></span>
-                <span></span>
-                <span></span>
+            <button class="hamburger" id="hamburgerBtn" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="navMenu">
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
             </button>
         </div>
     </div>

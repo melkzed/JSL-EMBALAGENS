@@ -39,22 +39,47 @@ export function initMenu() {
         })
     })
 
-    
+
     const hamburgerBtn = document.getElementById('hamburgerBtn')
     const navMenu = document.getElementById('navMenu')
 
     if (hamburgerBtn && navMenu) {
+        const fecharMenu = () => {
+            navMenu.classList.remove('open')
+            hamburgerBtn.classList.remove('active')
+            hamburgerBtn.setAttribute('aria-expanded', 'false')
+        }
+
         hamburgerBtn.addEventListener('click', () => {
-            navMenu.classList.toggle('open')
-            hamburgerBtn.classList.toggle('active')
+            const aberto = navMenu.classList.toggle('open')
+            hamburgerBtn.classList.toggle('active', aberto)
+            hamburgerBtn.setAttribute('aria-expanded', aberto ? 'true' : 'false')
         })
 
-        
+
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.navbar')) {
-                navMenu.classList.remove('open')
-                hamburgerBtn.classList.remove('active')
+                fecharMenu()
+            }
+        })
+
+        // Fecha o menu mobile ao pressionar Esc
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && navMenu.classList.contains('open')) {
+                fecharMenu()
+                hamburgerBtn.focus()
             }
         })
     }
+
+    // Ativa via teclado (Enter/Espaço) os elementos com role="button"
+    // que não são <button> nativos (carrinho, perfil, admin).
+    document.querySelectorAll('[role="button"][tabindex]').forEach(el => {
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault()
+                el.click()
+            }
+        })
+    })
 }

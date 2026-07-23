@@ -157,15 +157,20 @@ function initSuporteModal() {
     btnAbrir.addEventListener('click', () => {
         modal.style.display = 'flex'
         document.body.style.overflow = 'hidden'
+        btnFechar?.focus()
     })
 
     const fechar = () => {
         modal.style.display = 'none'
         document.body.style.overflow = ''
+        btnAbrir.focus()
     }
 
     btnFechar?.addEventListener('click', fechar)
     modal.addEventListener('click', (e) => { if (e.target === modal) fechar() })
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.style.display === 'flex') fechar()
+    })
 
     opcoes.forEach(btn => {
         btn.addEventListener('click', () => {
