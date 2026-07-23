@@ -608,22 +608,55 @@
         grid-template-columns: 1fr;
     }
 
+    .carrinho-resumo {
+        position: static;
+    }
+
     .carrinho-lista-header {
         display: none;
     }
 
+    /* Cada item vira um cartão empilhado, com rótulos para cada valor */
     .carrinho-lista-item {
-        grid-template-columns: 1fr;
-        gap: 8px;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "produto remover"
+            "preco   preco"
+            "qtd     subtotal";
+        gap: 10px 12px;
+        padding: 16px;
+        align-items: center;
     }
 
-    .carrinho-lista-item > * {
-        text-align: left;
+    .carrinho-lista-produto { grid-area: produto; }
+    .carrinho-lista-preco { grid-area: preco; }
+    .carrinho-lista-qtd { grid-area: qtd; justify-self: start; }
+    .carrinho-lista-subtotal { grid-area: subtotal; justify-self: end; font-size: 17px; }
+    .carrinho-lista-remover { grid-area: remover; justify-self: end; align-self: start; }
+
+    /* Rótulos gerados a partir de data-label para dar contexto no mobile */
+    .carrinho-lista-preco[data-label]::before,
+    .carrinho-lista-subtotal[data-label]::before {
+        content: attr(data-label) ": ";
+        font-weight: 500;
+        color: var(--text-gray-lighter);
+        text-transform: none;
+        letter-spacing: 0;
     }
 }
 
 @media (max-width: 480px) {
     .carrinho-painel {
         width: 100vw;
+        max-width: 100vw;
+    }
+
+    .carrinho-page {
+        padding: 24px 14px 64px;
+    }
+
+    .carrinho-lista-produto img {
+        width: 60px;
+        height: 60px;
     }
 }

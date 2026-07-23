@@ -28,8 +28,10 @@ export function mostrarToast(mensagem, tipo = 'sucesso') {
 
     const toast = document.createElement('div')
     toast.className = `cart-toast cart-toast-${tipo}`
+    toast.setAttribute('role', tipo === 'erro' ? 'alert' : 'status')
+    toast.setAttribute('aria-live', tipo === 'erro' ? 'assertive' : 'polite')
     toast.innerHTML = `
-        <i class="fa-solid ${tipo === 'sucesso' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+        <i class="fa-solid ${tipo === 'sucesso' ? 'fa-check-circle' : 'fa-exclamation-circle'}" aria-hidden="true"></i>
         <span>${escapeHtml(mensagem)}</span>
     `
     document.body.appendChild(toast)

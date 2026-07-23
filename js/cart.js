@@ -2,7 +2,7 @@ import { supabase } from "./supabaseClient.js"
 import { animarCarrinhoOverlay, animarCarrinhoPainel } from "./animacoes.js"
 import { escapeHtml, formatarPreco, isUrlSegura, mostrarToast } from "./utils.js"
 
-function getPaginaInternaHref(page) {
+export function getPaginaInternaHref(page) {
     const linkMenu = document.querySelector(`a[data-page="${page}"]`)
     const hrefMenu = linkMenu?.getAttribute('href')
 
@@ -226,22 +226,28 @@ export async function atualizarBadgeCarrinho() {
 }
 
 
+// Guarda o elemento que tinha o foco antes de abrir, para devolver ao fechar.
+let elementoFocoAnterior = null
+
 export function initCarrinhoSidebar() {
+    // Evita criar a sidebar mais de uma vez
+    if (document.getElementById('carrinhoSidebar')) return
+
     const sidebar = document.createElement('div')
     sidebar.id = 'carrinhoSidebar'
     sidebar.className = 'carrinho-sidebar'
     sidebar.innerHTML = `
         <div class="carrinho-overlay" id="carrinhoOverlay"></div>
-        <aside class="carrinho-painel" id="carrinhoPainel">
+        <aside class="carrinho-painel" id="carrinhoPainel" role="dialog" aria-modal="true" aria-labelledby="carrinhoTituloSidebar">
             <div class="carrinho-header">
-                <h2><i class="fa-solid fa-cart-shopping"></i> Meu Carrinho</h2>
-                <button class="carrinho-fechar" id="carrinhoFechar">
-                    <i class="fa-solid fa-xmark"></i>
+                <h2 id="carrinhoTituloSidebar"><i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Meu Carrinho</h2>
+                <button class="carrinho-fechar" id="carrinhoFechar" aria-label="Fechar carrinho">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
-            <div class="carrinho-body" id="carrinhoBody">
+            <div class="carrinho-body" id="carrinhoBody" aria-live="polite" aria-busy="false">
                 <div class="carrinho-loading">
-                    <div class="spinner-sm"></div>
+                    <div class="spinner-sm" aria-hidden="true"></div>
                     <p>Carregando...</p>
                 </div>
             </div>
@@ -251,10 +257,10 @@ export function initCarrinhoSidebar() {
                     <strong id="carrinhoTotal">R$ 0,00</strong>
                 </div>
                 <a href="#" class="btn-ver-carrinho" id="btnVerCarrinho">
-                    <i class="fa-solid fa-bag-shopping"></i> Ver carrinho completo
+                    <i class="fa-solid fa-bag-shopping" aria-hidden="true"></i> Ver carrinho completo
                 </a>
                 <a href="#" class="btn-finalizar" id="btnFinalizar">
-                    Finalizar pedido <i class="fa-solid fa-arrow-right"></i>
+                    Finalizar pedido <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                 </a>
             </div>
         </aside>
@@ -273,7 +279,18 @@ export function initCarrinhoSidebar() {
     overlay.addEventListener('click', fecharCarrinhoSidebar)
     fechar.addEventListener('click', fecharCarrinhoSidebar)
 
-    
+    // Fecha com Esc e mantém o foco preso dentro do painel (focus trap)
+    sidebar.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            e.preventDefault()
+            fecharCarrinhoSidebar()
+            return
+        }
+        if (e.key === 'Tab') {
+            manterFocoNoPainel(e)
+        }
+    })
+
     document.querySelectorAll('.cart').forEach(el => {
         el.style.cursor = 'pointer'
         el.addEventListener('click', (e) => {
@@ -282,7 +299,7 @@ export function initCarrinhoSidebar() {
         })
     })
 
-    
+
     window.addEventListener('carrinho-atualizado', () => {
         if (sidebar.classList.contains('aberto')) {
             renderizarSidebar()
@@ -290,13 +307,38 @@ export function initCarrinhoSidebar() {
     })
 }
 
+// Mantém a navegação por Tab dentro do painel do carrinho quando aberto.
+function manterFocoNoPainel(e) {
+    const painel = document.getElementById('carrinhoPainel')
+    if (!painel) return
+    const focaveis = painel.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+    const visiveis = Array.from(focaveis).filter(el => el.offsetParent !== null)
+    if (visiveis.length === 0) return
+
+    const primeiro = visiveis[0]
+    const ultimo = visiveis[visiveis.length - 1]
+
+    if (e.shiftKey && document.activeElement === primeiro) {
+        e.preventDefault()
+        ultimo.focus()
+    } else if (!e.shiftKey && document.activeElement === ultimo) {
+        e.preventDefault()
+        primeiro.focus()
+    }
+}
+
 export async function abrirCarrinhoSidebar() {
     const sidebar = document.getElementById('carrinhoSidebar')
     if (!sidebar) return
+    elementoFocoAnterior = document.activeElement
     sidebar.classList.add('aberto')
     document.body.style.overflow = 'hidden'
     animarCarrinhoOverlay(sidebar.querySelector('.carrinho-overlay'))
     animarCarrinhoPainel(sidebar.querySelector('.carrinho-painel'))
+    // Move o foco para o botão fechar (acessibilidade de modal)
+    document.getElementById('carrinhoFechar')?.focus()
     await renderizarSidebar()
 }
 
@@ -305,6 +347,11 @@ export function fecharCarrinhoSidebar() {
     if (!sidebar) return
     sidebar.classList.remove('aberto')
     document.body.style.overflow = ''
+    // Devolve o foco a quem abriu o carrinho
+    if (elementoFocoAnterior && typeof elementoFocoAnterior.focus === 'function') {
+        elementoFocoAnterior.focus()
+    }
+    elementoFocoAnterior = null
 }
 
 async function renderizarSidebar() {
@@ -313,14 +360,36 @@ async function renderizarSidebar() {
     const totalEl = document.getElementById('carrinhoTotal')
     if (!body) return
 
-    body.innerHTML = '<div class="carrinho-loading"><div class="spinner-sm"></div><p>Carregando...</p></div>'
+    body.setAttribute('aria-busy', 'true')
+    body.innerHTML = '<div class="carrinho-loading"><div class="spinner-sm" aria-hidden="true"></div><p>Carregando...</p></div>'
 
-    const itens = await carregarItensCarrinho()
+    let itens
+    try {
+        itens = await carregarItensCarrinho()
+    } catch (err) {
+        console.error('Erro ao carregar carrinho:', err)
+        body.setAttribute('aria-busy', 'false')
+        body.innerHTML = `
+            <div class="carrinho-vazio">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                <h3>Não foi possível carregar</h3>
+                <p>Verifique sua conexão e tente novamente.</p>
+                <button type="button" class="btn-ver-carrinho" id="btnRecarregarCarrinho" style="margin-top:12px">
+                    <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Tentar novamente
+                </button>
+            </div>
+        `
+        if (footer) footer.style.display = 'none'
+        document.getElementById('btnRecarregarCarrinho')?.addEventListener('click', renderizarSidebar)
+        return
+    }
+
+    body.setAttribute('aria-busy', 'false')
 
     if (itens.length === 0) {
         body.innerHTML = `
             <div class="carrinho-vazio">
-                <i class="fa-solid fa-cart-shopping"></i>
+                <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
                 <h3>Seu carrinho está vazio</h3>
                 <p>Adicione produtos para continuar</p>
             </div>
@@ -347,23 +416,25 @@ async function renderizarSidebar() {
         const imgPrincipal = imgs.length > 0 ? imgs[0].url : ''
         const img = isUrlSegura(imgPrincipal) ? imgPrincipal : defaultImg
 
+        const nomeCompleto = label ? `${nome} (${label})` : nome
+
         return `
             <div class="carrinho-item" data-item-id="${item.id}">
-                <img src="${img}" alt="${nome}">
+                <img src="${img}" alt="${nome}" loading="lazy" width="64" height="64">
                 <div class="carrinho-item-info">
-                    <h4>${nome}</h4>
+                    <h4 title="${nome}">${nome}</h4>
                     ${label ? `<span class="carrinho-item-variante">${label}</span>` : ''}
                     <span class="carrinho-item-preco">R$ ${formatarPreco(preco)}</span>
-                    <div class="carrinho-item-qtd">
-                        <button class="carrinho-qtd-btn" data-acao="diminuir" data-id="${item.id}" data-qtd="${item.quantity}">−</button>
-                        <span>${item.quantity}</span>
-                        <button class="carrinho-qtd-btn" data-acao="aumentar" data-id="${item.id}" data-qtd="${item.quantity}">+</button>
+                    <div class="carrinho-item-qtd" role="group" aria-label="Quantidade de ${nomeCompleto}">
+                        <button class="carrinho-qtd-btn" data-acao="diminuir" data-id="${item.id}" data-qtd="${item.quantity}" aria-label="Diminuir quantidade de ${nomeCompleto}">−</button>
+                        <span aria-live="polite">${item.quantity}</span>
+                        <button class="carrinho-qtd-btn" data-acao="aumentar" data-id="${item.id}" data-qtd="${item.quantity}" aria-label="Aumentar quantidade de ${nomeCompleto}">+</button>
                     </div>
                 </div>
                 <div class="carrinho-item-acoes">
                     <span class="carrinho-item-subtotal">R$ ${formatarPreco(subtotal)}</span>
-                    <button class="carrinho-remover" data-id="${item.id}" title="Remover">
-                        <i class="fa-solid fa-trash-can"></i>
+                    <button class="carrinho-remover" data-id="${item.id}" aria-label="Remover ${nomeCompleto} do carrinho">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
                     </button>
                 </div>
             </div>

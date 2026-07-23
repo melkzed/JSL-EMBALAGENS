@@ -1,4 +1,4 @@
-import { carregarItensCarrinho, atualizarQuantidade, removerDoCarrinho, limparCarrinho } from "./cart.js"
+import { carregarItensCarrinho, atualizarQuantidade, removerDoCarrinho, limparCarrinho, getPaginaInternaHref } from "./cart.js"
 import { escapeHtml, formatarPreco } from "./utils.js"
 
 async function renderizarPaginaCarrinho() {
@@ -6,17 +6,40 @@ async function renderizarPaginaCarrinho() {
     const subtitulo = document.getElementById('carrinhoSubtitulo')
     if (!conteudo) return
 
-    const itens = await carregarItensCarrinho()
+    conteudo.setAttribute('aria-busy', 'true')
+
+    let itens
+    try {
+        itens = await carregarItensCarrinho()
+    } catch (err) {
+        console.error('Erro ao carregar carrinho:', err)
+        conteudo.setAttribute('aria-busy', 'false')
+        if (subtitulo) subtitulo.textContent = ''
+        conteudo.innerHTML = `
+            <div class="carrinho-vazio-page">
+                <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                <h2>Não foi possível carregar seu carrinho</h2>
+                <p>Verifique sua conexão com a internet e tente novamente.</p>
+                <button type="button" class="btn-ver-produtos" id="btnRecarregarPagina">
+                    <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Tentar novamente
+                </button>
+            </div>
+        `
+        document.getElementById('btnRecarregarPagina')?.addEventListener('click', renderizarPaginaCarrinho)
+        return
+    }
+
+    conteudo.setAttribute('aria-busy', 'false')
 
     if (itens.length === 0) {
         if (subtitulo) subtitulo.textContent = ''
         conteudo.innerHTML = `
             <div class="carrinho-vazio-page">
-                <i class="fa-solid fa-cart-shopping"></i>
+                <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
                 <h2>Seu carrinho está vazio</h2>
                 <p>Navegue pelo nosso catálogo e encontre os produtos ideais para você</p>
-                <a href="./produtos.html" class="btn-ver-produtos">
-                    <i class="fa-solid fa-arrow-left"></i> Ver produtos
+                <a href="${getPaginaInternaHref('produtos')}" class="btn-ver-produtos">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Ver produtos
                 </a>
             </div>
         `
@@ -38,25 +61,26 @@ async function renderizarPaginaCarrinho() {
 
         const imgs = product?.product_images || []
         const img = imgs.length > 0 ? imgs[0].url : '../img/imagemExemplo.jpg'
+        const nomeCompleto = label ? `${nome} (${label})` : nome
 
         return `
             <div class="carrinho-lista-item" data-item-id="${item.id}">
                 <div class="carrinho-lista-produto">
-                    <img src="${img}" alt="${nome}">
+                    <img src="${img}" alt="${nome}" loading="lazy" width="72" height="72">
                     <div class="carrinho-lista-produto-info">
                         <h4>${nome}</h4>
                         ${label ? `<span>${label}</span>` : ''}
                     </div>
                 </div>
-                <div class="carrinho-lista-preco">R$ ${formatarPreco(preco)}</div>
-                <div class="carrinho-lista-qtd">
-                    <button data-acao="diminuir" data-id="${item.id}" data-qtd="${item.quantity}">−</button>
-                    <span>${item.quantity}</span>
-                    <button data-acao="aumentar" data-id="${item.id}" data-qtd="${item.quantity}">+</button>
+                <div class="carrinho-lista-preco" data-label="Preço">R$ ${formatarPreco(preco)}</div>
+                <div class="carrinho-lista-qtd" role="group" aria-label="Quantidade de ${nomeCompleto}">
+                    <button data-acao="diminuir" data-id="${item.id}" data-qtd="${item.quantity}" aria-label="Diminuir quantidade de ${nomeCompleto}">−</button>
+                    <span aria-live="polite">${item.quantity}</span>
+                    <button data-acao="aumentar" data-id="${item.id}" data-qtd="${item.quantity}" aria-label="Aumentar quantidade de ${nomeCompleto}">+</button>
                 </div>
-                <div class="carrinho-lista-subtotal">R$ ${formatarPreco(subtotal)}</div>
-                <button class="carrinho-lista-remover" data-id="${item.id}" title="Remover">
-                    <i class="fa-solid fa-trash-can"></i>
+                <div class="carrinho-lista-subtotal" data-label="Subtotal">R$ ${formatarPreco(subtotal)}</div>
+                <button class="carrinho-lista-remover" data-id="${item.id}" aria-label="Remover ${nomeCompleto} do carrinho">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
                 </button>
             </div>
         `
@@ -89,11 +113,11 @@ async function renderizarPaginaCarrinho() {
                     <span>Total</span>
                     <span>R$ ${formatarPreco(totalGeral)}</span>
                 </div>
-                <button class="btn-finalizar" id="btnFinalizarPedido">
-                    Finalizar pedido <i class="fa-solid fa-arrow-right"></i>
-                </button>
-                <a href="./produtos.html" class="btn-continuar">
-                    <i class="fa-solid fa-arrow-left"></i> Continuar comprando
+                <a href="${getPaginaInternaHref('checkout')}" class="btn-finalizar" id="btnFinalizarPedido">
+                    Finalizar pedido <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                <a href="${getPaginaInternaHref('produtos')}" class="btn-continuar">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Continuar comprando
                 </a>
             </div>
         </div>
@@ -111,18 +135,12 @@ async function renderizarPaginaCarrinho() {
         })
     })
 
-    
+
     conteudo.querySelectorAll('.carrinho-lista-remover').forEach(btn => {
         btn.addEventListener('click', async () => {
             await removerDoCarrinho(btn.dataset.id)
             await renderizarPaginaCarrinho()
         })
-    })
-
-    
-    const btnFinalizar = document.getElementById('btnFinalizarPedido')
-    btnFinalizar?.addEventListener('click', () => {
-        window.location.href = '/checkout'
     })
 }
 
@@ -137,10 +155,6 @@ function whenDomReady(callback) {
 
 
 
-whenDomReady(async () => {
-    
-    setTimeout(() => {
-        renderizarPaginaCarrinho()
-    }, 500)
-})
+whenDomReady(() => {
+    renderizarPaginaCarrinho()
 })
