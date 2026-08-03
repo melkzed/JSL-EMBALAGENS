@@ -535,11 +535,17 @@ function renderizarProduto(produto) {
         pdVariantes.style.display = ''
         variants.forEach((v, i) => {
             const btn = document.createElement('button')
+            btn.type = 'button'
             btn.className = `pd-variante-btn ${i === 0 ? 'ativa' : ''}`
             btn.textContent = v.size_label || `Variante ${i + 1}`
+            btn.setAttribute('aria-pressed', i === 0 ? 'true' : 'false')
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.pd-variante-btn').forEach(b => b.classList.remove('ativa'))
+                document.querySelectorAll('.pd-variante-btn').forEach(b => {
+                    b.classList.remove('ativa')
+                    b.setAttribute('aria-pressed', 'false')
+                })
                 btn.classList.add('ativa')
+                btn.setAttribute('aria-pressed', 'true')
                 if (v.price) {
                     pdPreco.textContent = `R$ ${formatarPreco(v.price)}`
                 }
@@ -638,17 +644,31 @@ let _confirmarProdutoCb = null
 function confirmarAcaoProduto(msg) {
     return new Promise(resolve => {
         const overlay = document.getElementById('modalConfirmarProduto')
-        document.getElementById('modalConfirmarProdutoMsg').textContent = msg
+        const msgEl = document.getElementById('modalConfirmarProdutoMsg')
+        // Fallback caso o modal não exista na página
+        if (!overlay || !msgEl) {
+            resolve(window.confirm(msg))
+            return
+        }
+        msgEl.textContent = msg
         _confirmarProdutoCb = resolve
         overlay.style.display = 'flex'
+        document.getElementById('btnConfirmarProdutoNao')?.focus()
     })
 }
 function _fecharConfirmarProduto(val) {
-    document.getElementById('modalConfirmarProduto').style.display = 'none'
+    const overlay = document.getElementById('modalConfirmarProduto')
+    if (overlay) overlay.style.display = 'none'
     if (_confirmarProdutoCb) { _confirmarProdutoCb(val); _confirmarProdutoCb = null }
 }
 document.getElementById('btnConfirmarProdutoSim')?.addEventListener('click', () => _fecharConfirmarProduto(true))
 document.getElementById('btnConfirmarProdutoNao')?.addEventListener('click', () => _fecharConfirmarProduto(false))
+document.getElementById('modalConfirmarProduto')?.addEventListener('click', (e) => {
+    if (e.target.id === 'modalConfirmarProduto') _fecharConfirmarProduto(false)
+})
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && _confirmarProdutoCb) _fecharConfirmarProduto(false)
+})
 
 
 
@@ -882,32 +902,50 @@ function initEstrelas() {
 
     const estrelas = container.querySelectorAll('i')
 
-    estrelas.forEach(star => {
-        star.addEventListener('click', () => {
-            const nota = parseInt(star.dataset.nota)
-            notaInput.value = nota
-
-            estrelas.forEach(s => {
-                const n = parseInt(s.dataset.nota)
-                s.className = n <= nota ? 'fa-solid fa-star ativa' : 'fa-regular fa-star'
-            })
+    // Mantém a classe do ícone preservando os atributos ARIA (role/aria-label/tabindex)
+    function pintar(nota) {
+        estrelas.forEach(s => {
+            const n = parseInt(s.dataset.nota)
+            const cheia = n <= nota
+            s.classList.toggle('fa-solid', cheia)
+            s.classList.toggle('fa-star', true)
+            s.classList.toggle('fa-regular', !cheia)
+            s.classList.toggle('ativa', cheia)
         })
+    }
 
-        star.addEventListener('mouseenter', () => {
-            const nota = parseInt(star.dataset.nota)
-            estrelas.forEach(s => {
-                const n = parseInt(s.dataset.nota)
-                s.className = n <= nota ? 'fa-solid fa-star ativa' : 'fa-regular fa-star'
-            })
+    function selecionar(nota) {
+        notaInput.value = nota
+        estrelas.forEach(s => s.setAttribute('aria-checked', parseInt(s.dataset.nota) === nota ? 'true' : 'false'))
+        pintar(nota)
+    }
+
+    estrelas.forEach(star => {
+        const nota = parseInt(star.dataset.nota)
+        star.addEventListener('click', () => selecionar(nota))
+        star.addEventListener('mouseenter', () => pintar(nota))
+        star.addEventListener('focus', () => pintar(nota))
+        // Suporte a teclado: Enter/Espaço seleciona; setas navegam
+        star.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault()
+                selecionar(nota)
+            } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                e.preventDefault()
+                const prox = Math.min(5, nota + 1)
+                estrelas[prox - 1]?.focus()
+                selecionar(prox)
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                e.preventDefault()
+                const ant = Math.max(1, nota - 1)
+                estrelas[ant - 1]?.focus()
+                selecionar(ant)
+            }
         })
     })
 
     container.addEventListener('mouseleave', () => {
-        const atual = parseInt(notaInput.value) || 0
-        estrelas.forEach(s => {
-            const n = parseInt(s.dataset.nota)
-            s.className = n <= atual ? 'fa-solid fa-star ativa' : 'fa-regular fa-star'
-        })
+        pintar(parseInt(notaInput.value) || 0)
     })
 }
 

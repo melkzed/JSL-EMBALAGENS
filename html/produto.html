@@ -75,12 +75,12 @@
         <p>Carregando produto...</p>
     </div>
 
-    <div class="produto-erro" id="produtoErro" style="display:none">
-        <i class="fa-solid fa-circle-exclamation"></i>
+    <div class="produto-erro" id="produtoErro" style="display:none" role="alert">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
         <h2>Produto não encontrado</h2>
         <p>O produto que você está procurando não existe ou foi removido.</p>
         <a href="/produtos" class="btn-voltar">
-            <i class="fa-solid fa-arrow-left"></i> Voltar aos produtos
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar aos produtos
         </a>
     </div>
 
@@ -122,24 +122,25 @@
                 
                 <!-- Quantidade e Botão -->
                 <div class="pd-acao">
-                    <div class="quantidade">
-                        <button class="menos">-</button>
-                        <span class="numero">1</span>
-                        <button class="mais">+</button>
+                    <div class="quantidade" role="group" aria-label="Selecionar quantidade">
+                        <button class="menos" type="button" aria-label="Diminuir quantidade">-</button>
+                        <span class="numero" aria-live="polite">1</span>
+                        <button class="mais" type="button" aria-label="Aumentar quantidade">+</button>
                     </div>
-                    <button class="btn-adicionar-carrinho">
-                        <i class="fa-solid fa-cart-shopping"></i> Adicionar ao carrinho
+                    <button class="btn-adicionar-carrinho" type="button">
+                        <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i> Adicionar ao carrinho
                     </button>
                 </div>
-                
+
                 <!-- Frete -->
                 <div class="pd-frete">
                     <h3>Calcular Frete</h3>
                     <div class="pd-frete-input">
-                        <input type="text" id="cepInput" placeholder="CEP (00000-000)" maxlength="9">
-                        <button id="btnCalcularFrete">Calcular</button>
+                        <label for="cepInput" class="sr-only">CEP para cálculo de frete</label>
+                        <input type="text" id="cepInput" placeholder="CEP (00000-000)" maxlength="9" inputmode="numeric" autocomplete="postal-code">
+                        <button id="btnCalcularFrete" type="button">Calcular</button>
                     </div>
-                    <div id="freteResultado"></div>
+                    <div id="freteResultado" aria-live="polite"></div>
                 </div>
                 
                 <!-- Especificações -->
@@ -149,32 +150,33 @@
 
         <!-- Avaliações -->
         <section class="pd-avaliacoes-section">
-            <h2><i class="fa-solid fa-star"></i> Avaliações</h2>
+            <h2><i class="fa-solid fa-star" aria-hidden="true"></i> Avaliações</h2>
             <div id="pdAvaliacoes"></div>
             
             <!-- Formulário de avaliação -->
             <div class="pd-form-avaliacao">
                 <h3>Sua avaliação</h3>
                 <form id="formAvaliacao">
-                    <div class="pd-estrelas-input" id="estrelasInput">
-                        <i class="fa-regular fa-star" data-nota="1"></i>
-                        <i class="fa-regular fa-star" data-nota="2"></i>
-                        <i class="fa-regular fa-star" data-nota="3"></i>
-                        <i class="fa-regular fa-star" data-nota="4"></i>
-                        <i class="fa-regular fa-star" data-nota="5"></i>
+                    <div class="pd-estrelas-input" id="estrelasInput" role="radiogroup" aria-label="Nota de 1 a 5 estrelas">
+                        <i class="fa-regular fa-star" data-nota="1" role="radio" aria-checked="false" tabindex="0" aria-label="1 estrela"></i>
+                        <i class="fa-regular fa-star" data-nota="2" role="radio" aria-checked="false" tabindex="0" aria-label="2 estrelas"></i>
+                        <i class="fa-regular fa-star" data-nota="3" role="radio" aria-checked="false" tabindex="0" aria-label="3 estrelas"></i>
+                        <i class="fa-regular fa-star" data-nota="4" role="radio" aria-checked="false" tabindex="0" aria-label="4 estrelas"></i>
+                        <i class="fa-regular fa-star" data-nota="5" role="radio" aria-checked="false" tabindex="0" aria-label="5 estrelas"></i>
                     </div>
                     <input type="hidden" id="notaInput" value="0">
+                    <label for="comentarioInput" class="sr-only">Comentário da avaliação</label>
                     <textarea id="comentarioInput" placeholder="Conte sua experiência com este produto..." rows="4"></textarea>
                     <div class="pd-upload-area" id="uploadArea">
-                        <div class="pd-upload-placeholder" id="uploadPlaceholder">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <button type="button" class="pd-upload-placeholder" id="uploadPlaceholder">
+                            <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i>
                             <span>Arraste imagens ou clique para adicionar</span>
-                        </div>
-                        <input type="file" id="imagensInput" accept="image/*" multiple style="display:none">
+                        </button>
+                        <input type="file" id="imagensInput" accept="image/*" multiple style="display:none" aria-label="Adicionar imagens à avaliação">
                         <div class="pd-upload-preview" id="uploadPreview"></div>
                     </div>
                     <button type="submit" class="btn-enviar-avaliacao">
-                        <i class="fa-solid fa-paper-plane"></i> Enviar avaliação
+                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Enviar avaliação
                     </button>
                 </form>
             </div>
@@ -182,7 +184,7 @@
 
         <!-- Produtos Semelhantes -->
         <section class="pd-semelhantes-section">
-            <h2><i class="fa-solid fa-box-open"></i> Produtos Semelhantes</h2>
+            <h2><i class="fa-solid fa-box-open" aria-hidden="true"></i> Produtos Semelhantes</h2>
             <div class="pd-semelhantes-grid" id="pdSemelhantes"></div>
         </section>
 
@@ -193,6 +195,17 @@
     </a>
 
     <div id="footer-placeholder"></div>
+
+    <!-- Modal de confirmação (ex.: excluir avaliação) -->
+    <div class="modal-confirmar-overlay" id="modalConfirmarProduto" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modalConfirmarProdutoMsg">
+        <div class="modal-confirmar-box">
+            <p id="modalConfirmarProdutoMsg">Tem certeza?</p>
+            <div class="modal-confirmar-btns">
+                <button type="button" class="modal-confirmar-btn cancelar" id="btnConfirmarProdutoNao">Não</button>
+                <button type="button" class="modal-confirmar-btn confirmar" id="btnConfirmarProdutoSim">Sim</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="../js/produto-detalhe.js"></script>

@@ -732,6 +732,11 @@
     cursor: pointer;
     color: var(--text-gray-lighter, #9ca3af);
     font-size: 0.85rem;
+    /* Reset para funcionar como <button> mantendo o visual original */
+    width: 100%;
+    background: none;
+    border: none;
+    font-family: inherit;
 }
 
 .pd-upload-placeholder i {

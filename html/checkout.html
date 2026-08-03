@@ -36,31 +36,31 @@
     <div class="checkout-page" id="checkoutPage">
         <h1><i class="fa-solid fa-bag-shopping" style="color: var(--primary-blue);" aria-hidden="true"></i> Finalizar Pedido</h1>
 
-        <div class="checkout-steps">
-            <div class="checkout-step ativo" data-step="1">
-                <span class="checkout-step-num">1</span>
+        <div class="checkout-steps" role="list" aria-label="Etapas do checkout">
+            <div class="checkout-step ativo" data-step="1" role="listitem" aria-current="step">
+                <span class="checkout-step-num" aria-hidden="true">1</span>
                 <span class="checkout-step-label">Endereço</span>
             </div>
-            <div class="checkout-step-line"></div>
-            <div class="checkout-step" data-step="2">
-                <span class="checkout-step-num">2</span>
+            <div class="checkout-step-line" aria-hidden="true"></div>
+            <div class="checkout-step" data-step="2" role="listitem">
+                <span class="checkout-step-num" aria-hidden="true">2</span>
                 <span class="checkout-step-label">Revisão</span>
             </div>
-            <div class="checkout-step-line"></div>
-            <div class="checkout-step" data-step="3">
-                <span class="checkout-step-num">3</span>
+            <div class="checkout-step-line" aria-hidden="true"></div>
+            <div class="checkout-step" data-step="3" role="listitem">
+                <span class="checkout-step-num" aria-hidden="true">3</span>
                 <span class="checkout-step-label">Confirmação</span>
             </div>
         </div>
 
         <div class="checkout-section" id="checkoutStep1">
-            <h2><i class="fa-solid fa-location-dot"></i> Entrega</h2>
+            <h2><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Entrega</h2>
 
             <div class="checkout-tipo-entrega" id="checkoutTipoEntrega">
                 <label class="checkout-tipo-entrega-option selecionado" data-tipo="entrega">
                     <input type="radio" name="tipoEntrega" value="entrega" checked>
                     <div class="checkout-tipo-entrega-content">
-                        <i class="fa-solid fa-truck-fast"></i>
+                        <i class="fa-solid fa-truck-fast" aria-hidden="true"></i>
                         <div>
                             <strong>Receber em casa</strong>
                             <span>Entrega no seu endereço</span>
@@ -70,7 +70,7 @@
                 <label class="checkout-tipo-entrega-option" data-tipo="retirada">
                     <input type="radio" name="tipoEntrega" value="retirada">
                     <div class="checkout-tipo-entrega-content">
-                        <i class="fa-solid fa-store"></i>
+                        <i class="fa-solid fa-store" aria-hidden="true"></i>
                         <div>
                             <strong>Retirar na loja</strong>
                             <span>Grátis - sem custo de frete</span>
@@ -82,13 +82,13 @@
             <div class="checkout-retirada-loja" id="checkoutRetiradaLoja" style="display:none;">
                 <div class="checkout-retirada-card">
                     <div class="checkout-retirada-header">
-                        <i class="fa-solid fa-store"></i>
+                        <i class="fa-solid fa-store" aria-hidden="true"></i>
                         <h3>Retirada na Loja</h3>
                         <span class="checkout-retirada-badge">Frete Grátis</span>
                     </div>
                     <div class="checkout-retirada-info">
                         <div class="checkout-retirada-item">
-                            <i class="fa-solid fa-location-dot"></i>
+                            <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
                             <div>
                                 <strong>Endereço</strong>
                                 <p>R. Francisco Guimarães, Centro</p>
@@ -96,14 +96,14 @@
                             </div>
                         </div>
                         <div class="checkout-retirada-item">
-                            <i class="fa-solid fa-clock"></i>
+                            <i class="fa-solid fa-clock" aria-hidden="true"></i>
                             <div>
                                 <strong>Prazo para retirada</strong>
                                 <p>Seu pedido ficará pronto em até <strong>3 dias úteis</strong> após a confirmação do pagamento.</p>
                             </div>
                         </div>
                         <div class="checkout-retirada-item">
-                            <i class="fa-solid fa-calendar-days"></i>
+                            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
                             <div>
                                 <strong>Horário de funcionamento</strong>
                                 <p>Segunda a Sexta: 8h às 17h</p>
@@ -111,7 +111,7 @@
                             </div>
                         </div>
                         <div class="checkout-retirada-item">
-                            <i class="fa-solid fa-circle-info"></i>
+                            <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
                             <div>
                                 <strong>Importante</strong>
                                 <p>Você receberá uma notificação quando o pedido estiver pronto para retirada. Apresente o número do pedido no local.</p>
@@ -137,7 +137,7 @@
                             <label for="checkCEP">CEP *</label>
                             <div class="checkout-cep-wrapper">
                                 <input type="text" id="checkCEP" placeholder="00000-000" maxlength="9" required>
-                                <button type="button" id="checkBtnCEP"><i class="fa-solid fa-search"></i></button>
+                                <button type="button" id="checkBtnCEP" aria-label="Buscar endereço pelo CEP"><i class="fa-solid fa-search" aria-hidden="true"></i></button>
                             </div>
                         </div>
                         <div class="checkout-form-group">
@@ -193,26 +193,26 @@
                         <input type="text" id="checkDestinatario" placeholder="Nome de quem vai receber">
                     </div>
                     <div class="checkout-form-actions">
-                        <button type="submit" class="checkout-btn-primary"><i class="fa-solid fa-check"></i> Salvar e usar</button>
+                        <button type="submit" class="checkout-btn-primary"><i class="fa-solid fa-check" aria-hidden="true"></i> Salvar e usar</button>
                         <button type="button" class="checkout-btn-outline" id="checkCancelarEndereco">Cancelar</button>
                     </div>
                 </form>
             </div>
 
             <button class="checkout-btn-novo-endereco" id="btnNovoEnderecoCheckout">
-                <i class="fa-solid fa-plus"></i> Adicionar novo endereço
+                <i class="fa-solid fa-plus" aria-hidden="true"></i> Adicionar novo endereço
             </button>
 
             <div class="checkout-frete-section" id="checkoutFreteSection" style="display:none;">
-                <h3><i class="fa-solid fa-truck-fast"></i> Opções de Envio</h3>
+                <h3><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> Opções de Envio</h3>
                 <p class="checkout-frete-origem">
-                    <i class="fa-solid fa-warehouse"></i> Enviado de Itaporanga - PB
+                    <i class="fa-solid fa-warehouse" aria-hidden="true"></i> Enviado de Itaporanga - PB
                 </p>
                 <div class="checkout-frete-opcoes" id="freteOpcoes">
                     
                 </div>
                 <p class="checkout-frete-aviso">
-                    <i class="fa-solid fa-info-circle"></i>
+                    <i class="fa-solid fa-info-circle" aria-hidden="true"></i>
                     Prazo inclui até 7 dias úteis para preparação do pedido.
                 </p>
             </div>
@@ -225,16 +225,16 @@
 
             <div class="checkout-nav">
                 <a href="./carrinho.html" class="checkout-btn-outline">
-                    <i class="fa-solid fa-arrow-left"></i> Voltar ao carrinho
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar ao carrinho
                 </a>
                 <button class="checkout-btn-primary" id="btnIrRevisao" disabled>
-                    Revisar pedido <i class="fa-solid fa-arrow-right"></i>
+                    Revisar pedido <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
 
         <div class="checkout-section" id="checkoutStep2" style="display:none;">
-            <h2><i class="fa-solid fa-clipboard-list"></i> Revise seu pedido</h2>
+            <h2><i class="fa-solid fa-clipboard-list" aria-hidden="true"></i> Revise seu pedido</h2>
 
             <div class="checkout-revisao-endereco" id="revisaoEndereco"></div>
             <div class="checkout-revisao-itens" id="revisaoItens"></div>
@@ -242,26 +242,26 @@
             <div class="checkout-resumo-final" id="resumoFinal"></div>
 
             <div class="checkout-metodo-pagamento">
-                <h3><i class="fa-solid fa-credit-card"></i> Forma de pagamento</h3>
+                <h3><i class="fa-solid fa-credit-card" aria-hidden="true"></i> Forma de pagamento</h3>
                 <div class="checkout-pagamento-opcoes">
                     <label class="checkout-pagamento-opcao selecionada">
                         <input type="radio" name="metodoPagamento" value="pix" checked>
-                        <i class="fa-brands fa-pix"></i>
+                        <i class="fa-brands fa-pix" aria-hidden="true"></i>
                         <span>PIX</span>
                     </label>
                     <label class="checkout-pagamento-opcao">
                         <input type="radio" name="metodoPagamento" value="credit_card">
-                        <i class="fa-solid fa-credit-card"></i>
+                        <i class="fa-solid fa-credit-card" aria-hidden="true"></i>
                         <span>Cartão de Crédito</span>
                     </label>
                     <label class="checkout-pagamento-opcao">
                         <input type="radio" name="metodoPagamento" value="debit_card">
-                        <i class="fa-solid fa-money-check-dollar"></i>
+                        <i class="fa-solid fa-money-check-dollar" aria-hidden="true"></i>
                         <span>Cartão de Débito</span>
                     </label>
                     <label class="checkout-pagamento-opcao">
                         <input type="radio" name="metodoPagamento" value="whatsapp">
-                        <i class="fa-brands fa-whatsapp"></i>
+                        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
                         <span>Combinar via WhatsApp</span>
                     </label>
                 </div>
@@ -272,10 +272,10 @@
 
             <div class="checkout-nav">
                 <button class="checkout-btn-outline" id="btnVoltarEndereco">
-                    <i class="fa-solid fa-arrow-left"></i> Voltar
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar
                 </button>
                 <button class="checkout-btn-primary btn-confirmar" id="btnConfirmarPedido">
-                    <i class="fa-solid fa-check"></i> Confirmar pedido
+                    <i class="fa-solid fa-check" aria-hidden="true"></i> Confirmar pedido
                 </button>
             </div>
         </div>
@@ -291,7 +291,7 @@
             
             <div class="checkout-sucesso" id="checkoutSucesso" style="display:none;">
                 <div class="checkout-sucesso-icon">
-                    <i class="fa-solid fa-circle-check"></i>
+                    <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
                 </div>
                 <h2>Pedido realizado com sucesso!</h2>
                 <p class="checkout-pedido-numero" id="pedidoNumero"></p>
@@ -301,10 +301,10 @@
 
                 <div class="checkout-sucesso-acoes">
                     <a href="./perfil.html?tab=pedidos" class="checkout-btn-primary">
-                        <i class="fa-solid fa-box"></i> Ver meus pedidos
+                        <i class="fa-solid fa-box" aria-hidden="true"></i> Ver meus pedidos
                     </a>
                     <a href="./produtos.html" class="checkout-btn-outline">
-                        <i class="fa-solid fa-arrow-left"></i> Continuar comprando
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Continuar comprando
                     </a>
                 </div>
             </div>

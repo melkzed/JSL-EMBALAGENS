@@ -353,11 +353,11 @@ async function carregarEnderecos() {
                 <p>CEP: ${escapeHtml(end.zip_code)}</p>
             </div>
             <div class="checkout-endereco-acoes">
-                <button type="button" class="checkout-endereco-btn-editar" data-editar-id="${end.id}" title="Editar endereço">
-                    <i class="fa-solid fa-pen"></i>
+                <button type="button" class="checkout-endereco-btn-editar" data-editar-id="${end.id}" title="Editar endereço" aria-label="Editar endereço ${escapeHtml(end.label || '')}">
+                    <i class="fa-solid fa-pen" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="checkout-endereco-btn-excluir" data-excluir-id="${end.id}" title="Excluir endereço">
-                    <i class="fa-solid fa-trash-can"></i>
+                <button type="button" class="checkout-endereco-btn-excluir" data-excluir-id="${end.id}" title="Excluir endereço" aria-label="Excluir endereço ${escapeHtml(end.label || '')}">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
                 </button>
             </div>
         </label>
@@ -1172,7 +1172,12 @@ function irParaStep(step) {
     document.querySelectorAll('.checkout-step').forEach(el => {
         const s = parseInt(el.dataset.step)
         el.classList.remove('ativo', 'completo')
-        if (s === step) el.classList.add('ativo')
+        if (s === step) {
+            el.classList.add('ativo')
+            el.setAttribute('aria-current', 'step')
+        } else {
+            el.removeAttribute('aria-current')
+        }
         if (s < step) el.classList.add('completo')
     })
 
