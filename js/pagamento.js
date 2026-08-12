@@ -65,14 +65,6 @@ export async function criarCheckoutMercadoPago(pedidoId) {
     }
 }
 
-export async function criarCheckoutPagBank(pedidoId) {
-    return criarCheckoutMercadoPago(pedidoId)
-}
-
-export async function verificarRecaptcha() { return true }
-export async function consultarCheckoutPagBank() { return { success: false, errors: ['Nao disponivel com Mercado Pago'] } }
-export async function inativarCheckoutPagBank() { return { success: false, errors: ['Nao disponivel com Mercado Pago'] } }
-
 function pixTLV(id, value) {
     const len = value.length.toString().padStart(2, '0')
     return id + len + value

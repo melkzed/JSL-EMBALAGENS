@@ -50,7 +50,7 @@ Edge Functions).
 | Ícones        | Font Awesome 6                                                               |
 | Back-end      | [Supabase](https://supabase.com/) — Postgres, Auth, Storage, Edge Functions |
 | Edge Functions| Deno / TypeScript                                                           |
-| Pagamentos    | PagSeguro (PagBank) e Mercado Pago                                           |
+| Pagamentos    | Mercado Pago (Checkout Pro) + PIX Copia e Cola próprio                       |
 | Frete         | Integração de cálculo via Edge Function + ViaCEP para busca de endereço      |
 | Hospedagem    | Servidor Apache (regras em `.htaccess`) atrás de HTTPS / Cloudflare          |
 
@@ -77,8 +77,7 @@ JSL-EMBALAGENS/
 │   ├── contato.html
 │   ├── sobre.html
 │   ├── politicas.html
-│   ├── confirmar-email.html
-│   └── pagbank-sandbox.html
+│   └── confirmar-email.html
 │
 ├── css/                     # Estilos modulares (agregados por style.css)
 │   ├── style.css            # Ponto de entrada — importa os demais
@@ -102,9 +101,8 @@ JSL-EMBALAGENS/
 └── supabase/                # Back-end
     ├── functions/           # Edge Functions (Deno/TypeScript)
     │   ├── calcular-frete/
-    │   ├── create-preference/
-    │   ├── mp-webhook/
-    │   └── processar-pagamento-pagseguro/
+    │   ├── create-preference/   # Cria preferência de pagamento no Mercado Pago
+    │   └── mp-webhook/          # Webhook de confirmação do Mercado Pago
     └── *.sql                # Políticas / RPCs
 ```
 
@@ -178,8 +176,7 @@ supabase functions deploy <nome>    # publica no projeto
 - **Edge Functions** (`supabase/functions/`):
   - `calcular-frete` — cálculo de frete.
   - `create-preference` — cria a preferência de pagamento no Mercado Pago.
-  - `mp-webhook` — recebe notificações (webhook) do Mercado Pago.
-  - `processar-pagamento-pagseguro` — processa pagamentos via PagSeguro/PagBank.
+  - `mp-webhook` — recebe notificações (webhook) do Mercado Pago e confirma o pagamento.
 - **SQL** (`supabase/*.sql`) — políticas de RLS e RPCs para variantes de produtos no admin.
 
 > A `apikey` presente em `supabaseClient.js` é a chave **anônima** pública do Supabase, protegida por
@@ -188,9 +185,12 @@ supabase functions deploy <nome>    # publica no projeto
 
 ## Pagamentos
 
-- **PIX**, **cartão de crédito** e **cartão de débito** processados via PagSeguro/PagBank
-  (SDK carregado em `assets.pagseguro.com.br`).
-- **Mercado Pago** via preferências + webhook.
+- **Mercado Pago (Checkout Pro)** para **PIX**, **cartão de crédito** e **cartão de débito**:
+  o site cria uma preferência (`create-preference`) e redireciona o cliente para o ambiente
+  seguro do Mercado Pago. A confirmação chega pelo webhook (`mp-webhook`), que atualiza o
+  status do pagamento; o retorno cai em `/checkout-retorno`.
+- **PIX Copia e Cola** próprio (gerado em `js/pagamento.js` a partir da chave PIX da empresa)
+  como alternativa direta.
 - **Combinar via WhatsApp** como alternativa manual no checkout.
 
 ## Acessibilidade e usabilidade

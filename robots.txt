@@ -3,8 +3,6 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /docs/
-Disallow: /pagbank-evidencias/
-Disallow: /html/pagbank-sandbox.html
 Disallow: /html/confirmar-email.html
 Disallow: /checkout
 Disallow: /carrinho
