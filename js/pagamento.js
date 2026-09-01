@@ -4,7 +4,7 @@ import { formatarPreco } from './utils.js'
 const SUPABASE_FUNCTIONS_URL = 'https://otwmjdiqjhumqvyztnbl.supabase.co/functions/v1'
 const SUPABASE_PUBLIC_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90d21qZGlxamh1bXF2eXp0bmJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0OTU3NTUsImV4cCI6MjA5MDA3MTc1NX0.1syGgZJNqoax0z-E5dWcTtm5g47xDUdFa3U7lttxZz4'
 
-export const MP_PUBLIC_KEY = 'APP_USR-d2e431d7-64ef-4f3a-8bc5-e1d15a12ff3c'
+export const MP_PUBLIC_KEY = 'APP_USR-45d4ce7f-89df-4ac8-817c-6fda890ac5ee'
 
 async function invokeFunctionPublic(functionName, body) {
     const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/${functionName}`, {
